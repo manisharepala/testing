@@ -101,7 +101,7 @@ class Question
 
 
   def self.get_data_from_tags(method_name, body_data)
-    uri = URI("http://localhost:4000/#{method_name}")
+    uri = URI("http://13.233.76.145/#{method_name}")
     req = Net::HTTP::Get.new(uri.path, 'Content-Type' => 'application/json')
     req.body = body_data
     res = Net::HTTP.start(uri.hostname, uri.port) do |http|
