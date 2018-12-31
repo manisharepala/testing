@@ -1,0 +1,25 @@
+development:
+  adapter: mysql2
+  database: ed_x_assessment
+  pool: 5
+  timeout: 5000
+  username: root
+  password: edutor123
+
+test:
+  adapter: mysql2
+  database: ed_x_assessment
+  pool: 5
+  timeout: 5000
+  username: root
+  password: edutor123
+
+production:
+  adapter: mysql2
+  database: ed_x_assessment
+  #database: esz
+  pool: 5
+  timeout: 5000
+  username: root
+  password: edutor123
+
