@@ -1,0 +1,19 @@
+#content_header.text-center
+  %div.page-header
+    %h1#main_heading Get Quizz
+    %br
+.container
+  %table.table.table-bordered.table-hover
+    %thead
+      %tr
+        %th  S.no
+        %th Guid
+        %th Quiz name
+        %th No of Questions
+    %tbody
+      - @quiz.each_with_index do |quiz,i| 
+        %tr
+          %td= i+1
+          %td= quiz.guid
+          %td= link_to quiz.name,assessment_get_question_path
+          %td= quiz.question_ids.count

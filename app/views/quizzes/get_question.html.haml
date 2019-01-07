@@ -1,0 +1,35 @@
+#content_header.text-center
+  %div.page-header
+    %h1#main_heading Questions
+    %br
+.container
+  %div.panel.panel-default
+    %div.panel-body
+      %table
+        %tbody
+          - @que.each_with_index do |q,i|
+            %tr
+              %td
+                %div.well.well-lg
+                  %table
+                    %tr
+                      %td=i+1
+                      %td=(q.questiontext).html_safe
+                    %tr
+                      -if (q.qtype=='SmcqQuestion')||(q.qtype=='MmcqQuestion')||(q.qtype=='TrueFalseQuestion')
+                        - q.question_answers.each_with_index do |qa,i|
+                          %tr
+                            %td
+                              - if qa.fraction == true
+                                %i.fa.fa-check= i+1
+                              -else
+                                = i+1
+                            %td= (qa.answer).html_safe
+                      -elsif q.qtype=="FibQuestion"
+                        %tr
+                          %td A
+                      -elsif q.qtype== 'SubjectiveQuestion' 
+                        %tr
+                          %td A
+                          ="\n"
+              %td= link_to "Edit"
