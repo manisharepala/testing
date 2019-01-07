@@ -115,8 +115,13 @@ class Question
     method_name = '/tags/find_tag'
     body_data = {name: name, value:value}.to_json
 
-    data = JSON.parse(Question.get_data_from_tags(method_name,body_data)) rescue {"guid"=>"not_present"}
-    return data['guid']
+    res = Question.get_data_from_tags(method_name,body_data)
+    if res.present?
+      data = JSON.parse(res)
+      return data['guid']
+    else
+      return nil
+    end
   end
 
   protected

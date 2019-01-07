@@ -78,15 +78,23 @@ class QuizzesController < ApplicationController
 
     Archive::Zip.extract(file_path, extract_dir)
 
+    tags_not_present = []
+
     if (Dir[extract_dir+"/"+'*.etx'])!=[]
       Dir[extract_dir+"/"+'*.etx'].each do |etx_file|
-        begin
-          ActiveRecord::Base.transaction do
-            process_etx(etx_file,user_id, publisher_question_bank_id,zip_name.split('.')[0], false) #/home/inayath/edutor/assessment_app/public/zip_uploads/1/Maths-F2-C9-1-MCQ-EN/Maths-F2-C9-1-MCQ-EN.etx
-          end
-        rescue Exception => e
-          logger.info "Exception in etx uploading....#{e.backtrace}"
+        file = File.open(etx_file)
+        etx = Nokogiri::XML(file)
+        test_paper = etx.xpath("/ignitor_questions")
+        tags_not_present += verify_tags(test_paper)
+      end
+
+      if tags_not_present.count == 0
+        Dir[extract_dir+"/"+'*.etx'].each do |etx_file|
+          process_etx(etx_file,user_id, publisher_question_bank_id,zip_name.split('.')[0], false) #/home/inayath/edutor/assessment_app/public/zip_uploads/1/Maths-F2-C9-1-MCQ-EN/Maths-F2-C9-1-MCQ-EN.etx
         end
+      else
+        logger.info "Tags not present -------------------------------- #{tags_not_present}"
+        raise Exception.new("Following tags are not present #{tags_not_present}")
       end
     end
 
@@ -122,6 +130,40 @@ class QuizzesController < ApplicationController
     create_quiz(question_ids,quiz_name)
 
     puts ("Successfully updated #{question_ids.count} -- #{question_ids}")
+  end
+
+  def verify_tags(test_paper)
+    all_tags = []
+    tag_not_present = []
+    test_paper.xpath("group_questions").each do |group_ques|
+      group_ques.xpath("itags/itag").each do |tag|
+        name = tag.attr("name").to_s
+        value = tag.attr("value").to_s
+        d = {}
+        d['name'] = name
+        d['value'] = value
+        all_tags << d
+        if !Question.get_tag_guid(name, value).present?
+          tag_not_present << d
+        end
+      end
+    end
+
+    test_paper.xpath("question_set").each do |ques|
+      ques.xpath("itags/itag").each do |tag|
+        name = tag.attr("name").to_s
+        value = tag.attr("value").to_s
+        d = {}
+        d['name'] = name
+        d['value'] = value
+        all_tags << d
+        if !Question.get_tag_guid(name, value).present?
+          tag_not_present << d
+        end
+      end
+    end
+    logger.info "All tags - #{all_tags.count} - #{all_tags}"
+    return tag_not_present
   end
 
   def create_simple_question(user_id, ques,publisher_question_bank_id, s3_path,master_dir)
