@@ -4,6 +4,9 @@ Rails.application.routes.draw do
   get "/assessment/zip_upload_question" => "quizzes#zip_upload_question"
   post "/assessment/post_zip_upload_question" => "quizzes#post_zip_upload_question"
 
+  get '/assessment/get_quizz', to: 'quizzes#get_quizz'
+  get '/assessment/get_question', to: 'quizzes#get_question'
+
   get '/assessment/get_quizzes', to: 'quizzes#get_quizzes'
   get '/assessment/get_quiz_for_browser', to: 'quizzes#get_quiz_for_browser'
   get '/assessment/get_quiz_for_app', to: 'quizzes#get_quiz_for_app'

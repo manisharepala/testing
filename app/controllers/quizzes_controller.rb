@@ -4,6 +4,18 @@ class QuizzesController < ApplicationController
 
   end
 
+  def show
+    
+  end
+
+  def get_quizz
+    @quiz = Quiz.all
+  end
+
+  def get_question
+    @que = Question.all 
+  end
+
   def get_quizzes
     data = []
     Quiz.all.each do |quiz|

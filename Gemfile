@@ -62,14 +62,19 @@ end
 gem 'tzinfo-data', platforms: [:mingw, :mswin, :x64_mingw, :jruby]
 
 gem 'mongoid', '~> 7.0.2'
-gem 'fileutils', '~> 1.1'
+# gem 'fileutils', '~> 1.1'
 gem 'archive-zip', '~> 0.11.0'
 gem 'rmagick', '~> 2.16'
 gem 'net-ssh', '~> 5.0', '>= 5.0.2'
 gem 'csv-mapper', "0.5.1"
 
-gem 'bootstrap', '~> 4.1.3'
+#gem 'bootstrap', '~> 4.1.3'
 gem 'jquery-rails'
 gem 'haml-rails', '>= 0.3.4'
 
 gem 'mini_racer'
+
+gem "font-awesome-rails"
+gem 'bootstrap-sass', '~> 3.3', '>= 3.3.7'
+
+
