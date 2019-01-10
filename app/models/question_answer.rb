@@ -3,7 +3,7 @@ class QuestionAnswer
   field :answer, type: BSON::Binary
   field :feedback, type: BSON::Binary
   field :fraction, type: Boolean, default: false
-  embedded_in :objective_question
+  embedded_in :objective_question, :inverse_of => :question_answers
   validates_presence_of :answer, :fraction
 
   def as_json(with_key: false)

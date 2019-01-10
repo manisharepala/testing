@@ -69,12 +69,15 @@ gem 'net-ssh', '~> 5.0', '>= 5.0.2'
 gem 'csv-mapper', "0.5.1"
 
 #gem 'bootstrap', '~> 4.1.3'
-gem 'jquery-rails'
-gem 'haml-rails', '>= 0.3.4'
 
+gem 'haml', '~> 5.0', '>= 5.0.4'
+gem 'bootstrap-sass', '~> 3.4'
 gem 'mini_racer'
 
-gem "font-awesome-rails"
-gem 'bootstrap-sass', '~> 3.3', '>= 3.3.7'
+# gem "font-awesome-rails"
 
+gem 'jquery-rails'
 
+gem 'ckeditor', '~> 4.3'
+gem 'mongoid-paperclip', require: 'mongoid_paperclip'
+gem 'simple_form', '~> 4.1'

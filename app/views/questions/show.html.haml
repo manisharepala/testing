@@ -1,0 +1,35 @@
+.container
+  %table.table-striped.table-bordered{style:"width: 100%;"}
+    %tbody
+      %tr
+        %td=1
+        %td=(@question.questiontext).html_safe
+      -if (@question.qtype=='SmcqQuestion')||(@question.qtype=='MmcqQuestion')||(@question.qtype=='TrueFalseQuestion')
+        - @question.question_answers.each_with_index do |qa,i|
+          %tr
+            %td{style:"width:10%;"}
+              %input{:name => "#{@question.id}_#{qa.id}", :type => "radio", value:"1", checked: (qa.fraction==true) ? true : false, style:'cursor: not-allowed;pointer-events: none;'}
+            %td
+              %span= qa.answer.html_safe
+
+      -elsif @question.qtype=="FibQuestion"
+        %tr
+          %td A
+      -elsif @question.qtype== 'SubjectiveQuestion'
+        %tr
+          %td A
+          ="\n"
+      -#%tr
+      -#  %td Hint:
+      -#  %td= @question.hint.html_safe
+      -#%tr
+      -#  %td Actual Answer:
+      -#  %td= @question.actual_answer.html_safe
+      %tr
+        %td Explanation:
+        %td= @question.general_feedback.html_safe
+      %tr
+        %td= link_to "Edit", assessment_question_edit_path(id:@question.id), class:'btn btn-default'
+        %td
+      %br
+      %br

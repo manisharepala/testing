@@ -1,0 +1,37 @@
+!!!
+%html
+  %head
+    %meta{:content => "text/html; charset=UTF-8", "http-equiv" => "Content-Type"}/
+    %title AssessmentApp
+    = csrf_meta_tags
+    = csp_meta_tag
+    = stylesheet_link_tag    'application', media: 'all', 'data-turbolinks-track': 'reload'
+    = javascript_include_tag 'application', 'data-turbolinks-track': 'reload'
+  %body
+    .container
+      - flash.each do |name, msg|
+        = content_tag :div, msg, class: "alert alert-info"
+    = yield
+
+:css
+  .navbar-nav > li > a {
+    font-size: 1.5em;
+  }
+
+  .navbar {
+    border-radius: 0px !important;
+    margin-bottom: 0px;
+  }
+  html {
+    position:relative;
+    min-height: 100%;
+  }
+
+  .alert{
+    margin-bottom: 0% !important;
+  }
+
+:javascript
+    $(document).ready(function(){
+      $(".alert-info" ).fadeOut(3000);
+    });

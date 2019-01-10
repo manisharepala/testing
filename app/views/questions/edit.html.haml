@@ -1,0 +1,35 @@
+.container{style:'margin-top:2%;'}
+  = simple_form_for @question, :url => assessment_question_update_path(id:@question.id, qtype:@question.qtype), :method => :post do |f|
+    -#- if @question.errors.any?
+    -#  #errors
+    -#    %h2
+    -#      = pluralize(@question.errors.count, "error")
+    -#      prevented this post from saving:
+    -#    %ul
+    -#      - @question.errors.full_messages.each do |msg|
+    -#        %li= msg
+    = f.label :question_text
+    = f.cktext_area :question_text, :class => "form-control", required:true, :ckeditor => {:toolbar => 'Full'}
+
+    - if @question.qtype == 'SmcqQuestion' || @question.qtype == 'MmcqQuestion'
+      - @question.question_answers.each_with_index do |question_answer, i|
+        = f.simple_fields_for :question_answers, question_answer do |qa|
+          = f.label "Option #{i+1}"
+          = qa.cktext_area :answer, :class => "form-control", required:true, value: question_answer.answer
+
+    = f.cktext_area :general_feedback, :class => "form-control", required:true, :ckeditor => {:toolbar => 'Full'}
+
+    = f.submit class:'btn btn-default'
+:css
+  textarea {
+      width: 100%;
+      padding: 1.5%;
+  }
+  select{
+      padding: .6% 2%;
+      border-radius: 5%;
+      font-size: 1.3em;
+  }
+  select option{
+      font-size: 1.3em;
+  }

@@ -13,11 +13,11 @@ class Question
   field :guid, type: String
   field :tag_ids, type: Array
 
-  embeds_many :question_images
+  embeds_many :pictures, :cascade_callbacks => true
   # has_and_belongs_to_many :tags, index: true, autosave: true, inverse_of: nil # one side relation
   has_and_belongs_to_many :publisher_question_banks,index: true, autosave: true, inverse_of: nil # one side relation
 
-  accepts_nested_attributes_for :question_images, :publisher_question_banks
+  accepts_nested_attributes_for :publisher_question_banks
 
   # has_many :s3_files, as: :s3_asset, :dependent => :destroy
 

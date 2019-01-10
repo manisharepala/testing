@@ -12,6 +12,7 @@ class Quiz
   field :tag_ids, type: Array
   field :question_ids, type: Array
   field :guid, type: String
+  field :final, type: Boolean, default: false
 
   embeds_many :quiz_targeted_groups
   embeds_many :quiz_sections

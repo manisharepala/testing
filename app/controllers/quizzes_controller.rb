@@ -8,12 +8,13 @@ class QuizzesController < ApplicationController
     
   end
 
-  def get_quizz
+  def all_quizzes
     @quiz = Quiz.all
   end
 
-  def get_question
-    @que = Question.all 
+  def quiz_questions
+    quiz = Quiz.find(params[:id])
+    @questions = Question.where(:id.in=>quiz.question_ids)
   end
 
   def get_quizzes
@@ -113,7 +114,7 @@ class QuizzesController < ApplicationController
     # FileUtils.rm_rf(extract_dir)
 
     respond_to do |format|
-      format.html { redirect_to assessment_zip_upload_question_path}
+      format.html { redirect_to assessment_zip_upload_question_path, notice: 'Quiz was successfully created.'}
       # format.json { render json: @zip_upload.errors, status: :unprocessable_entity }
     end
   end
@@ -121,6 +122,7 @@ class QuizzesController < ApplicationController
   def process_etx(etx_file, user_id, publisher_question_bank_id,quiz_name, hidden=false)
     s3_path = '/question_images/' #"learnflix-question-images/"
     master_dir = (File.dirname etx_file) + "/" # "/home/inayath/edutor/assessment/public/zip_uploads/1/Maths-F2-C9-1-MCQ-EN/"
+    images_dir = etx_file.split('/').last.split('.').first + '_files' #"Maths-F2-C9-1-MCQ-EN_files"
     publisher_question_bank = PublisherQuestionBank.find(publisher_question_bank_id)
     file = File.open(etx_file)
     etx = Nokogiri::XML(file)
@@ -133,7 +135,7 @@ class QuizzesController < ApplicationController
     end
 
     test_paper.xpath("question_set").each do |ques|
-      question = create_simple_question(user_id, ques,publisher_question_bank_id, s3_path,master_dir)
+      question = create_simple_question(user_id, ques,publisher_question_bank_id, s3_path,master_dir,images_dir)
       question_ids << question._id
     end
     publisher_question_bank.attributes = {question_ids:(publisher_question_bank.question_ids + question_ids)}
@@ -178,11 +180,11 @@ class QuizzesController < ApplicationController
     return tag_not_present
   end
 
-  def create_simple_question(user_id, ques,publisher_question_bank_id, s3_path,master_dir)
+  def create_simple_question(user_id, ques,publisher_question_bank_id, s3_path,master_dir,images_dir)
     question_data = get_simple_question_hash(user_id,ques, publisher_question_bank_id)
     question = Question.create_question(question_data)
     update_image_path(question._id,s3_path)
-    copy_question_images(question._id,master_dir)
+    copy_question_images(question._id,master_dir,images_dir)
     return question
   end
 
@@ -205,13 +207,16 @@ class QuizzesController < ApplicationController
       replacement_paths.uniq.each do |rp|
         text = text.gsub(rp, s3_path+ques_id)
       end
+      ['.png', '.wmz'].each do |f|
+        text = text.gsub(f, '.jpg')
+      end
     else
       text = ''
     end
     return text
   end
 
-  def copy_question_images(ques_id,master_dir)
+  def copy_question_images(ques_id,master_dir, images_dir)
     ques_images = []
     question = Question.find(ques_id)
     Nokogiri::HTML(question.question_text).css('img').map{ |i| i['src'] }.each do |img|
@@ -232,7 +237,7 @@ class QuizzesController < ApplicationController
 
     if question.qtype == 'Passage'
       question.questions.each do |q|
-        copy_question_images(q._id,master_dir)
+        copy_question_images(q._id,master_dir,images_dir)
       end
     end
 
@@ -241,7 +246,7 @@ class QuizzesController < ApplicationController
 
     dir_path = Rails.root.to_s + "/public/question_images/#{ques_id}/"
     FileUtils.mkdir_p(dir_path)
-    Dir["#{master_dir}/**/**/*"].each do |img|
+    Dir["#{master_dir}/#{images_dir}/*"].each do |img|
       index = image_names.index(File.basename(img).split('.')[0].downcase)
 
       if index.present?
