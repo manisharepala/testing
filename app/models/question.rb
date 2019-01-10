@@ -13,7 +13,7 @@ class Question
   field :guid, type: String
   field :tag_ids, type: Array
 
-  embeds_many :pictures, :cascade_callbacks => true
+  embeds_many :question_images, :cascade_callbacks => true
   # has_and_belongs_to_many :tags, index: true, autosave: true, inverse_of: nil # one side relation
   has_and_belongs_to_many :publisher_question_banks,index: true, autosave: true, inverse_of: nil # one side relation
 
