@@ -1,5 +1,5 @@
 Rails.application.routes.draw do
-  mount Ckeditor::Engine => '/ckeditor' if Gem.loaded_specs.has_key? "ckeditor"
+  mount Ckeditor::Engine => '/ckeditor'
   post '/assessment/quiz_attempt_data', to: 'application#quiz_attempt_data'
 
   get "/assessment/zip_upload_question" => "quizzes#zip_upload_question"
