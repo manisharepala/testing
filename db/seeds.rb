@@ -50,6 +50,8 @@ end
 #S3Configuration.create(region: "ap-southeast-1", access_key_id:"AKIAIYVXJZRUR5UU6QTQ",secret_access_key:"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",bucket_name:"learnflix-question-images")
 # UsersS3Configuration.create(user_id:1,s3_configuration_id:1)
 
+# q = Question.find('5c24a323957966371e3b6e1a')
+# Image.create(key:"/question_images/5c24a323957966371e3b6e1a/image003.jpg", name:"image001.jpg", file_path:"/home/inayath/edutor/assessment_app/public/question_images/5c24a323957966371e3b6e1a/image001.jpg")
 
 
 

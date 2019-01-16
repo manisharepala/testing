@@ -12,8 +12,9 @@ class Question
   field :created_by, type: Integer
   field :guid, type: String
   field :tag_ids, type: Array
+  field :image_ids, type: Array
 
-  embeds_many :question_images, :cascade_callbacks => true
+  # embeds_many :images, :cascade_callbacks => true
   # has_and_belongs_to_many :tags, index: true, autosave: true, inverse_of: nil # one side relation
   has_and_belongs_to_many :publisher_question_banks,index: true, autosave: true, inverse_of: nil # one side relation
 
@@ -42,6 +43,13 @@ class Question
   ABSTRACT_CLASSES = %w(Question SubjectiveQuestion ObjectiveQuestion)
 
   private_class_method :new, :create
+
+  def upload_images
+    image_ids.each do |guid|
+      image = Image.where(:guid.in=>[guid])[0]
+      image.upload_image
+    end
+  end
 
   def self.create_question(attrs)
     # byebug

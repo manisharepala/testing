@@ -81,3 +81,5 @@ gem 'jquery-rails'
 gem 'ckeditor', '~> 4.3'
 gem 'mongoid-paperclip', require: 'mongoid_paperclip'
 gem 'simple_form', '~> 4.1'
+
+gem 'httparty'

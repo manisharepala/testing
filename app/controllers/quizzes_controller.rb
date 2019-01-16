@@ -1,11 +1,33 @@
 class QuizzesController < ApplicationController
 
+  def process_quiz_attempt_data
+    data = {"launch_path"=>"", "guid"=>"asset_guid", "start_time"=>"time when the asset is opened", "active_duration"=>"less than or equal to end_time - start_time", "end_time"=>"time when the asset is closed", "book_id"=>"book_guid", "player"=>"player used to launch", "item_type"=>"self explanatory", "display_name"=>"self explanatory", "time_zone"=>"self explanatory", "ip_address"=>"self explanatory", "user_agent"=>"android/windows/ios/web", "package_id"=>"self explanatory", "device_id"=>"self explanatory", "tags"=>"self explanatory", "score"=>"123", "attempted"=>[], "correct"=>[], "timeline"=>[{"question_id"=>12345, "sessions"=>[{"start_time"=>123456789, "end_time"=>123456799, "data"=>{"extras"=>"can have key value pair, for mcq option_selecte:a, for fib answer:abc...etc"}}]}, {"question_id"=>6789, "sessions"=>[{"start_time"=>123476789, "end_time"=>123458799, "data"=>{"extras"=>"can have key value pair, for mcq option_selected:a, for fib answer:abc...etc"}}]}]}
+
+    quiz = Quiz.where(:guid.in=>data['guid'])[0]
+
+    quiz_attempt_data = {}
+    quiz_attempt_data['guid'] = data['guid']
+    quiz_attempt_data['start_time'] = data['start_time']
+    quiz_attempt_data['end_time'] = data['end_time']
+    quiz_attempt_data['active_duration'] = data['active_duration']
+    quiz_attempt_data['publish_id'] = data['publish_id']
+    quiz_attempt_data['book_id'] = data['book_id']
+    quiz_attempt_data['total_marks'] = quiz.total_marks
+
+    data['timeline'].each do |q_data|
+      question_attempt_data = {}
+      question_attempt_data['question_attributes'] = Question.where(:guid.in=>q_data['question_id'])[0]
+      question_attempt_data['']
+    end
+
+  end
+
   def home
 
   end
 
   def show
-    
+
   end
 
   def all_quizzes
@@ -61,10 +83,10 @@ class QuizzesController < ApplicationController
 
 
   def create_quiz(question_ids, name)
-    quiz = Quiz.new
-    quiz.name = name
-    quiz.question_ids = question_ids
-    quiz.save
+    quiz = Quiz.create(name:name,question_ids:question_ids)
+    quiz.key = "/quiz_zips/#{quiz.guid}.zip"
+    quiz.file_path = Rails.root.to_s + "/public/quiz_zips/#{quiz.guid}.zip"
+    quiz.save!
   end
 
   def zip_upload_question
@@ -92,22 +114,25 @@ class QuizzesController < ApplicationController
     Archive::Zip.extract(file_path, extract_dir)
 
     tags_not_present = []
+    question_wise_tags_not_present = []
 
     if (Dir[extract_dir+"/"+'*.etx'])!=[]
       Dir[extract_dir+"/"+'*.etx'].each do |etx_file|
         file = File.open(etx_file)
         etx = Nokogiri::XML(file)
         test_paper = etx.xpath("/ignitor_questions")
-        tags_not_present += verify_tags(test_paper)
+        tags_not_present_data = verify_tags(test_paper)
+        tags_not_present += tags_not_present_data[0]
+        question_wise_tags_not_present += tags_not_present_data[1]
       end
 
-      if tags_not_present.count == 0
+      if (tags_not_present.count == 0) && (question_wise_tags_not_present.count == 0)
         Dir[extract_dir+"/"+'*.etx'].each do |etx_file|
           process_etx(etx_file,user_id, publisher_question_bank_id,zip_name.split('.')[0], false) #/home/inayath/edutor/assessment_app/public/zip_uploads/1/Maths-F2-C9-1-MCQ-EN/Maths-F2-C9-1-MCQ-EN.etx
         end
       else
         logger.info "Tags not present -------------------------------- #{tags_not_present}"
-        raise Exception.new("Following tags are not present #{tags_not_present}")
+        raise Exception.new("Following tags are not present #{tags_not_present} and Following questions do not have the compulsory 5 tags -> #{question_wise_tags_not_present} ")
       end
     end
 
@@ -117,6 +142,62 @@ class QuizzesController < ApplicationController
       format.html { redirect_to assessment_zip_upload_question_path, notice: 'Quiz was successfully created.'}
       # format.json { render json: @zip_upload.errors, status: :unprocessable_entity }
     end
+  end
+
+  def verify_tags(test_paper)
+    all_tags = []
+    tag_not_present = []
+    must_present_tag_names_for_each_question = ["board", "grade", "subject", "chapter", "concept"]
+    question_wise_tags_not_present = []
+    test_paper.xpath("group_questions").each_with_index do |group_ques,i|
+      tag_names = []
+      group_ques.xpath("itags/itag").each do |tag|
+        name = tag.attr("name").to_s
+        value = tag.attr("value").to_s
+        d = {}
+        d['name'] = name
+        d['value'] = value
+        tag_names << name
+        all_tags << d
+        if !Question.get_tag_guid(name, value).present?
+          tag_not_present << d
+        end
+      end
+      absent_tags = must_present_tag_names_for_each_question - tag_names
+      if absent_tags.count > 0
+        question_tag_not_present = {}
+        question_tag_not_present['id'] = i+1
+        question_tag_not_present['type'] = 'group_questions'
+        question_tag_not_present['tags_not_present'] = absent_tags
+        question_wise_tags_not_present << question_tag_not_present
+      end
+    end
+
+    test_paper.xpath("question_set").each_with_index do |ques,i|
+      tag_names = []
+      ques.xpath("itags/itag").each do |tag|
+        name = tag.attr("name").to_s
+        value = tag.attr("value").to_s
+        d = {}
+        d['name'] = name
+        d['value'] = value
+        tag_names << name
+        all_tags << d
+        if !Question.get_tag_guid(name, value).present?
+          tag_not_present << d
+        end
+      end
+      absent_tags = must_present_tag_names_for_each_question - tag_names
+      if absent_tags.count > 0
+        question_tag_not_present = {}
+        question_tag_not_present['id'] = i+1
+        question_tag_not_present['type'] = 'question_set'
+        question_tag_not_present['tags_not_present'] = absent_tags
+        question_wise_tags_not_present << question_tag_not_present
+      end
+    end
+    logger.info "All tags - #{all_tags.count} - #{all_tags}"
+    return [tag_not_present,question_wise_tags_not_present]
   end
 
   def process_etx(etx_file, user_id, publisher_question_bank_id,quiz_name, hidden=false)
@@ -146,39 +227,7 @@ class QuizzesController < ApplicationController
     puts ("Successfully updated #{question_ids.count} -- #{question_ids}")
   end
 
-  def verify_tags(test_paper)
-    all_tags = []
-    tag_not_present = []
-    test_paper.xpath("group_questions").each do |group_ques|
-      group_ques.xpath("itags/itag").each do |tag|
-        name = tag.attr("name").to_s
-        value = tag.attr("value").to_s
-        d = {}
-        d['name'] = name
-        d['value'] = value
-        all_tags << d
-        if !Question.get_tag_guid(name, value).present?
-          tag_not_present << d
-        end
-      end
-    end
 
-    test_paper.xpath("question_set").each do |ques|
-      ques.xpath("itags/itag").each do |tag|
-        name = tag.attr("name").to_s
-        value = tag.attr("value").to_s
-        d = {}
-        d['name'] = name
-        d['value'] = value
-        all_tags << d
-        if !Question.get_tag_guid(name, value).present?
-          tag_not_present << d
-        end
-      end
-    end
-    logger.info "All tags - #{all_tags.count} - #{all_tags}"
-    return tag_not_present
-  end
 
   def create_simple_question(user_id, ques,publisher_question_bank_id, s3_path,master_dir,images_dir)
     question_data = get_simple_question_hash(user_id,ques, publisher_question_bank_id)
@@ -243,6 +292,7 @@ class QuizzesController < ApplicationController
 
     ques_images = ques_images.uniq
     image_names = ques_images.map{|n| n.downcase.split('.')[0]}
+    image_ids = []
 
     dir_path = Rails.root.to_s + "/public/question_images/#{ques_id}/"
     FileUtils.mkdir_p(dir_path)
@@ -250,12 +300,19 @@ class QuizzesController < ApplicationController
       index = image_names.index(File.basename(img).split('.')[0].downcase)
 
       if index.present?
+        # copying to public folder
         img_name = (ques_images[index]).split('.')[0] + ".jpg"
         image = Magick::Image.read(img).first
         image.write(dir_path+img_name)
+
+        # creating Image reference for S3
+        image_ids << (Image.create(name: img_name, key: "/question_images/#{ques_id}/#{img_name}", file_path:(dir_path+img_name))).id
       end
 
     end
+    question.image_ids = image_ids
+    question.save!
+    question.upload_images
   end
 
   def create_group_question(user_id, group_ques,publisher_question_bank_id, hidden=false)
