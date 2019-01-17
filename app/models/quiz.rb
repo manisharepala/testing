@@ -12,10 +12,12 @@ class Quiz
   field :tag_ids, type: Array
   field :question_ids, type: Array
   field :guid, type: String
+  field :type, type: String
   field :key, type: String
   field :file_path, type: String
   field :final, type: Boolean, default: false
   field :uploaded, type: Boolean, default: false
+  field :focus_area, type: BSON::Binary
 
   embeds_many :quiz_targeted_groups
   embeds_many :quiz_sections
@@ -96,7 +98,7 @@ class Quiz
   end
 
   def as_json(with_key: false)
-    data = {name:name, description:description, instructions:instructions, total_marks:total_marks, total_time:total_time} #,quiz_detail:quiz_detail.as_json
+    data = {name:name, description:description, instructions:instructions, total_marks:total_marks, total_time:total_time, type:type} #,quiz_detail:quiz_detail.as_json
 
     if quiz_sections.count > 0
       quiz_sections_data = []

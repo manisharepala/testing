@@ -1,5 +1,27 @@
 class QuizzesController < ApplicationController
 
+  def get_focus_area
+    quiz = (Quiz.where(:guid.in => [params[:guid]]))[0]
+    if quiz.present?
+      render json: quiz.focus_area
+    else
+      render json: {}
+    end
+  end
+
+  def update_focus_area
+    quiz = (Quiz.where(:guid.in => [params[:guid]]))[0]
+    quiz.update_attributes(focus_area: params[:focus_area])
+    response = {}
+    response['guid'] = quiz.guid
+    if quiz.present?
+      response['status'] = true
+    else
+      response['status'] = false
+    end
+    render json: response
+  end
+
   def process_quiz_attempt_data
     data = {"launch_path"=>"", "guid"=>"asset_guid", "start_time"=>"time when the asset is opened", "active_duration"=>"less than or equal to end_time - start_time", "end_time"=>"time when the asset is closed", "book_id"=>"book_guid", "player"=>"player used to launch", "item_type"=>"self explanatory", "display_name"=>"self explanatory", "time_zone"=>"self explanatory", "ip_address"=>"self explanatory", "user_agent"=>"android/windows/ios/web", "package_id"=>"self explanatory", "device_id"=>"self explanatory", "tags"=>"self explanatory", "score"=>"123", "attempted"=>[], "correct"=>[], "timeline"=>[{"question_id"=>12345, "sessions"=>[{"start_time"=>123456789, "end_time"=>123456799, "data"=>{"extras"=>"can have key value pair, for mcq option_selecte:a, for fib answer:abc...etc"}}]}, {"question_id"=>6789, "sessions"=>[{"start_time"=>123476789, "end_time"=>123458799, "data"=>{"extras"=>"can have key value pair, for mcq option_selected:a, for fib answer:abc...etc"}}]}]}
 
@@ -82,8 +104,8 @@ class QuizzesController < ApplicationController
   end
 
 
-  def create_quiz(question_ids, name)
-    quiz = Quiz.create(name:name,question_ids:question_ids)
+  def create_quiz(question_ids, name, type)
+    quiz = Quiz.create(name:name,question_ids:question_ids, type:type)
     quiz.key = "/quiz_zips/#{quiz.guid}.zip"
     quiz.file_path = Rails.root.to_s + "/public/quiz_zips/#{quiz.guid}.zip"
     quiz.save!
@@ -91,6 +113,7 @@ class QuizzesController < ApplicationController
 
   def zip_upload_question
     @publisher_question_banks = PublisherQuestionBank.all
+    @quiz_types = [['Challenge Test' ,'challenge_test'], ['Subjective', 'subjective'], ['Try Out', 'try_out'], ['Concept Practice', 'concept_practice']]
   end
 
   def post_zip_upload_question
@@ -128,7 +151,7 @@ class QuizzesController < ApplicationController
 
       if (tags_not_present.count == 0) && (question_wise_tags_not_present.count == 0)
         Dir[extract_dir+"/"+'*.etx'].each do |etx_file|
-          process_etx(etx_file,user_id, publisher_question_bank_id,zip_name.split('.')[0], false) #/home/inayath/edutor/assessment_app/public/zip_uploads/1/Maths-F2-C9-1-MCQ-EN/Maths-F2-C9-1-MCQ-EN.etx
+          process_etx(etx_file,user_id, publisher_question_bank_id,zip_name.split('.')[0], false, params[:type]) #/home/inayath/edutor/assessment_app/public/zip_uploads/1/Maths-F2-C9-1-MCQ-EN/Maths-F2-C9-1-MCQ-EN.etx
         end
       else
         logger.info "Tags not present -------------------------------- #{tags_not_present}"
@@ -200,7 +223,7 @@ class QuizzesController < ApplicationController
     return [tag_not_present,question_wise_tags_not_present]
   end
 
-  def process_etx(etx_file, user_id, publisher_question_bank_id,quiz_name, hidden=false)
+  def process_etx(etx_file, user_id, publisher_question_bank_id,quiz_name, hidden=false, type)
     s3_path = '/question_images/' #"learnflix-question-images/"
     master_dir = (File.dirname etx_file) + "/" # "/home/inayath/edutor/assessment/public/zip_uploads/1/Maths-F2-C9-1-MCQ-EN/"
     images_dir = etx_file.split('/').last.split('.').first + '_files' #"Maths-F2-C9-1-MCQ-EN_files"
@@ -222,7 +245,7 @@ class QuizzesController < ApplicationController
     publisher_question_bank.attributes = {question_ids:(publisher_question_bank.question_ids + question_ids)}
     publisher_question_bank.save!
 
-    create_quiz(question_ids,quiz_name)
+    create_quiz(question_ids,quiz_name, type)
 
     puts ("Successfully updated #{question_ids.count} -- #{question_ids}")
   end

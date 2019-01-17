@@ -14,4 +14,7 @@ Rails.application.routes.draw do
   get '/assessment/get_quizzes', to: 'quizzes#get_quizzes'
   get '/assessment/get_quiz_for_browser', to: 'quizzes#get_quiz_for_browser'
   get '/assessment/get_quiz_for_app', to: 'quizzes#get_quiz_for_app'
+
+  get '/assessment/get_focus_area', to: 'quizzes#get_focus_area'
+  post '/assessment/update_focus_area', to: 'quizzes#update_focus_area'
 end
