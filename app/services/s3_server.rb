@@ -57,7 +57,23 @@ class S3Server
     res.success? ? true : false
   end
 
+  def self.download_quiz_zip(guid)
+    tempfile = Tempfile.new("quiz.zip")
+    res = get(S3Server.quiz_zip_download_url(guid))
+    File.open(tempfile.path,"w+b", 0644 ) do |file|
+      # get(S3Server.quiz_zip_download_url(guid), stream_body: true) do |fragment|
+      #   file.write(fragment)
+      # end
+      file.write res.body
+    end
+    return tempfile
+  end
+
   private
+
+  def self.quiz_zip_download_url(guid)
+    "/content_assets/#{guid}/original_attachment"
+  end
 
   def headers
     {token: user_id.to_s}

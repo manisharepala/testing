@@ -36,10 +36,14 @@ class QuizzesController < ApplicationController
     quiz_attempt_data['book_id'] = data['book_id']
     quiz_attempt_data['total_marks'] = quiz.total_marks
 
+    question_attempts_attributes = []
+
     data['timeline'].each do |q_data|
+      question = Question.where(:guid.in=>q_data['question_id'])[0]
       question_attempt_data = {}
-      question_attempt_data['question_attributes'] = Question.where(:guid.in=>q_data['question_id'])[0]
-      question_attempt_data['']
+      question_attempt_data['question_attributes'] = question
+      question_attempt_data['qtype'] = question.qtype
+
     end
 
   end
@@ -73,36 +77,10 @@ class QuizzesController < ApplicationController
     render json: data
   end
 
-  def get_quiz_for_browser
-    render json: (Quiz.where(:guid.in => [params[:guid]]))[0].as_json
+  def get_quiz_json
+    data = Quiz.get_json_from_s3(params[:guid])
+    render json: data
   end
-
-  def get_quiz_for_app
-    quiz = (Quiz.where(:guid.in => [params[:guid]]))[0]
-
-    quiz_zips_dir = Rails.root.to_s + "/public/quiz_zips/"
-    zip_name = quiz_zips_dir + "#{quiz.guid}.zip"
-    quiz_zip_path = quiz_zips_dir + quiz.guid + "/"
-
-    FileUtils.mkdir_p (quiz_zips_dir) if !Dir.exists?(quiz_zips_dir)
-    FileUtils.mkdir_p (quiz_zip_path) if !Dir.exists?(quiz_zip_path)
-
-    question_images_path = Rails.root.to_s + "/public/question_images/"
-
-    # FileUtils.rm_rf Dir.glob("#{dir_path}/*") if dir_path.present?
-    quiz.question_ids.each do |id|
-      FileUtils.mkdir_p (quiz_zip_path+id)
-      FileUtils.cp_r(Dir["#{question_images_path+id}/*"],quiz_zip_path+id)
-    end
-
-    File.open(quiz_zip_path+"quiz_data.json","w") do |f|
-      f.write((quiz.as_json).to_json)
-    end
-
-    Archive::Zip.archive(zip_name, quiz_zip_path)
-    send_file zip_name
-  end
-
 
   def create_quiz(question_ids, name, type)
     quiz = Quiz.create(name:name,question_ids:question_ids, type:type)
@@ -148,6 +126,9 @@ class QuizzesController < ApplicationController
         tags_not_present += tags_not_present_data[0]
         question_wise_tags_not_present += tags_not_present_data[1]
       end
+      logger.info "2222222222222222222222222"
+      logger.info tags_not_present
+      logger.info question_wise_tags_not_present
 
       if (tags_not_present.count == 0) && (question_wise_tags_not_present.count == 0)
         Dir[extract_dir+"/"+'*.etx'].each do |etx_file|
@@ -170,7 +151,7 @@ class QuizzesController < ApplicationController
   def verify_tags(test_paper)
     all_tags = []
     tag_not_present = []
-    must_present_tag_names_for_each_question = ["board", "grade", "subject", "chapter", "concept"]
+    must_present_tag_names_for_each_question = ["course", "grade", "subject", "chapter", "concept"]
     question_wise_tags_not_present = []
     test_paper.xpath("group_questions").each_with_index do |group_ques,i|
       tag_names = []
@@ -182,7 +163,7 @@ class QuizzesController < ApplicationController
         d['value'] = value
         tag_names << name
         all_tags << d
-        if !Question.get_tag_guid(name, value).present?
+        if !TagsServer.get_tag_guid(name, value).present?
           tag_not_present << d
         end
       end
@@ -206,7 +187,7 @@ class QuizzesController < ApplicationController
         d['value'] = value
         tag_names << name
         all_tags << d
-        if !Question.get_tag_guid(name, value).present?
+        if !TagsServer.get_tag_guid(name, value).present?
           tag_not_present << d
         end
       end
@@ -403,12 +384,12 @@ class QuizzesController < ApplicationController
       name = tag.attr("name").to_s
       value = tag.attr("value").to_s
       if ["course", "academic_class", "subject", "chapter", "concept_names"].include? name
-        data['tag_ids'] << Question.get_tag_guid(name, value)
+        data['tag_ids'] << TagsServer.get_tag_guid(name, value)
       else
         if name == "subjective_lines" && (['SubjectiveQuestion'].include? data['qtype'])
           data['answer_lines'] = value
         else
-          data['tag_ids'] << Question.get_tag_guid(name, value)
+          data['tag_ids'] << TagsServer.get_tag_guid(name, value)
         end
       end
     end
