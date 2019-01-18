@@ -12,10 +12,12 @@ class Quiz
   field :tag_ids, type: Array
   field :question_ids, type: Array
   field :guid, type: String
+  field :type, type: String
   field :key, type: String
   field :file_path, type: String
   field :final, type: Boolean, default: false
   field :uploaded, type: Boolean, default: false
+  field :focus_area, type: BSON::Binary
 
   embeds_many :quiz_targeted_groups
   embeds_many :quiz_sections
@@ -59,15 +61,33 @@ class Quiz
       FileUtils.cp_r(Dir["#{question_images_path+id}/*"],quiz_zip_path+id)
     end
 
-    File.open(quiz_zip_path+"quiz_data.json","w") do |f|
+    File.open(quiz_zip_path+"assessment.json","w") do |f|
       f.write((quiz.as_json).to_json)
     end
 
     Archive::Zip.archive(zip_name, quiz_zip_path)
   end
 
+  def s3_server
+    @s3_server ||= S3Server.new(guid: guid, type: 'assessment')
+  end
+
   def content_server
-    @content_server ||= ContentServer.new(guid: guid, type: 'Quiz')
+    @content_server ||= ContentServer.new(guid: guid, type: 'assessment')
+  end
+
+  def self.get_json_from_s3(guid)
+    require 'zip'
+    tempfile = S3Server.download_quiz_zip(guid)
+    content = {}
+    Zip::File.open(tempfile) do |zip_file|
+      zip_file.each do |entry|
+        if entry.name == "assessment.json"
+          content = entry.get_input_stream.read
+        end
+      end
+    end
+    return content
   end
 
   def upload_zip
@@ -96,7 +116,7 @@ class Quiz
   end
 
   def as_json(with_key: false)
-    data = {name:name, description:description, instructions:instructions, total_marks:total_marks, total_time:total_time} #,quiz_detail:quiz_detail.as_json
+    data = {name:name, description:description, instructions:instructions, total_marks:total_marks, total_time:total_time, type:type} #,quiz_detail:quiz_detail.as_json
 
     if quiz_sections.count > 0
       quiz_sections_data = []
