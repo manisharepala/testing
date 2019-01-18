@@ -14,7 +14,7 @@ class QuestionsController < ApplicationController
     logger.info "11111111111222222222222222222111111"
     logger.info question_params
 
-    if params[:qtype] == 'SmcqQuestion' || params[:qtype] == 'MmcqQuestion'
+    if params[:qtype] == 'SmcqQuestion' || params[:qtype] == 'MmcqQuestion' || params[:qtype] == 'TrueFalseQuestion'
       qa_params = question_params['question_answers_attributes'].to_h
       @question.question_answers_attributes = qa_params.values
       @question.save!
@@ -40,6 +40,8 @@ class QuestionsController < ApplicationController
   def question_params
     if params[:qtype] == 'SmcqQuestion'
       params.require(:smcq_question).permit(:default_mark,:question_text,:general_feedback, question_answers_attributes: [:answer, :id, :fraction])
+    elsif params[:qtype] == 'TrueFalseQuestion'
+      params.require(:true_false_question).permit(:default_mark,:question_text,:general_feedback, question_answers_attributes: [:answer, :id, :fraction])
     elsif params[:qtype] == 'MmcqQuestion'
       params.require(:mmcq_question).permit(:default_mark,:question_text,:general_feedback, question_answers_attributes: [:answer, :id, :fraction])
     elsif params[:qtype] == 'FibQuestion'

@@ -29,6 +29,9 @@
         %td Explanation:
         %td= @question.general_feedback.html_safe
       %tr
+        %td Marks:
+        %td= @question.default_mark
+      %tr
         %td= link_to "Edit", assessment_question_edit_path(id:@question.id), class:'btn btn-default'
         %td
       %br

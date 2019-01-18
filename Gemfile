@@ -83,3 +83,5 @@ gem 'mongoid-paperclip', require: 'mongoid_paperclip'
 gem 'simple_form', '~> 4.1'
 
 gem 'httparty'
+
+gem 'rack-cors', require: 'rack/cors'

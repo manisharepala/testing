@@ -26,6 +26,20 @@ module AssessmentApp
     # Do not swallow errors in after_commit/after_rollback callbacks.
     # config.active_record.raise_in_transactional_callbacks = true
 
+    # cors enabling
+    config.middleware.insert_before 0, Rack::Cors do
+      allow do
+        origins 'localhost:4000', '192.168.1.92:4000', 'ec2-13-250-46-76.ap-southeast-1.compute.amazonaws.com:4000', 'ec2-35-154-201-127.ap-south-1.compute.amazonaws.com:4000', '192.168.40.113:4000', '10.10.0.131:4000'
+        resource '*',
+                 headers: :any,
+                 expose: ['Authorization', 'ETag'],
+                 methods: [:get, :post, :put, :patch, :delete, :options, :head],
+                 credentials: true,
+                 max_age: 86400
+      end
+    end
+
+
     config.assets.prefix = "/assessment/assets"
 
     config.assets.precompile += Ckeditor.assets
