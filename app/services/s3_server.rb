@@ -61,9 +61,6 @@ class S3Server
     tempfile = Tempfile.new("quiz.zip")
     res = get(S3Server.quiz_zip_download_url(guid))
     File.open(tempfile.path,"w+b", 0644 ) do |file|
-      # get(S3Server.quiz_zip_download_url(guid), stream_body: true) do |fragment|
-      #   file.write(fragment)
-      # end
       file.write res.body
     end
     return tempfile

@@ -90,12 +90,12 @@ class Question
   end
 
   def add_tag(name,value)
-    self.tag_ids << Question.get_tag_guid(name,value)
+    self.tag_ids << TagsServer.get_tag_guid(name,value)
     self.save!
   end
 
   def remove_tag(name, value)
-    guid = Question.get_tag_guid(name,value)
+    guid = TagsServer.get_tag_guid(name,value)
     if guid.present?
       self.update_attributes(tag_ids: (self.tag_ids - [guid]))
       return true
@@ -105,31 +105,6 @@ class Question
 
   def id
     self._id
-  end
-
-
-  def self.get_data_from_tags(method_name, body_data)
-    uri = URI("http://13.233.76.145/#{method_name}")
-    req = Net::HTTP::Get.new(uri.path, 'Content-Type' => 'application/json')
-    req.body = body_data
-    res = Net::HTTP.start(uri.hostname, uri.port) do |http|
-      http.request(req)
-    end
-    return res.body
-  end
-
-  def self.get_tag_guid(name,value)
-    require 'net/http'
-    method_name = '/tags/find_tag'
-    body_data = {name: name, value:value}.to_json
-
-    res = Question.get_data_from_tags(method_name,body_data)
-    if res.present?
-      data = JSON.parse(res)
-      return data['guid']
-    else
-      return nil
-    end
   end
 
   protected
