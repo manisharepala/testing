@@ -11,6 +11,11 @@ class QuizzesController < ApplicationController
 
   def update_focus_area
     quiz = (Quiz.where(:guid.in => [params[:guid]]))[0]
+    if !quiz.present?
+      quiz = Quiz.create(name:'quiz')
+      quiz.guid = params[:guid]
+      quiz.save!
+    end
     quiz.update_attributes(focus_area: params[:focus_area])
     response = {}
     response['guid'] = quiz.guid
