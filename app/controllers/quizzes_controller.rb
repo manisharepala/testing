@@ -76,7 +76,7 @@ class QuizzesController < ApplicationController
       d = {}
       d['name'] = quiz.name
       d['guid'] = quiz.guid
-      d['total_questions'] = quiz.question_ids.count
+      d['total_questions'] = quiz.question_ids.count rescue 0
       data << d
     end
     render json: data

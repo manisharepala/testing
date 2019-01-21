@@ -16,4 +16,4 @@
           %td= i+1
           %td= quiz.guid
           %td= link_to quiz.name,assessment_quiz_questions_path(id:quiz.id)
-          %td= quiz.question_ids.count
+          %td= quiz.question_ids.count rescue 0
