@@ -38,7 +38,7 @@ class S3Server
   end
 
   def get_file_details key_name
-    res = self.class.get(details_url(key_name))
+    res = self.class.get(details_url(key_name),headers:headers)
     res.success? ? JSON.parse(res.body) : false
   end
 
@@ -59,7 +59,7 @@ class S3Server
 
   def self.download_quiz_zip(guid)
     tempfile = Tempfile.new("quiz.zip")
-    res = get(S3Server.quiz_zip_download_url(guid))
+    res = get(S3Server.quiz_zip_download_url(guid),headers:headers)
     File.open(tempfile.path,"w+b", 0644 ) do |file|
       file.write res.body
     end
@@ -72,8 +72,12 @@ class S3Server
     "/content_assets/#{guid}/original_attachment"
   end
 
+  def self.headers
+    {token: "eyJhbGciOiJIUzI1NiJ9.eyJ1c2VybmFtZSI6ImtyaXNobmE1IiwiZW1haWwiOiJrcmlzaG5hNS5jaGFpdGFueWFAaWduaXRvcmxlYXJuaW5nLmNvbSIsInJvbGxfbm8iOiJrcmlzaG5hLTUiLCJ1c2VyX2lkIjo2LCJzdWIiOiI2Iiwic2NwIjoidXNlciIsImF1ZCI6bnVsbCwiaWF0IjoxNTQ3ODExNTg2LCJleHAiOjE1NDc4OTc5ODYsImp0aSI6Ijc4Y2IxM2FiLTRlMGMtNGQwZC1iZmFmLTA2OGQ3NTQxMDY5MSJ9.mBZdwB0x_DFtgrV8A2AyxJYiCB6jEdABIyjNVRlPxzE"}
+  end
+
   def headers
-    {token: user_id.to_s}
+    {token: "eyJhbGciOiJIUzI1NiJ9.eyJ1c2VybmFtZSI6ImtyaXNobmE1IiwiZW1haWwiOiJrcmlzaG5hNS5jaGFpdGFueWFAaWduaXRvcmxlYXJuaW5nLmNvbSIsInJvbGxfbm8iOiJrcmlzaG5hLTUiLCJ1c2VyX2lkIjo2LCJzdWIiOiI2Iiwic2NwIjoidXNlciIsImF1ZCI6bnVsbCwiaWF0IjoxNTQ3ODExNTg2LCJleHAiOjE1NDc4OTc5ODYsImp0aSI6Ijc4Y2IxM2FiLTRlMGMtNGQwZC1iZmFmLTA2OGQ3NTQxMDY5MSJ9.mBZdwB0x_DFtgrV8A2AyxJYiCB6jEdABIyjNVRlPxzE"}
   end
 
   def delete_asset_url
