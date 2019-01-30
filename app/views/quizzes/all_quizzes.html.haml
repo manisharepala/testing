@@ -25,6 +25,6 @@
             %td= quiz.created_at.strftime("%B %d, %Y")
             %td= link_to "Edit",assessment_quiz_edit_path(id:quiz.id)
             -if quiz.final
-              %td= link_to "Download", "http://13.233.76.145/content_assets/#{quiz.guid}/original_attachment?token=eyJhbGciOiJIUzI1NiJ9.eyJ1c2VybmFtZSI6InN0cmluZyIsImVtYWlsIjoidXNlckBleGFtcGxlLmNvbSIsInJvbGxfbm8iOiJzdHJpbmciLCJ1c2VyX2lkIjoxLCJzdWIiOiIxIiwic2NwIjoidXNlciIsImF1ZCI6bnVsbCwiaWF0IjoxNTQ4MDY0Njg1LCJleHAiOjE1NDgxNTEwODUsImp0aSI6IjlmYWEzYTM1LTBmMjYtNDM4YS05ZWUyLTBlZDA0NTI2ZjVlNCJ9.x9C769SkwTGPDLEdrkXx2KlY4UoA7WA47RQXTaKscnk"
+              %td= link_to "Download", "http://13.233.76.145/content_assets/#{quiz.guid}/original_attachment?token=eyJhbGciOiJIUzI1NiJ9.eyJ1c2VybmFtZSI6InN0cmluZyIsImVtYWlsIjoidXNlckBleGFtcGxlLmNvbSIsInJvbGxfbm8iOiJzdHJpbmciLCJ1c2VyX2lkIjoxLCJzdWIiOiIxIiwic2NwIjoidXNlciIsImF1ZCI6bnVsbCwiaWF0IjoxNTQ4MDY0Njg1LCJleHAiOjE1NDgxNTEwODUsImp0aSI6IjlmYWEzYTM1LTBmMjYtNDM4YS05ZWUyLTBlZDA0NTI2ZjVlNCJ9.x9C769SkwTGPDLEdrkXx2KlY4UoA7WA47RQXTaKscnk", target:'_blank'
             -else
               %td= link_to "Download", "#", style:'pointer-events:none;'
