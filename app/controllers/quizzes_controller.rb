@@ -2,6 +2,19 @@ class QuizzesController < ApplicationController
 
   skip_before_action :authenticate_user!     #, only: [:show, :index]
 
+  def quiz_edit
+    @quiz = Quiz.find(params[:id])
+  end
+
+  def quiz_update
+    @quiz = Quiz.find(params[:id])
+    if @quiz.update_attributes(name: quiz_params[:name], final: quiz_params[:final])
+      redirect_to assessment_all_quizzes_path
+    else
+      render 'edit'
+    end
+  end
+
   def get_focus_area
     quiz = (Quiz.where(:guid.in => [params[:guid]]))[0]
     if quiz.present?
@@ -64,7 +77,7 @@ class QuizzesController < ApplicationController
   end
 
   def all_quizzes
-    @quiz = Quiz.all
+    @quiz = Quiz.all.order("created_at DESC")
   end
 
   def quiz_questions
@@ -458,5 +471,10 @@ class QuizzesController < ApplicationController
     elsif qtype == "saq" || qtype == "laq" || qtype == "vsaq"
       "SubjectiveQuestion"
     end
+  end
+
+  private
+  def quiz_params
+    params.require(:quiz).permit(:name,:final)
   end
 end

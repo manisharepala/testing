@@ -10,19 +10,28 @@
         %th Final
         %th Uploaded on
     %tbody
-      - @quiz.each_with_index do |quiz,i| 
-        %tr
-          %td= i+1
-          %td= quiz.guid
-          %td= link_to quiz.name,assessment_quiz_questions_path(id:quiz.id), target:'_blank'
-          %td= quiz.question_ids.count rescue 0
-          %td
-            - if quiz.final?
-              %span.fa.fa-check{style:'color:green; font-size:1.5em;'}
-              |
-              %span True
-            - else
-              %span.fa.fa-times{style:'color:red; font-size:1.5em;'}
-              |
-              %span False
-          %td= quiz.created_at.strftime("%B %d, %Y")
+      - @quiz.each_with_index do |quiz,i|
+        -if quiz.question_ids.count>0 
+          %tr
+            %td= i+1
+            %td= quiz.guid
+            %td= link_to quiz.name,assessment_quiz_questions_path(id:quiz.id), target:'_blank'
+            %td= quiz.question_ids.count rescue 0
+            %td
+              - if quiz.final?
+                %i.fa.fa-check{style:'color:green; font-size:1.5em;'} True
+              - else
+                %i.fa.fa-times{style:'color:red; font-size:1.5em;'} False
+            %td= quiz.created_at.strftime("%B %d, %Y")
+            %td= link_to "Edit",assessment_quiz_edit_path(id:quiz.id)
+            -if quiz.final
+              %td= link_to "Download", "http://13.233.76.145/content_assets/#{quiz.guid}/original_attachment"
+            -else
+              %td= link_to "Download", disabled: true 
+                
+:javascript
+  $(document).ready(function() {
+    $('a[disabled=disabled]').click(function(event){
+        event.preventDefault(); // Prevent link from following its href
+    });
+  });

@@ -18,4 +18,7 @@ Rails.application.routes.draw do
 
   get '/assessment/get_focus_area', to: 'quizzes#get_focus_area'
   post '/assessment/update_focus_area', to: 'quizzes#update_focus_area'
+
+  get '/assessment/quiz/edit', to: 'quizzes#quiz_edit'
+  post '/assessment/quiz/update', to: 'quizzes#quiz_update'
 end

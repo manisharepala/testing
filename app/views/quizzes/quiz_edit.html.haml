@@ -1,0 +1,13 @@
+.container{style:'margin-top:4%;'}
+  %h3 Edit Quiz
+  = simple_form_for @quiz, :url => assessment_quiz_update_path(id:@quiz.id), :method => :post do |f|
+    %table.table-striped.table-bordered{style:"width: 80%;"}
+      %tbody
+        %tr
+          %th.text-center{style:"width:40%;"}= f.label :Name
+          %th.text-center= f.label :Final
+        %tr
+          %td.text-center=f.text_area :name
+          %td.text-center=f.check_box :final, :checked => (@quiz.final == true) ? true : false
+    %br
+    = f.submit class:'btn btn-default'
