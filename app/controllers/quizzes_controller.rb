@@ -1,5 +1,7 @@
 class QuizzesController < ApplicationController
 
+  skip_before_action :authenticate_user!     #, only: [:show, :index]
+
   def get_focus_area
     quiz = (Quiz.where(:guid.in => [params[:guid]]))[0]
     if quiz.present?
@@ -137,7 +139,7 @@ class QuizzesController < ApplicationController
 
       if (tags_not_present.count == 0) && (question_wise_tags_not_present.count == 0)
         Dir[extract_dir+"/"+'*.etx'].each do |etx_file|
-          process_etx(etx_file,user_id, publisher_question_bank_id,zip_name.split('.')[0], false, params[:type]) #/home/inayath/edutor/assessment_app/public/zip_uploads/1/Maths-F2-C9-1-MCQ-EN/Maths-F2-C9-1-MCQ-EN.etx
+          process_etx(etx_file,user_id, publisher_question_bank_id,params[:name], false, params[:type]) #/home/inayath/edutor/assessment_app/public/zip_uploads/1/Maths-F2-C9-1-MCQ-EN/Maths-F2-C9-1-MCQ-EN.etx
         end
       else
         logger.info "Tags not present -------------------------------- #{tags_not_present}"
@@ -145,7 +147,7 @@ class QuizzesController < ApplicationController
       end
     end
 
-    # FileUtils.rm_rf(extract_dir)
+    FileUtils.rm_rf(extract_dir)
 
     respond_to do |format|
       format.html { redirect_to assessment_zip_upload_question_path, notice: 'Quiz was successfully created.'}
@@ -249,7 +251,7 @@ class QuizzesController < ApplicationController
   def update_image_path(ques_id,s3_path)
     question = Question.find(ques_id)
     question.update_attributes(question_text:update_img_src(question.question_text,s3_path,ques_id), general_feedback:update_img_src(question.general_feedback,s3_path,ques_id))
-    if question.qtype == MmcqQuestion || question.qtype == SmcqQuestion
+    if question.qtype == 'MmcqQuestion' || question.qtype == 'SmcqQuestion'
       question.question_answers.each do |qa|
         qa.update_attributes(answer:update_img_src(qa.answer,s3_path,ques_id))
       end
@@ -285,7 +287,7 @@ class QuizzesController < ApplicationController
       ques_images << img.split("/").last
     end
 
-    if question.qtype == MmcqQuestion || question.qtype == SmcqQuestion
+    if question.qtype == 'MmcqQuestion' || question.qtype == 'SmcqQuestion'
       question.question_answers.each do |qa|
         Nokogiri::HTML(qa.answer).css('img').map{ |i| i['src'] }.each do |img|
           ques_images << img.split("/").last
@@ -315,7 +317,7 @@ class QuizzesController < ApplicationController
         image.write(dir_path+img_name)
 
         # creating Image reference for S3
-        image_ids << (Image.create(name: img_name, key: "/question_images/#{ques_id}/#{img_name}", file_path:(dir_path+img_name))).id
+        image_ids << (Image.create(name: img_name, key: "/question_images/#{ques_id}/#{img_name}", file_path:(dir_path+img_name))).guid
       end
 
     end

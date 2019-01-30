@@ -13,7 +13,7 @@ class ContentServer
   def upload_file(name,file_path,tags)
     res = self.class.post(
         CREATION_URL,
-        # headers: {token: user_id.to_s},
+        headers: headers,
         body: {
             content_asset: {
                 name: name,
@@ -31,6 +31,10 @@ class ContentServer
     )
     # puts res
     res.success? ? true : false
+  end
+
+  def headers
+    {token: "eyJhbGciOiJIUzI1NiJ9.eyJ1c2VybmFtZSI6ImtyaXNobmExMiIsImVtYWlsIjpudWxsLCJyb2xsX25vIjpudWxsLCJ1c2VyX2lkIjoxMiwic3ViIjoiMTIiLCJzY3AiOiJ1c2VyIiwiYXVkIjpudWxsLCJpYXQiOjE1NDgwNjY3NDUsImV4cCI6MTU0ODE1MzE0NSwianRpIjoiZGFiNGI0MjQtMzQ0Ny00N2I1LWEwN2MtZjVhY2UxNzkyNjJkIn0.91Pl73VJqFR0lUPG30NqstOE0E1DVurCZK-JssNURtM"}
   end
 
   # @content_server ||= ContentServer.new(guid: "9788b5d5-a2a9-4439-8abf-efd09838cdc3", type: 'assessment')

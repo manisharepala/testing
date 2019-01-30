@@ -1,17 +1,17 @@
-#content_header
-  %h1#main_heading Uploading Zip
+.container{style:'margin-top:4%;'}
+  %h3 Upload Zip to create Assessments from ETX's
   %br
-  %h3 This tool should be used only to bulk upload ETX based questions.
-.container
   %div
     =form_tag(assessment_post_zip_upload_question_path,{:multipart=>true,:method=>:post}) do
-      %h2 Upload Etx Zip
-      %br
       =label_tag :file,"Choose Publisher"
       = select_tag "publisher_question_bank_id", options_for_select(@publisher_question_banks.map {|pqb| [pqb.name, pqb.id] }), class:'btn btn-default'
       %br
+      %br
       =label_tag :file,"Assessment Type"
       = select_tag "type", options_for_select(@quiz_types), class:'btn btn-default'
+      %br
+      %br
+      %input{:name => "name", :type => "text", :placeholder => "Quiz Name", style:'width:25%;'}
       %br
       %br
       =file_field_tag :zip_file, accept: 'zip', class:'btn btn-default'

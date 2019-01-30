@@ -44,7 +44,7 @@ class S3Server
 
   def get_download_url key_name
     res = self.class.get(download_url(key_name), headers: headers)
-    res.success? ? JSON.parse(res.body)['url'] : false
+    res.success? ? (JSON.parse(res.body))['url'] : false
   end
 
   def delete_file key_name
@@ -73,11 +73,11 @@ class S3Server
   end
 
   def self.headers
-    {token: "eyJhbGciOiJIUzI1NiJ9.eyJ1c2VybmFtZSI6ImtyaXNobmE1IiwiZW1haWwiOiJrcmlzaG5hNS5jaGFpdGFueWFAaWduaXRvcmxlYXJuaW5nLmNvbSIsInJvbGxfbm8iOiJrcmlzaG5hLTUiLCJ1c2VyX2lkIjo2LCJzdWIiOiI2Iiwic2NwIjoidXNlciIsImF1ZCI6bnVsbCwiaWF0IjoxNTQ3ODExNTg2LCJleHAiOjE1NDc4OTc5ODYsImp0aSI6Ijc4Y2IxM2FiLTRlMGMtNGQwZC1iZmFmLTA2OGQ3NTQxMDY5MSJ9.mBZdwB0x_DFtgrV8A2AyxJYiCB6jEdABIyjNVRlPxzE"}
+    {token: "eyJhbGciOiJIUzI1NiJ9.eyJ1c2VybmFtZSI6InN0cmluZyIsImVtYWlsIjoidXNlckBleGFtcGxlLmNvbSIsInJvbGxfbm8iOiJzdHJpbmciLCJ1c2VyX2lkIjoxLCJzdWIiOiIxIiwic2NwIjoidXNlciIsImF1ZCI6bnVsbCwiaWF0IjoxNTQ4MDY0Njg1LCJleHAiOjE1NDgxNTEwODUsImp0aSI6IjlmYWEzYTM1LTBmMjYtNDM4YS05ZWUyLTBlZDA0NTI2ZjVlNCJ9.x9C769SkwTGPDLEdrkXx2KlY4UoA7WA47RQXTaKscnk"}
   end
 
   def headers
-    {token: "eyJhbGciOiJIUzI1NiJ9.eyJ1c2VybmFtZSI6ImtyaXNobmE1IiwiZW1haWwiOiJrcmlzaG5hNS5jaGFpdGFueWFAaWduaXRvcmxlYXJuaW5nLmNvbSIsInJvbGxfbm8iOiJrcmlzaG5hLTUiLCJ1c2VyX2lkIjo2LCJzdWIiOiI2Iiwic2NwIjoidXNlciIsImF1ZCI6bnVsbCwiaWF0IjoxNTQ3ODExNTg2LCJleHAiOjE1NDc4OTc5ODYsImp0aSI6Ijc4Y2IxM2FiLTRlMGMtNGQwZC1iZmFmLTA2OGQ3NTQxMDY5MSJ9.mBZdwB0x_DFtgrV8A2AyxJYiCB6jEdABIyjNVRlPxzE"}
+    {token: "eyJhbGciOiJIUzI1NiJ9.eyJ1c2VybmFtZSI6InN0cmluZyIsImVtYWlsIjoidXNlckBleGFtcGxlLmNvbSIsInJvbGxfbm8iOiJzdHJpbmciLCJ1c2VyX2lkIjoxLCJzdWIiOiIxIiwic2NwIjoidXNlciIsImF1ZCI6bnVsbCwiaWF0IjoxNTQ4MDY0Njg1LCJleHAiOjE1NDgxNTEwODUsImp0aSI6IjlmYWEzYTM1LTBmMjYtNDM4YS05ZWUyLTBlZDA0NTI2ZjVlNCJ9.x9C769SkwTGPDLEdrkXx2KlY4UoA7WA47RQXTaKscnk"}
   end
 
   def delete_asset_url
@@ -95,4 +95,9 @@ class S3Server
   def details_url key_name
     "/s3/file_details/#{guid}/#{type}?key_name=#{key_name}"
   end
+
+  # publisher
+  #eyJhbGciOiJIUzI1NiJ9.eyJ1c2VybmFtZSI6ImtyaXNobmExMiIsImVtYWlsIjpudWxsLCJyb2xsX25vIjpudWxsLCJ1c2VyX2lkIjoxMiwic3ViIjoiMTIiLCJzY3AiOiJ1c2VyIiwiYXVkIjpudWxsLCJpYXQiOjE1NDgwNjY3NDUsImV4cCI6MTU0ODE1MzE0NSwianRpIjoiZGFiNGI0MjQtMzQ0Ny00N2I1LWEwN2MtZjVhY2UxNzkyNjJkIn0.91Pl73VJqFR0lUPG30NqstOE0E1DVurCZK-JssNURtM
+  #admin
+  #eyJhbGciOiJIUzI1NiJ9.eyJ1c2VybmFtZSI6InN0cmluZyIsImVtYWlsIjoidXNlckBleGFtcGxlLmNvbSIsInJvbGxfbm8iOiJzdHJpbmciLCJ1c2VyX2lkIjoxLCJzdWIiOiIxIiwic2NwIjoidXNlciIsImF1ZCI6bnVsbCwiaWF0IjoxNTQ4MDY0Njg1LCJleHAiOjE1NDgxNTEwODUsImp0aSI6IjlmYWEzYTM1LTBmMjYtNDM4YS05ZWUyLTBlZDA0NTI2ZjVlNCJ9.x9C769SkwTGPDLEdrkXx2KlY4UoA7WA47RQXTaKscnk
 end

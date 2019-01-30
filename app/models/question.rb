@@ -107,6 +107,20 @@ class Question
     self._id
   end
 
+  def self.get_updated_text(text)
+    if text.present?
+      replacement_paths = []
+      Nokogiri::HTML(text).css('img').map{ |i| i['src'] }.each do |img|
+        replacement_paths << img
+      end
+      replacement_paths.uniq.each do |rp|
+        s3_image_download_url = (Image.where(:key.in=>[rp])[0]).get_download_url
+        text = text.gsub(rp, s3_image_download_url)
+      end
+    end
+    return text
+  end
+
   protected
 
   def abstract_class

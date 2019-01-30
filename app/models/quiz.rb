@@ -55,7 +55,6 @@ class Quiz
 
     question_images_path = Rails.root.to_s + "/public/question_images/"
 
-    # FileUtils.rm_rf Dir.glob("#{dir_path}/*") if dir_path.present?
     quiz.question_ids.each do |id|
       FileUtils.mkdir_p (quiz_zip_path+id)
       FileUtils.cp_r(Dir["#{question_images_path+id}/*"],quiz_zip_path+id)
@@ -66,6 +65,7 @@ class Quiz
     end
 
     Archive::Zip.archive(zip_name, quiz_zip_path)
+    FileUtils.rm_rf Dir.glob("#{zip_name.gsub('.zip','')}") if (zip_name.gsub('.zip','')).present?
   end
 
   def s3_server
@@ -94,17 +94,17 @@ class Quiz
     if final
       create_zip
       tags = {}
-      tag_ids.each do |guid|
-        data = TagsServer.get_tag_data(guid)
-        d = {}
-        d[data['name']] = data['guid']
-        tags << d
-      end
-      # tags = {"grade"=>"177acf20-32ce-421b-8f32-c3b920c58e54", "subject"=>"fef249d0-4deb-454b-ba3a-70f6317f95d2", "chapter"=>"d84b02e8-6993-4e3a-9746-19de19a4b628", "concept"=>"99756e2f-b32b-417d-9fb4-190003131ce", "course"=>"99756e2f-b32b-417d-9fb4-190003131ce"}
+     #  tag_ids.each do |guid|
+     #    data = TagsServer.get_tag_data(guid)
+     #    d = {}
+     #    d[data['name']] = data['guid']
+     #    tags << d
+     #  end
+     # tags = {"grade"=>"177acf20-32ce-421b-8f32-c3b920c58e54", "subject"=>"fef249d0-4deb-454b-ba3a-70f6317f95d2", "chapter"=>"d84b02e8-6993-4e3a-9746-19de19a4b628", "concept"=>"99756e2f-b32b-417d-9fb4-190003131ce", "course"=>"99756e2f-b32b-417d-9fb4-190003131ce"}
       success = content_server.upload_file(name,file_path, tags)
       if success
         self.update_attributes(uploaded:success)
-        # File.delete(file_path) if File.exist?(file_path)
+        File.delete(file_path) if File.exist?(file_path)
       end
     end
   end

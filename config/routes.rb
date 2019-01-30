@@ -1,4 +1,6 @@
 Rails.application.routes.draw do
+  root 'quizzes#all_quizzes'
+
   mount Ckeditor::Engine => '/ckeditor'
   post '/assessment/quiz_attempt_data', to: 'application#quiz_attempt_data'
 

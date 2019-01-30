@@ -1,4 +1,5 @@
-.container{style:'margin-top:2%;'}
+.container{style:'margin-top:4%;'}
+  %h3 Edit Question
   = simple_form_for @question, :url => assessment_question_update_path(id:@question.id, qtype:@question.qtype), :method => :post do |f|
     -#- if @question.errors.any?
     -#  #errors
@@ -36,6 +37,8 @@
     %br
 
     = f.submit class:'btn btn-default'
+    %br
+    %br
 :css
   textarea {
       width: 100%;

@@ -23,8 +23,12 @@ class Image
     success = s3_server.upload_file(key_name: key, file_path: file_path)
     if success
       self.update_attributes(uploaded:success)
-      # File.delete(file_path) if File.exist?(file_path)
+      File.delete(file_path) if File.exist?(file_path)
     end
+  end
+
+  def get_download_url
+    s3_server.get_download_url(key)
   end
 
   def id

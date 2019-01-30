@@ -1,21 +1,18 @@
-#content_header.text-center
-  %div.page-header
-    %h1#main_heading Questions
-    %br
-.container
+.container{style:'margin-top:4%;'}
+  %h3 Questions
   - @questions.each_with_index do |q,i|
     %table.table-striped.table-bordered{style:"width: 100%;"}
       %tbody
         %tr
           %td=i+1
-          %td=(q.questiontext).html_safe
+          %td=(Question.get_updated_text(q.questiontext)).html_safe
         -if (q.qtype=='SmcqQuestion')||(q.qtype=='MmcqQuestion')||(q.qtype=='TrueFalseQuestion')
           - q.question_answers.each_with_index do |qa,i|
             %tr
               %td{style:"width:10%;"}
                 %input{:name => "#{q.id}_#{qa.id}", :type => "radio", value:"1", checked: (qa.fraction==true) ? true : false, style:'cursor: not-allowed;pointer-events: none;'}
               %td
-                %span= qa.answer.html_safe
+                %span= (Question.get_updated_text(qa.answer)).html_safe
 
         -elsif q.qtype=="FibQuestion"
           %tr
@@ -32,7 +29,7 @@
         -#  %td= q.actual_answer.html_safe
         %tr
           %td Explanation:
-          %td= q.general_feedback.html_safe
+          %td= (Question.get_updated_text(q.general_feedback)).html_safe
         %tr
           %td= link_to "Edit", assessment_question_edit_path(id:q.id), class:'btn btn-default', target:'_blank'
           %td
