@@ -77,7 +77,7 @@ class Question
         question_text: self.question_text,
         marks: self.default_mark,
         penalty: self.penalty,
-        type: self.qtype
+        question_type: self.qtype
     }.merge(tags: tag_ids)
     # byebug
     if with_key

@@ -11,7 +11,7 @@
         %th Uploaded on
     %tbody
       - @quiz.each_with_index do |quiz,i|
-        -if quiz.question_ids.count>0 
+        -if quiz.question_ids.present?
           %tr
             %td= i+1
             %td= quiz.guid
@@ -27,11 +27,4 @@
             -if quiz.final
               %td= link_to "Download", "http://13.233.76.145/content_assets/#{quiz.guid}/original_attachment"
             -else
-              %td= link_to "Download", disabled: true 
-                
-:javascript
-  $(document).ready(function() {
-    $('a[disabled=disabled]').click(function(event){
-        event.preventDefault(); // Prevent link from following its href
-    });
-  });
+              %td= link_to "Download", "#", style:'pointer-events:none;'

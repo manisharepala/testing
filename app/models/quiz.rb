@@ -61,7 +61,7 @@ class Quiz
     end
 
     File.open(quiz_zip_path+"assessment.json","w") do |f|
-      f.write((quiz.as_json).to_json)
+      f.write((quiz.as_json(with_key:true)).to_json)
     end
 
     Archive::Zip.archive(zip_name, quiz_zip_path)
@@ -116,7 +116,11 @@ class Quiz
   end
 
   def as_json(with_key: false)
-    data = {name:name, description:description, instructions:instructions, total_marks:total_marks, total_time:total_time, type:type} #,quiz_detail:quiz_detail.as_json
+    des = '' if !description.present?
+    ins = '' if !instructions.present?
+    t_marks = '' if !total_marks.present?
+    t_time = '' if !total_time.present?
+    data = {name:name, description:des, instructions:ins, total_marks:t_marks, total_time:t_time, type:type, player:'', time_open:'', time_close:''} #,quiz_detail:quiz_detail.as_json
 
     if quiz_sections.count > 0
       quiz_sections_data = []
