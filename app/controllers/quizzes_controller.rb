@@ -11,7 +11,7 @@ class QuizzesController < ApplicationController
     un_attempted_count = 0
     total_count = 0.0
     assessment_ids.each do |guid|
-      qad = QuizAttemptData.where("data.guid"=>{:$in=>[guid]})[0]
+      qad = QuizAttemptData.where("data.guid"=>{:$in=>[guid]},user_id:params[:user_id].to_s)[0]
       if qad.present?
         correct_count += qad.data['correct'].count
         in_correct_count += qad.data['incorrect'].count
@@ -23,10 +23,10 @@ class QuizzesController < ApplicationController
 
     data = {}
     if total_count > 0
-      data['correct_percentage'] = "#{(correct_count/total_count).round(3)*100}%"
-      data['in_correct_percentage'] = "#{(in_correct_count/total_count).round(3)*100}%"
-      data['skipped_percentage'] = "#{(skipped_count/total_count).round(3)*100}%"
-      data['un_attempted_percentage'] = "#{(un_attempted_count/total_count).round(3)*100}%"
+      data['correct_questions'] = "#{(correct_count/total_count).round(3)*100}"
+      data['incorrect_questions'] = "#{(in_correct_count/total_count).round(3)*100}"
+      data['skipped_questions'] = "#{(skipped_count/total_count).round(3)*100}"
+      data['unattempted_questions'] = "#{(un_attempted_count/total_count).round(3)*100}"
     end
 
     render json: data
