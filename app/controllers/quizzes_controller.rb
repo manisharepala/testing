@@ -4,14 +4,14 @@ class QuizzesController < ApplicationController
 
   def get_quizzes_analytics_data
     assessment_ids = params[:assessment_ids]
-    logger.info assessment_ids
+    # Usage.where(:user_id=>48,"data.player"=>{:$in=>["TRYOUT", "OBJECTIVE ASSESSMENT", "SUBJECTIVE ASSESSMENT"]}).count
     correct_count = 0
     in_correct_count = 0
     skipped_count = 0
     un_attempted_count = 0
     total_count = 0.0
     assessment_ids.each do |guid|
-      qad = QuizAttemptData.where(:guid.in=>[guid])[0]
+      qad = QuizAttemptData.where("data.guid"=>{:$in=>[guid]})[0]
       if qad.present?
         correct_count += qad.data['correct'].count
         in_correct_count += qad.data['incorrect'].count
