@@ -21,4 +21,6 @@ Rails.application.routes.draw do
 
   get '/assessment/quiz/edit', to: 'quizzes#quiz_edit'
   post '/assessment/quiz/update', to: 'quizzes#quiz_update'
+
+  post '/assessment/get_quizzes_analytics_data', to: 'quizzes#get_quizzes_analytics_data'
 end

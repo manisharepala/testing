@@ -2,6 +2,36 @@ class QuizzesController < ApplicationController
 
   skip_before_action :authenticate_user!     #, only: [:show, :index]
 
+  def get_quizzes_analytics_data
+    assessment_ids = params[:assessment_ids]
+    logger.info assessment_ids
+    correct_count = 0
+    in_correct_count = 0
+    skipped_count = 0
+    un_attempted_count = 0
+    total_count = 0.0
+    assessment_ids.each do |guid|
+      qad = QuizAttemptData.where(:guid.in=>[guid])[0]
+      if qad.present?
+        correct_count += qad.data['correct'].count
+        in_correct_count += qad.data['incorrect'].count
+        skipped_count += qad.data['skipped_questions'].count
+        un_attempted_count += qad.data['unattempted'].count
+        total_count += qad.data['total_questions'].count
+      end
+    end
+
+    data = {}
+    if total_count > 0
+      data['correct_percentage'] = "#{(correct_count/total_count).round(3)*100}%"
+      data['in_correct_percentage'] = "#{(in_correct_count/total_count).round(3)*100}%"
+      data['skipped_percentage'] = "#{(skipped_count/total_count).round(3)*100}%"
+      data['un_attempted_percentage'] = "#{(un_attempted_count/total_count).round(3)*100}%"
+    end
+
+    render json: data
+  end
+
   def quiz_edit
     @quiz = Quiz.find(params[:id])
   end
@@ -103,7 +133,7 @@ class QuizzesController < ApplicationController
   end
 
   def create_quiz(question_ids, name, type)
-    quiz = Quiz.create(name:name,question_ids:question_ids, type:type)
+    quiz = Quiz.create(name:name,question_ids:question_ids, type:type, player:type)
     quiz.key = "/quiz_zips/#{quiz.guid}.zip"
     quiz.file_path = Rails.root.to_s + "/public/quiz_zips/#{quiz.guid}.zip"
     quiz.save!
