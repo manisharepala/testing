@@ -23,10 +23,10 @@ class QuizzesController < ApplicationController
 
     data = {}
     if total_count > 0
-      data['correct_questions'] = "#{(correct_count/total_count).round(3)*100}"
-      data['incorrect_questions'] = "#{(in_correct_count/total_count).round(3)*100}"
-      data['skipped_questions'] = "#{(skipped_count/total_count).round(3)*100}"
-      data['unattempted_questions'] = "#{(un_attempted_count/total_count).round(3)*100}"
+      data['correct_questions'] = ((correct_count/total_count).round(3)*100).round(1)
+      data['incorrect_questions'] = ((in_correct_count/total_count).round(3)*100).round(1)
+      data['skipped_questions'] = ((skipped_count/total_count).round(3)*100).round(1)
+      data['unattempted_questions'] = ((un_attempted_count/total_count).round(3)*100).round(1)
     end
 
     render json: data
