@@ -9,24 +9,32 @@ class QuizzesController < ApplicationController
     in_correct_count = 0
     skipped_count = 0
     un_attempted_count = 0
-    total_count = 0.0
+    total_count = 0
     assessment_ids.each do |guid|
       qad = QuizAttemptData.where("data.guid"=>{:$in=>[guid]},user_id:params[:user_id].to_s)[0]
-      if qad.present?
-        correct_count += qad.data['correct'].count
-        in_correct_count += qad.data['incorrect'].count
-        skipped_count += qad.data['skipped_questions'].count
-        un_attempted_count += qad.data['unattempted'].count
-        total_count += qad.data['total_questions'].count
+      quiz = Quiz.where(guid:guid)[0]
+
+      if qad.present? && quiz.present?
+        total_questions = []
+        (JSON.parse(quiz.focus_area)).map{|h| total_questions << h['questionIds']}
+        total_questions = total_questions.flatten.uniq
+
+        correct_count += (total_questions.count - (total_questions - qad.data['correct']).count)
+        in_correct_count += (total_questions.count - (total_questions - qad.data['incorrect']).count)
+        skipped_count += (total_questions.count - (total_questions - qad.data['skipped_questions']).count)
+        un_attempted_count += (total_questions.count - (total_questions - qad.data['unattempted']).count)
+        total_count += total_questions.count
       end
     end
 
     data = {}
     if total_count > 0
-      data['correct_questions'] = ((correct_count/total_count).round(3)*100).round(1)
-      data['incorrect_questions'] = ((in_correct_count/total_count).round(3)*100).round(1)
-      data['skipped_questions'] = ((skipped_count/total_count).round(3)*100).round(1)
-      data['unattempted_questions'] = ((un_attempted_count/total_count).round(3)*100).round(1)
+      data['correct_questions'] = ((correct_count/total_count.to_f)*100).round(1)
+      data['incorrect_questions'] = ((in_correct_count/total_count.to_f)*100).round(1)
+      data['skipped_questions'] = ((skipped_count/total_count.to_f)*100).round(1)
+      data['unattempted_questions'] = ((un_attempted_count/total_count.to_f)*100).round(1)
+    else
+      # data['success'] = false
     end
 
     render json: data
