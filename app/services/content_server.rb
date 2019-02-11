@@ -29,12 +29,37 @@ class ContentServer
             course: tags['course']
         }
     )
-    # puts res
+    puts res
     res.success? ? true : false
   end
 
+  def update_file(name,file_path,tags)
+    res = self.class.put(
+        "/content_assets/#{guid}.json",
+        headers: headers,
+        body: {
+            content_asset: {
+                name: name,
+                # icon: File.open(file_path),
+                attachment: File.open(file_path)
+            },
+            grade: tags['grade'],
+            subject: tags['subject'],
+            chapter: tags['chapter'],
+            concept: tags['concept'],
+            course: tags['course']
+        }
+    )
+    puts res
+    res.success? ? true : false
+  end
+
+  def self.get_quiz_zip
+
+  end
+
   def headers
-    {token: "eyJhbGciOiJIUzI1NiJ9.eyJ1c2VybmFtZSI6ImtyaXNobmExMiIsImVtYWlsIjpudWxsLCJyb2xsX25vIjpudWxsLCJ1c2VyX2lkIjoxMiwic3ViIjoiMTIiLCJzY3AiOiJ1c2VyIiwiYXVkIjpudWxsLCJpYXQiOjE1NDgwNjY3NDUsImV4cCI6MTU0ODE1MzE0NSwianRpIjoiZGFiNGI0MjQtMzQ0Ny00N2I1LWEwN2MtZjVhY2UxNzkyNjJkIn0.91Pl73VJqFR0lUPG30NqstOE0E1DVurCZK-JssNURtM"}
+    {token: "eyJhbGciOiJIUzI1NiJ9.eyJ1c2VybmFtZSI6InN0cmluZyIsImVtYWlsIjoidXNlckBleGFtcGxlLmNvbSIsInJvbGxfbm8iOiJzdHJpbmciLCJ1c2VyX2lkIjoxLCJzdWIiOiIxIiwic2NwIjoidXNlciIsImF1ZCI6bnVsbCwiaWF0IjoxNTQ4MDY0Njg1LCJleHAiOjE1NDgxNTEwODUsImp0aSI6IjlmYWEzYTM1LTBmMjYtNDM4YS05ZWUyLTBlZDA0NTI2ZjVlNCJ9.x9C769SkwTGPDLEdrkXx2KlY4UoA7WA47RQXTaKscnk"}
   end
 
   # @content_server ||= ContentServer.new(guid: "9788b5d5-a2a9-4439-8abf-efd09838cdc3", type: 'assessment')

@@ -154,4 +154,98 @@ class Quiz
     return data
   end
 
+  def self.sss
+    ["mp4", "zip", "pdf", "mp3", "json"]
+    ["mp4", "pdf", "assessment", "html5", "toc"]
+
+    require 'zip'
+    result_data = []
+
+    name = ''
+    type = ''
+    tags = {"grade"=>"177acf20-32ce-421b-8f32-c3b920c58e54"}
+    guid = "0e6dcd16-38f9-4346-8685-a326ae641d24"
+
+    data = [{"guid"=>"0e6dcd16-38f9-4346-8685-a326ae641d24", "asset_type"=>"ContentAsset", "file_extension"=>"mp4", "key"=>"content_assets/40be7d42-3b35-435a-b5e7-5b355721f97d/original/Pg_21.mp4"}]
+    data.each do |d|
+      guid = d['guid']
+      guid_a = "0e6dcd16-38f9-4346-8685-a326ae641d24"
+      guid_h = "0e7bdeca-c4e2-44e0-b580-db1d819b4660"
+      folder_path = "/home/inayath/Desktop/s3_files/#{guid}/original/"
+
+      file_names = []
+      file_types = []
+
+      Dir[folder_path+"*"].each do |file|
+        file_names << File.basename(file)
+        file_types << (File.basename(file)).split('.').last
+      end
+
+      if file_types.include? 'zip'
+        base_file = ''
+        file_names.each do |n|
+          base_file = n if n.split('.').last == 'zip'
+        end
+
+        Zip::File.open(folder_path+base_file) do |zip_file|
+          zip_file.each do |entry|
+            if entry.name == "assessment.json"
+              type = 'assessment'
+              name = (JSON.parse(entry.get_input_stream.read))['name']
+            elsif entry.name.split('.').last == "m3u8"
+              type = 'mp4'
+              name = base_file.split('.').first
+            elsif entry.name.split('.').last == "html"
+              type = 'html5'
+              name = base_file.split('.').first
+            end
+          end
+        end
+
+        file_path = folder_path + base_file
+
+      elsif file_types.include? 'mp3'
+        base_file = ''
+        file_names.each do |n|
+          base_file = n if n.split('.').last == 'mp3'
+        end
+
+        file_path = folder_path + base_file
+        name = base_file.split('.').first
+        type = 'mp3'
+
+      elsif file_types.include? 'pdf'
+        base_file = ''
+        file_names.each do |n|
+          base_file = n if n.split('.').last == 'pdf'
+        end
+
+        file_path = folder_path + base_file
+        name = base_file.split('.').first
+        type = 'pdf'
+      elsif file_types.include? 'json'
+        base_file = ''
+        file_names.each do |n|
+          base_file = n if n.split('.').last == 'json'
+        end
+
+        file_path = folder_path + base_file
+        name = base_file.split('.').first
+        type = 'toc'
+      end
+
+      if File.exists? file_path
+        content_server ||= ContentServer.new(guid: guid, type: type)
+        success = content_server.update_file(name,file_path, tags)
+
+        r = {}
+        r['guid'] = guid
+        r['success'] = success
+
+        result_data << r
+      end
+    end
+    puts "result_data is #{result_data}"
+  end
+
 end
