@@ -40,6 +40,16 @@ class QuizzesController < ApplicationController
     render json: data
   end
 
+  def get_quiz_attempt_data
+    data = {}
+    qad = QuizAttemptData.where("data.guid"=>{:$in=>[params[:guid]]},user_id:params[:user_id].to_s)[0]
+    if qad.present?
+      data = qad.data
+    end
+
+    render json: data
+  end
+
   def quiz_edit
     @quiz = Quiz.find(params[:id])
   end
