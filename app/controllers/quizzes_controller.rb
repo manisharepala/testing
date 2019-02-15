@@ -5,36 +5,51 @@ class QuizzesController < ApplicationController
   def get_quizzes_analytics_data
     assessment_ids = params[:assessment_ids]
     # Usage.where(:user_id=>48,"data.player"=>{:$in=>["TRYOUT", "OBJECTIVE ASSESSMENT", "SUBJECTIVE ASSESSMENT"]}).count
-    correct_count = 0
-    in_correct_count = 0
-    skipped_count = 0
-    un_attempted_count = 0
-    total_count = 0
+
+    d = {}
+    correct_ids = []
+    in_correct_ids = []
+    skipped_ids = []
+    un_attempted_ids = []
+
     assessment_ids.each do |guid|
-      qad = QuizAttemptData.where("data.guid"=>{:$in=>[guid]},user_id:params[:user_id].to_s)[0]
       quiz = Quiz.where(guid:guid)[0]
+      if quiz.present?
+        (JSON.parse(quiz.focus_area)).each do |fa|
+          d[fa['guid']] ||= {}
+          d[fa['guid']]['name'] = fa['name']
+          d[fa['guid']]['total_questions'] ||= []
+          d[fa['guid']]['total_questions'] << fa['questionIds'].uniq.map!{|e| e.to_i}
+        end
+      end
 
-      if qad.present? && quiz.present?
-        total_questions = []
-        (JSON.parse(quiz.focus_area)).map{|h| total_questions << h['questionIds']}
-        total_questions = total_questions.flatten.uniq
-
-        correct_count += (total_questions.count - (total_questions - qad.data['correct']).count)
-        in_correct_count += (total_questions.count - (total_questions - qad.data['incorrect']).count)
-        skipped_count += (total_questions.count - (total_questions - qad.data['skipped_questions']).count)
-        un_attempted_count += (total_questions.count - (total_questions - qad.data['unattempted']).count)
-        total_count += total_questions.count
+      qad = QuizAttemptData.where("data.guid"=>{:$in=>[guid]},user_id:params[:user_id].to_s).last
+      if qad.present?
+        correct_ids << qad.data['correct']
+        in_correct_ids << qad.data['incorrect']
+        skipped_ids << qad.data['skipped_questions']
+        un_attempted_ids << qad.data['unattempted']
       end
     end
 
-    data = {}
-    if total_count > 0
-      data['correct_questions'] = ((correct_count/total_count.to_f)*100).round(1)
-      data['incorrect_questions'] = ((in_correct_count/total_count.to_f)*100).round(1)
-      data['skipped_questions'] = ((skipped_count/total_count.to_f)*100).round(1)
-      data['unattempted_questions'] = ((un_attempted_count/total_count.to_f)*100).round(1)
-    else
-      # data['success'] = false
+    data = []
+    d.keys.each do |guid|
+      total_question_ids = d[guid]['total_questions'].flatten.uniq
+      total_count = total_question_ids.count
+      correct_count = (total_question_ids.count - (total_question_ids - correct_ids.flatten.uniq).count)
+      in_correct_count = (total_question_ids.count - (total_question_ids - in_correct_ids.flatten.uniq).count)
+      skipped_count = (total_question_ids.count - (total_question_ids - skipped_ids.flatten.uniq).count)
+      un_attempted_count = (total_question_ids.count - (total_question_ids - un_attempted_ids.flatten.uniq).count)
+
+      cd = {}
+      cd['name'] = d[guid]['name']
+      cd['guid'] = guid
+      cd['correct_questions'] = ((correct_count/total_count.to_f)*100).round(1)
+      cd['incorrect_questions'] = ((in_correct_count/total_count.to_f)*100).round(1)
+      cd['skipped_questions'] = ((skipped_count/total_count.to_f)*100).round(1)
+      cd['unattempted_questions'] = ((un_attempted_count/total_count.to_f)*100).round(1)
+
+      data << cd
     end
 
     render json: data
@@ -42,7 +57,7 @@ class QuizzesController < ApplicationController
 
   def get_quiz_attempt_data
     data = {}
-    qad = QuizAttemptData.where("data.guid"=>{:$in=>[params[:guid]]},user_id:params[:user_id].to_s)[0]
+    qad = QuizAttemptData.where("data.guid"=>{:$in=>[params[:guid]]},user_id:params[:user_id].to_s).last
     if qad.present?
       data = qad.data
     end
