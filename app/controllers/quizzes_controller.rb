@@ -15,7 +15,9 @@ class QuizzesController < ApplicationController
 
     assessment_ids.each do |guid|
       quiz = Quiz.where(guid:guid)[0]
-      if quiz.present?
+      qad = QuizAttemptData.where("data.guid"=>{:$in=>[guid]},user_id:48).last
+
+      if quiz.present? && qad.present?
         (JSON.parse(quiz.focus_area)).each do |fa|
           d[fa['guid']] ||= {}
           d[fa['guid']]['name'] = fa['name']
@@ -24,7 +26,6 @@ class QuizzesController < ApplicationController
         end
       end
 
-      qad = QuizAttemptData.where("data.guid"=>{:$in=>[guid]},user_id:params[:user_id].to_s).last
       if qad.present?
         correct_ids << qad.data['correct']
         in_correct_ids << qad.data['incorrect']
