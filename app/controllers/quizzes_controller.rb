@@ -4,6 +4,7 @@ class QuizzesController < ApplicationController
 
   def get_quizzes_analytics_data
     assessment_ids = params[:assessment_ids]
+    concept_guids = params[:concept_ids]
     # Usage.where(:user_id=>48,"data.player"=>{:$in=>["TRYOUT", "OBJECTIVE ASSESSMENT", "SUBJECTIVE ASSESSMENT"]}).count
 
     d = {}
@@ -49,7 +50,7 @@ class QuizzesController < ApplicationController
       cd['skipped_questions'] = ((skipped_count/total_count.to_f)*100).round(1)
       cd['unattempted_questions'] = ((un_attempted_count/total_count.to_f)*100).round(1)
 
-      data << cd
+      data << cd if concept_guids.include? guid
     end
 
     render json: data
