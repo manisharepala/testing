@@ -13,11 +13,15 @@ class Quiz
   field :question_ids, type: Array
   field :guid, type: String
   field :type, type: String
+  field :player, type: String
   field :key, type: String
   field :file_path, type: String
   field :final, type: Boolean, default: false
   field :uploaded, type: Boolean, default: false
   field :focus_area, type: BSON::Binary
+  field :time_open, type: DateTime
+  field :time_close, type: DateTime
+  field :quiz_json, type: BSON::Binary
 
   embeds_many :quiz_targeted_groups
   embeds_many :quiz_sections
@@ -94,13 +98,13 @@ class Quiz
     if final
       create_zip
       tags = {}
-     #  tag_ids.each do |guid|
-     #    data = TagsServer.get_tag_data(guid)
-     #    d = {}
-     #    d[data['name']] = data['guid']
-     #    tags << d
-     #  end
-     # tags = {"grade"=>"177acf20-32ce-421b-8f32-c3b920c58e54", "subject"=>"fef249d0-4deb-454b-ba3a-70f6317f95d2", "chapter"=>"d84b02e8-6993-4e3a-9746-19de19a4b628", "concept"=>"99756e2f-b32b-417d-9fb4-190003131ce", "course"=>"99756e2f-b32b-417d-9fb4-190003131ce"}
+      #  tag_ids.each do |guid|
+      #    data = TagsServer.get_tag_data(guid)
+      #    d = {}
+      #    d[data['name']] = data['guid']
+      #    tags << d
+      #  end
+      # tags = {"grade"=>"177acf20-32ce-421b-8f32-c3b920c58e54", "subject"=>"fef249d0-4deb-454b-ba3a-70f6317f95d2", "chapter"=>"d84b02e8-6993-4e3a-9746-19de19a4b628", "concept"=>"99756e2f-b32b-417d-9fb4-190003131ce", "course"=>"99756e2f-b32b-417d-9fb4-190003131ce"}
       success = content_server.upload_file(name,file_path, tags)
       if success
         self.update_attributes(uploaded:success)
@@ -149,6 +153,213 @@ class Quiz
         end
       end
       data = data.merge(questions:questions_data)
+    end
+
+    return data
+  end
+
+  def self.migrate_quizzes(guid)
+    require 'zip'
+    guid = "f1a77f71-3044-40bb-add6-052d51cdea44" #objective
+    guid = "6176cb03-6305-42bb-b8ca-2fdb77e9a044" #subjective
+    tempfile = S3Server.download_quiz_zip(guid)
+    zip_path = File.join(Rails.root.to_s,"public/quiz_zips/#{guid}") #"/home/inayath/edutor/assessment_app/public/quiz_zips/472508b1-6f7d-4f80-a1f0-b4ca4202be7b"
+    FileUtils.mkdir_p (zip_path)
+    Archive::Zip.extract(tempfile, zip_path)
+
+    data = JSON.parse(File.read(zip_path+"/assessment.json"))
+
+    images_dir = zip_path + "/#{data['name']}_files"
+    user_id = 1
+    publisher_question_bank_id = PublisherQuestionBank.first._id
+    publisher_question_bank = PublisherQuestionBank.find(publisher_question_bank_id)
+    s3_path = '/question_images/'
+
+    data.keys #[:name, :description, :instructions, :total_marks, :total_time, :player, :time_open, :time_close, :questions]
+
+    tags_not_present = []
+    question_wise_tags_not_present = []
+    tags_not_present_data = Quiz.verify_tags(data)
+    tags_not_present += tags_not_present_data[0]
+    question_wise_tags_not_present += tags_not_present_data[1]
+
+    question_ids = []
+
+    if (tags_not_present.count == 0) && (question_wise_tags_not_present.count == 0)
+      data[:questions].each do |ques_data|
+        question = Question.create_question(Quiz.get_simple_question_hash(ques_data,user_id,publisher_question_bank_id))
+        Quiz.update_image_path(question._id,s3_path)
+        Quiz.copy_question_images(question._id,images_dir)
+        question_ids << question._id
+      end
+      publisher_question_bank.attributes = {question_ids:(publisher_question_bank.question_ids + question_ids)}
+      publisher_question_bank.save!
+
+      quiz = Quiz.create!(name:data[:name], description:data[:description], instructions:data[:instructions], total_marks:data[:total_marks], total_time:data[:total_time],player:data[:player], type:data[:player], time_open:data[:time_open], time_close:data[:time_close])
+      quiz.question_ids = question_ids
+      quiz.key = "/quiz_zips/#{quiz.guid}.zip"
+      quiz.file_path = Rails.root.to_s + "/public/quiz_zips/#{quiz.guid}.zip"
+      quiz.quiz_json = data
+      quiz.final = true
+      quiz.save!
+    else
+      logger.info "Tags not present -------------------------------- #{tags_not_present}"
+      raise Exception.new("Following tags are not present #{tags_not_present} and Following questions do not have the compulsory 5 tags -> #{question_wise_tags_not_present} ")
+    end
+  end
+
+  def Quiz.update_image_path(ques_id,s3_path)
+    question = Question.find(ques_id)
+    question.update_attributes(question_text:Quiz.update_img_src(question.question_text,s3_path,ques_id), general_feedback:Quiz.update_img_src(question.general_feedback,s3_path,ques_id))
+    if question.qtype == 'MmcqQuestion' || question.qtype == 'SmcqQuestion'
+      question.question_answers.each do |qa|
+        qa.update_attributes(answer:Quiz.update_img_src(qa.answer,s3_path,ques_id))
+      end
+    end
+  end
+
+  def Quiz.update_img_src(text,s3_path,ques_id)
+    if text.present?
+      text = JSON.parse(text)
+      replacement_paths = []
+      Nokogiri::HTML(text).css('img').map{ |i| i['src'] }.each do |img|
+        replacement_paths << (img.reverse.split('/', 2).map(&:reverse).reverse)[0]
+      end
+      replacement_paths.uniq.each do |rp|
+        text = text.gsub(rp, s3_path+ques_id)
+      end
+      ['.png', '.wmz'].each do |f|
+        text = text.gsub(f, '.jpg')
+      end
+    else
+      text = ''
+    end
+    return text
+  end
+
+  def Quiz.copy_question_images(ques_id, images_dir)
+    ques_images = []
+    question = Question.find(ques_id)
+    Nokogiri::HTML(question.question_text).css('img').map{ |i| i['src'] }.each do |img|
+      ques_images << img.split("/").last
+    end
+
+    Nokogiri::HTML(question.general_feedback).css('img').map{ |i| i['src'] }.each do |img|
+      ques_images << img.split("/").last
+    end
+
+    if question.qtype == 'MmcqQuestion' || question.qtype == 'SmcqQuestion'
+      question.question_answers.each do |qa|
+        Nokogiri::HTML(qa.answer).css('img').map{ |i| i['src'] }.each do |img|
+          ques_images << img.split("/").last
+        end
+      end
+    end
+
+    if question.qtype == 'Passage'
+      question.questions.each do |q|
+        copy_question_images(q._id,images_dir)
+      end
+    end
+
+    ques_images = ques_images.uniq
+    image_names = ques_images.map{|n| n.downcase.split('.')[0]}
+    image_ids = []
+
+    dir_path = Rails.root.to_s + "/public/question_images/#{ques_id}/"
+    FileUtils.mkdir_p(dir_path)
+    Dir["#{images_dir}/*"].each do |img|
+      index = image_names.index(File.basename(img).split('.')[0].downcase)
+
+      if index.present?
+        # copying to public folder
+        img_name = (ques_images[index]).split('.')[0] + ".jpg"
+        image = Magick::Image.read(img).first
+        image.write(dir_path+img_name)
+
+        # creating Image reference for S3
+        image_ids << (Image.create(name: img_name, key: "/question_images/#{ques_id}/#{img_name}", file_path:(dir_path+img_name))).guid
+      end
+
+    end
+    question.image_ids = image_ids
+    question.save!
+    question.upload_images
+  end
+
+  def Quiz.verify_tags(data)
+    all_tags = []
+    tag_not_present = []
+    must_present_tag_names_for_each_question = ["course", "grade", "subject", "chapter", "concept"]
+    question_wise_tags_not_present = []
+
+    tags_hash = {"academic_class"=>"grade", "concept_names"=>"concept", "course"=>"course", "chapter"=>"chapter", "subject"=>"subject"}
+
+    data['questions'].each_with_index do |ques,i|
+      tag_names = []
+      ques['tags'].each do |tag|
+        name = tags_hash[tag.keys[0]]
+        value = tag.values[0]
+        d = {}
+        d['name'] = name
+        d['value'] = value
+        tag_names << name
+        all_tags << d
+        if !TagsServer.get_tag_guid(name, value).present?
+          tag_not_present << d
+        end
+      end
+      absent_tags = must_present_tag_names_for_each_question - tag_names
+      if absent_tags.count > 0
+        question_tag_not_present = {}
+        question_tag_not_present['id'] = ques['id']
+        question_tag_not_present['type'] = ques['question_type']
+        question_tag_not_present['tags_not_present'] = absent_tags
+        question_wise_tags_not_present << question_tag_not_present
+      end
+    end
+    logger.info "All tags - #{all_tags.count} - #{all_tags}"
+    return [tag_not_present,question_wise_tags_not_present]
+  end
+
+  def Quiz.get_simple_question_hash(ques_data,user_id,publisher_question_bank_id)
+    #[:id, :question_text, :marks, :penalty, :question_type, :tags, :explanation, :hint, :options, :answers, :blanks]
+    data = {}
+    data['publisher_question_bank_ids'] = [publisher_question_bank_id]
+    data['created_by'] = user_id
+    data['question_text'] = ques_data['question_text']
+    data['default_mark'] = ques_data['marks']
+    data['penalty'] = ques_data['penalty']
+    data['qtype'] = ques_data['question_type']
+    data['qtype'] = 'SubjectiveQuestion' if ques_data['question_type'] == nil
+    data['generalfeedback'] = data['explanation']
+    data['hint'] = ques_data['hint']
+
+    data['tag_ids'] = []
+    ques_data['tags'].each do |tag|
+      data['tag_ids'] << "abcde" #TagsServer.get_tag_guid(tag.keys[0], tag.values[0])
+    end
+
+    if ['SmcqQuestion', 'MmcqQuestion', 'TrueFalseQuestion'].include? ques_data['question_type']
+      data['question_answers_attributes'] = []
+      ques_data['options'].each do |option|
+        option_data = {}
+        option_data['answer'] = option['option_text']
+        option_data['feedback'] = ""
+
+        if (ques_data['answers'].flatten).include? option['id']
+          option_data['fraction'] = true
+        else
+          option_data['fraction'] = false
+        end
+
+        data['question_answers_attributes'] << option_data
+      end
+    elsif ['FibQuestion'].include? data['question_type']
+      data['question_fill_blanks_attributes'] = []
+      # ques.xpath("question/options_fib").each do |option|
+      #   data['question_fill_blanks_attributes'] << get_question_fill_blank_hash(option)
+      # end
     end
 
     return data
