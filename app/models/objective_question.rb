@@ -15,7 +15,7 @@ class ObjectiveQuestion < Question
     end
     common_data.merge(
         options: options,
-        answers: (self.question_answers.map{|a| a._id.to_s if a.fraction == true} - [nil]),
+        answers: ([self.question_answers.map{|a| a._id.to_s if a.fraction == true} - [nil]]),
         blanks: []
     )
   end
