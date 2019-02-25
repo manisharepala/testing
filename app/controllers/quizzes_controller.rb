@@ -168,7 +168,8 @@ class QuizzesController < ApplicationController
   end
 
   def create_quiz(question_ids, name, type)
-    quiz = Quiz.create(name:name,question_ids:question_ids, type:type, player:type)
+    total_marks = question_ids.map{|id| Question.find(id).default_mark}.sum
+    quiz = Quiz.create(name:name,question_ids:question_ids, type:type, player:type, total_marks:total_marks)
     quiz.key = "/quiz_zips/#{quiz.guid}.zip"
     quiz.file_path = Rails.root.to_s + "/public/quiz_zips/#{quiz.guid}.zip"
     quiz.save!
@@ -176,7 +177,7 @@ class QuizzesController < ApplicationController
 
   def zip_upload_question
     @publisher_question_banks = PublisherQuestionBank.all
-    @quiz_types = [['Challenge Test' ,'challenge_test'], ['Subjective', 'subjective'], ['Try Out', 'try_out'], ['Concept Practice', 'concept_practice']]
+    @quiz_types = [['Challenge Test' ,'challenge test'], ['Subjective', 'subjective'], ['Try Out', 'tryout'], ['Concept Practice', 'concept_practice']]
   end
 
   def post_zip_upload_question

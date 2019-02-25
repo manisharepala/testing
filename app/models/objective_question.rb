@@ -10,8 +10,13 @@ class ObjectiveQuestion < Question
   def as_json(with_key: false)
     common_data = common_data_json(with_key: with_key)
     options = self.question_answers.map{|a| a.as_json(with_key: with_key)}
+    options.each do |hash|
+      hash['option_text'] = hash.delete 'answer'
+    end
     common_data.merge(
-      options: options
+        options: options,
+        answers: (self.question_answers.map{|a| a._id.to_s if a.fraction == true} - [nil]),
+        blanks: []
     )
   end
 
