@@ -72,13 +72,18 @@ class Question
 
   def common_data_json(with_key: false, quiz_id: nil)
     # Marks and Penalty should be fetched from quiz
+    tags_data = []
+    tag_ids.each do |guid|
+      d = TagsServer.get_tag_data(guid)
+      tags_data << {d['name']=>d['value']} if d.present?
+    end
     data = {
         id: self.id.to_s,
         question_text: self.question_text,
         marks: self.default_mark,
         penalty: self.penalty,
         question_type: self.qtype
-    }.merge(tags: tag_ids)
+    }.merge(tags: tags_data)
     # byebug
     if with_key
       data.merge!({

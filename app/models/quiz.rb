@@ -122,9 +122,9 @@ class Quiz
   def as_json(with_key: false)
     des = '' if !description.present?
     ins = '' if !instructions.present?
-    t_marks = '' if !total_marks.present?
-    t_time = '' if !total_time.present?
-    data = {name:name, description:des, instructions:ins, total_marks:t_marks, total_time:t_time, type:type, player:'', time_open:'', time_close:''} #,quiz_detail:quiz_detail.as_json
+    t_marks = question_ids.map{|id| Question.find(id).default_mark}.sum if !total_marks.present?
+    t_time = 180 if !total_time.present?
+    data = {name:name, description:des, instructions:'Attempt all Questions', total_marks:t_marks, total_time:t_time, player:player, time_open:'', time_close:''} #,quiz_detail:quiz_detail.as_json
 
     if quiz_sections.count > 0
       quiz_sections_data = []

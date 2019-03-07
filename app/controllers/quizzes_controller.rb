@@ -168,7 +168,8 @@ class QuizzesController < ApplicationController
   end
 
   def create_quiz(question_ids, name, type)
-    quiz = Quiz.create(name:name,question_ids:question_ids, type:type, player:type)
+    total_marks = question_ids.map{|id| Question.find(id).default_mark}.sum
+    quiz = Quiz.create(name:name,question_ids:question_ids, type:type, player:type, total_marks:total_marks)
     quiz.key = "/quiz_zips/#{quiz.guid}.zip"
     quiz.file_path = Rails.root.to_s + "/public/quiz_zips/#{quiz.guid}.zip"
     quiz.save!
@@ -176,7 +177,7 @@ class QuizzesController < ApplicationController
 
   def zip_upload_question
     @publisher_question_banks = PublisherQuestionBank.all
-    @quiz_types = [['Challenge Test' ,'challenge_test'], ['Subjective', 'subjective'], ['Try Out', 'try_out'], ['Concept Practice', 'concept_practice']]
+    @quiz_types = [['Concept Practice Objective' ,'concept_practice_objective'],['Concept Test Objective' ,'concept_test_objective'],['Concept Practice Subjective' ,'concept_practice_subjective'],['Concept Test Subjective' ,'concept_test_subjective'],['Challenge Test Objective' ,'challenge_test_objective'],['Challenge Test Subjective' ,'challenge_test_subjective'],['Chapter Practice Objective' ,'chapter_practice_objective'],['Chapter Test Objective' ,'chapter_test_objective'],['Chapter Practice Subjective' ,'chapter_practice_subjective'],['Chapter Test Subjective' ,'chapter_test_subjective'],['Challenge Test' ,'challenge test'], ['Subjective', 'subjective'], ['Try Out', 'tryout'], ['Concept Practice', 'concept_practice']]
   end
 
   def post_zip_upload_question
