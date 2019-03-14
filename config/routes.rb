@@ -23,6 +23,11 @@ Rails.application.routes.draw do
   post '/assessment/quiz/update', to: 'quizzes#quiz_update'
 
   post '/assessment/get_quizzes_analytics_data', to: 'quizzes#get_quizzes_analytics_data'
+  post '/assessment/get_chapter_level_quizzes_analytics_data', to: 'quizzes#get_chapter_level_quizzes_analytics_data'
+  post '/assessment/get_concept_wise_quizzes_analytics_data', to: 'quizzes#get_concept_wise_quizzes_analytics_data'
 
   get '/assessment/get_quiz_attempt_data', to: 'quizzes#get_quiz_attempt_data'
+
+
+
 end
