@@ -68,7 +68,7 @@ class QuizzesController < ApplicationController
     un_attempted_ids = []
 
     assessment_ids.each do |guid|
-      qad = QuizAttemptData.where("data.guid"=>{:$in=>[guid]},user_id:48).last
+      qad = QuizAttemptData.where("data.guid"=>{:$in=>[guid]},user_id:@current_user).last
 
       if qad.present?
         correct_ids << qad.data['correct']
@@ -107,7 +107,7 @@ class QuizzesController < ApplicationController
       un_attempted_ids = []
 
       v.each do |guid|
-        qad = QuizAttemptData.where("data.guid"=>{:$in=>[guid]},user_id:48).last
+        qad = QuizAttemptData.where("data.guid"=>{:$in=>[guid]},user_id:@current_user).last
 
         if qad.present?
           correct_ids << qad.data['correct']
