@@ -97,7 +97,7 @@ class QuizzesController < ApplicationController
   end
 
   def get_concept_wise_quizzes_analytics_data
-    concept_wise_assessment_guids = params[:concept_wise_assessment_guids]
+    concept_wise_assessment_guids = params[:concept_ids]
     @current_user = params[:user_id]
     data = {}
 
