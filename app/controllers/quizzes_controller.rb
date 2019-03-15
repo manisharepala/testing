@@ -100,7 +100,7 @@ class QuizzesController < ApplicationController
     concept_wise_assessment_guids = params[:concept_ids]
     @current_user = params[:user_id]
     data = {}
-
+    begin
     concept_wise_assessment_guids.each do |k,v|
       correct_ids = []
       in_correct_ids = []
@@ -133,6 +133,9 @@ class QuizzesController < ApplicationController
       d['unattempted_questions'] = ((un_attempted_ids.count/total_count.to_f)*100).round(1)
 
       data[k] = d
+    end
+    rescue
+      render json: data
     end
 
     render json: data
