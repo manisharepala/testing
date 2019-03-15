@@ -61,6 +61,7 @@ class QuizzesController < ApplicationController
 
   def get_chapter_level_quizzes_analytics_data
     assessment_ids = params[:assessment_ids]
+    @current_user = params[:user_id]
 
     correct_ids = []
     in_correct_ids = []
@@ -97,7 +98,7 @@ class QuizzesController < ApplicationController
 
   def get_concept_wise_quizzes_analytics_data
     concept_wise_assessment_guids = params[:concept_wise_assessment_guids]
-
+    @current_user = params[:user_id]
     data = {}
 
     concept_wise_assessment_guids.each do |k,v|
