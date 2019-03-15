@@ -135,7 +135,7 @@ class QuizzesController < ApplicationController
       data[k] = d
     end
     rescue
-      render json: data
+       data = {}
     end
 
     render json: data
