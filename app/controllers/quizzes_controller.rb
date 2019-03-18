@@ -87,6 +87,7 @@ class QuizzesController < ApplicationController
     total_count = total_question_ids.count
 
     data = {}
+    data['name'] = ""
     data['correct_questions'] = ((correct_ids.count/total_count.to_f)*100).round(1)
     data['incorrect_questions'] = ((in_correct_ids.count/total_count.to_f)*100).round(1)
     data['skipped_questions'] = ((skipped_ids.count/total_count.to_f)*100).round(1)
@@ -98,6 +99,7 @@ class QuizzesController < ApplicationController
   def get_concept_wise_quizzes_analytics_data
     concept_wise_assessment_guids = params[:concept_wise_assessment_guids]
     data = {}
+    ds = []
     begin
       concept_wise_assessment_guids.each do |k,v|
         correct_ids = []
@@ -125,18 +127,20 @@ class QuizzesController < ApplicationController
         total_count = total_question_ids.count
 
         d = {}
+        d['name'] = ""
         d['correct_questions'] = ((correct_ids.count/total_count.to_f)*100).round(1)
         d['incorrect_questions'] = ((in_correct_ids.count/total_count.to_f)*100).round(1)
         d['skipped_questions'] = ((skipped_ids.count/total_count.to_f)*100).round(1)
         d['unattempted_questions'] = ((un_attempted_ids.count/total_count.to_f)*100).round(1)
 
         data[k] = d
+        ds << data
       end
     rescue
-      data = {}
+      ds = []
     end
 
-    render json: data
+    render json: ds
   end
 
   def get_quiz_attempt_data
