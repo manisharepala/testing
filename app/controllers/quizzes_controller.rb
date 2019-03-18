@@ -15,7 +15,7 @@ class QuizzesController < ApplicationController
 
     assessment_ids.each do |guid|
       quiz = Quiz.where(guid:guid)[0]
-      qad = QuizAttemptData.where("data.guid"=>{:$in=>[guid]},user_id:@current_user).last
+      qad = QuizAttemptData.where("data.guid"=>{:$in=>[guid]},user_id:params[:user_id]).last
 
       if quiz.present? && qad.present?
         (JSON.parse(quiz.focus_area)).each do |fa|
@@ -61,7 +61,6 @@ class QuizzesController < ApplicationController
 
   def get_chapter_level_quizzes_analytics_data
     assessment_ids = params[:assessment_ids]
-    @current_user = params[:user_id]
 
     correct_ids = []
     in_correct_ids = []
@@ -69,7 +68,7 @@ class QuizzesController < ApplicationController
     un_attempted_ids = []
 
     assessment_ids.each do |guid|
-      qad = QuizAttemptData.where("data.guid"=>{:$in=>[guid]},user_id:@current_user).last
+      qad = QuizAttemptData.where("data.guid"=>{:$in=>[guid]},user_id:params[:user_id]).last
 
       if qad.present?
         correct_ids << qad.data['correct']
@@ -97,45 +96,44 @@ class QuizzesController < ApplicationController
   end
 
   def get_concept_wise_quizzes_analytics_data
-    concept_wise_assessment_guids = params[:concept_ids]
-    @current_user = params[:user_id]
+    concept_wise_assessment_guids = params[:concept_wise_assessment_guids]
     data = {}
     begin
-    concept_wise_assessment_guids.each do |k,v|
-      correct_ids = []
-      in_correct_ids = []
-      skipped_ids = []
-      un_attempted_ids = []
+      concept_wise_assessment_guids.each do |k,v|
+        correct_ids = []
+        in_correct_ids = []
+        skipped_ids = []
+        un_attempted_ids = []
 
-      v.each do |guid|
-        qad = QuizAttemptData.where("data.guid"=>{:$in=>[guid]},user_id:@current_user).last
+        v.each do |guid|
+          qad = QuizAttemptData.where("data.guid"=>{:$in=>[guid]},user_id:params[:user_id]).last
 
-        if qad.present?
-          correct_ids << qad.data['correct']
-          in_correct_ids << qad.data['incorrect']
-          skipped_ids << qad.data['skipped_questions']
-          un_attempted_ids << qad.data['unattempted']
+          if qad.present?
+            correct_ids << qad.data['correct']
+            in_correct_ids << qad.data['incorrect']
+            skipped_ids << qad.data['skipped_questions']
+            un_attempted_ids << qad.data['unattempted']
+          end
         end
+
+        correct_ids = correct_ids.flatten.uniq
+        in_correct_ids = in_correct_ids.flatten.uniq
+        skipped_ids = skipped_ids.flatten.uniq
+        un_attempted_ids = un_attempted_ids.flatten.uniq
+
+        total_question_ids = (correct_ids+in_correct_ids+skipped_ids+un_attempted_ids).flatten.uniq
+        total_count = total_question_ids.count
+
+        d = {}
+        d['correct_questions'] = ((correct_ids.count/total_count.to_f)*100).round(1)
+        d['incorrect_questions'] = ((in_correct_ids.count/total_count.to_f)*100).round(1)
+        d['skipped_questions'] = ((skipped_ids.count/total_count.to_f)*100).round(1)
+        d['unattempted_questions'] = ((un_attempted_ids.count/total_count.to_f)*100).round(1)
+
+        data[k] = d
       end
-
-      correct_ids = correct_ids.flatten.uniq
-      in_correct_ids = in_correct_ids.flatten.uniq
-      skipped_ids = skipped_ids.flatten.uniq
-      un_attempted_ids = un_attempted_ids.flatten.uniq
-
-      total_question_ids = (correct_ids+in_correct_ids+skipped_ids+un_attempted_ids).flatten.uniq
-      total_count = total_question_ids.count
-
-      d = {}
-      d['correct_questions'] = ((correct_ids.count/total_count.to_f)*100).round(1)
-      d['incorrect_questions'] = ((in_correct_ids.count/total_count.to_f)*100).round(1)
-      d['skipped_questions'] = ((skipped_ids.count/total_count.to_f)*100).round(1)
-      d['unattempted_questions'] = ((un_attempted_ids.count/total_count.to_f)*100).round(1)
-
-      data[k] = d
-    end
     rescue
-       data = {}
+      data = {}
     end
 
     render json: data
