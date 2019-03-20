@@ -60,13 +60,11 @@ class QuizzesController < ApplicationController
 
   def get_assessments_attempted_count
     data = {}
-    count = 0
     assessment_ids = params[:assessment_ids]
-    assessment_ids.each do |guid|
-      count += 1 if (QuizAttemptData.where("data.guid"=>{:$in=>[guid]},user_id:params[:user_id]).count > 0)
-    end
-    data['attempted'] = count
-    data['un_attempted'] = assessment_ids.count - count
+    uniq_count = QuizAttemptData.where("data.guid"=>{:$in=>assessment_ids},user_id:params[:user_id]).group_by{|i| i.data["guid"]}.count
+
+    data['attempted'] = uniq_count
+    data['un_attempted'] = assessment_ids.count - uniq_count
     data['total'] = assessment_ids.count
     render json: data
   end
