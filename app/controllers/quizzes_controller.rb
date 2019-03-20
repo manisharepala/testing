@@ -52,7 +52,7 @@ class QuizzesController < ApplicationController
       cd['skipped_questions'] = ((skipped_count/total_count.to_f)*100).round(1)
       cd['unattempted_questions'] = ((un_attempted_count/total_count.to_f)*100).round(1)
 
-      data << cd if (concept_guids.include? guid && total_count > 0)
+      data << cd if ((concept_guids.include? guid) && (total_count > 0))
     end
 
     render json: data
