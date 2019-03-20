@@ -26,9 +26,17 @@ Rails.application.routes.draw do
   post '/assessment/get_chapter_level_quizzes_analytics_data', to: 'quizzes#get_chapter_level_quizzes_analytics_data'
   post '/assessment/get_concept_wise_quizzes_analytics_data', to: 'quizzes#get_concept_wise_quizzes_analytics_data'
   post '/assessment/get_assessments_attempted_count', to: 'quizzes#get_assessments_attempted_count'
+  post '/assessment/get_assessments_active_duration', to: 'quizzes#get_assessments_active_duration'
 
   get '/assessment/get_quiz_attempt_data', to: 'quizzes#get_quiz_attempt_data'
 
-
+#teacher web api's
+  # get '/assessment/user_assessments_by_category', to: 'api#user_assessments_by_category'
+  # post '/assessment/edit_due_time', to: 'api#edit_due_time'
+  # post '/assessment/cancel_published_assessment', to: 'api#cancel_published_assessment'
+  # post '/assessment/publish_assessment', to: 'api#publish_assessment'
+  # get '/assessment/assessment_details', to: 'api#assessment_details'
+  # get '/assessment/user_tags_by_category', to: 'api#user_tags_by_category'
+  # post '/assessment/create_duplicate_assessment', to: 'api#create_duplicate_assessment'
 
 end
