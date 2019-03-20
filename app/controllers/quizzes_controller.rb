@@ -17,7 +17,7 @@ class QuizzesController < ApplicationController
       quiz = Quiz.where(guid:guid)[0]
       qad = QuizAttemptData.where("data.guid"=>{:$in=>[guid]},user_id:params[:user_id]).last
 
-      if quiz.present? && qad.present?
+      if quiz.present?
         (JSON.parse(quiz.focus_area)).each do |fa|
           d[fa['guid']] ||= {}
           d[fa['guid']]['name'] = fa['name']
@@ -30,7 +30,7 @@ class QuizzesController < ApplicationController
         correct_ids << qad.data['correct']
         in_correct_ids << qad.data['incorrect']
         skipped_ids << qad.data['skipped_questions']
-        un_attempted_ids << qad.data['unattempted']
+        skipped_ids << qad.data['unattempted'] #logic changed here (skipped + un_attempted)
       end
     end
 
@@ -38,10 +38,11 @@ class QuizzesController < ApplicationController
     d.keys.each do |guid|
       total_question_ids = d[guid]['total_questions'].flatten.uniq
       total_count = total_question_ids.count
-      correct_count = (total_question_ids.count - (total_question_ids - correct_ids.flatten.uniq).count)
-      in_correct_count = (total_question_ids.count - (total_question_ids - in_correct_ids.flatten.uniq).count)
-      skipped_count = (total_question_ids.count - (total_question_ids - skipped_ids.flatten.uniq).count)
-      un_attempted_count = (total_question_ids.count - (total_question_ids - un_attempted_ids.flatten.uniq).count)
+      correct_count = (total_count - (total_question_ids - correct_ids.flatten.uniq).count)
+      in_correct_count = (total_count - (total_question_ids - in_correct_ids.flatten.uniq).count)
+      skipped_count = (total_count - (total_question_ids - skipped_ids.flatten.uniq).count)
+      # un_attempted_count = (total_question_ids.count - (total_question_ids - un_attempted_ids.flatten.uniq).count)
+      un_attempted_count = (total_count - (total_question_ids - (correct_ids.flatten.uniq+in_correct_ids.flatten.uniq+skipped_ids.flatten.uniq)).count)
 
       cd = {}
       cd['name'] = d[guid]['name']
