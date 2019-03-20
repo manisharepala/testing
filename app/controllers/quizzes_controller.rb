@@ -58,7 +58,18 @@ class QuizzesController < ApplicationController
     render json: data
   end
 
-
+  def get_assessments_attempted_count
+    data = {}
+    count = 0
+    assessment_ids = params[:assessment_ids]
+    assessment_ids.each do |guid|
+      count += 1 if (QuizAttemptData.where("data.guid"=>{:$in=>[guid]},user_id:params[:user_id]).count > 0)
+    end
+    data['attempted'] = count
+    data['un_attempted'] = assessment_ids.count - count
+    data['total'] = assessment_ids.count
+    render json: data
+  end
 
   def get_chapter_level_quizzes_analytics_data
     assessment_ids = params[:assessment_ids]
