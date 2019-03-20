@@ -1,14 +1,22 @@
 class Question
   include Mongoid::Document
   include Mongoid::Timestamps
+
+  # remove_later
   field :question_text,as: :questiontext, type: BSON::Binary
-  field :default_mark,as: :defaultmark, type: Float, default: 1
-  field :penalty, type: Float, default: 0
-  field :_type, as: :qtype, type: String
-  field :active, type: Boolean, default: true
   field :generalfeedback,as: :general_feedback, type: BSON::Binary
   field :hint, type: BSON::Binary
   field :actual_answer, type: BSON::Binary
+
+  embeds_many :question_language_specific_datas, cascade_callbacks: true
+
+  field :default_mark,as: :defaultmark, type: Float, default: 1
+  field :penalty, type: Float, default: 0
+  field :partial_positive_marks, type: Float, default: 0
+  field :partial_negative_marks, type: Float, default: 0
+
+  field :_type, as: :qtype, type: String
+  field :active, type: Boolean, default: true
   field :created_by, type: Integer
   field :guid, type: String
   field :tag_ids, type: Array
@@ -18,12 +26,12 @@ class Question
   # has_and_belongs_to_many :tags, index: true, autosave: true, inverse_of: nil # one side relation
   has_and_belongs_to_many :publisher_question_banks,index: true, autosave: true, inverse_of: nil # one side relation
 
-  accepts_nested_attributes_for :publisher_question_banks
+  accepts_nested_attributes_for :publisher_question_banks, :question_language_specific_datas
 
   # has_many :s3_files, as: :s3_asset, :dependent => :destroy
 
   # Validations
-  validates_presence_of  :questiontext, :defaultmark, :penalty, :_type, :created_by
+  validates_presence_of  :defaultmark, :penalty, :_type, :created_by
   validate :abstract_class
   validate do |record|
     # errors.add(:tag_ids, 'Must be a valid tag') unless Tag.valid_tags?(record.tag_ids, created_by)
@@ -89,6 +97,45 @@ class Question
       data.merge!({
                       explaination: generalfeedback,
                       hint: hint
+                  })
+    end
+    data
+  end
+
+  def common_data_json_v1(with_key: false, quiz_id: nil)
+    # Marks and Penalty should be fetched from quiz
+    tags_data = []
+    tag_ids.each do |guid|
+      d = TagsServer.get_tag_data(guid)
+      tags_data << {d['name']=>d['value']} if d.present?
+    end
+
+    question_text_data = {}
+    hint_data = {}
+    general_feedback_data = {}
+    actual_answer_data = {}
+    question_language_specific_datas.each do |d|
+      question_text_data[d.language] = d.question_text
+      hint_data[d.language] = d.hint
+      general_feedback_data[d.language] = d.general_feedback
+      actual_answer_data[d.language] = d.actual_answer
+    end
+
+    data = {
+        id: self.id.to_s,
+        question_text: question_text_data,
+        marks: self.default_mark,
+        penalty: self.penalty,
+        partial_positive_marks: self.partial_positive_marks,
+        partial_negative_marks: self.partial_negative_marks,
+        question_type: self.qtype
+    }.merge(tags: tags_data)
+    # byebug
+    if with_key
+      data.merge!({
+                      explaination: general_feedback_data,
+                      hint: hint_data,
+                      actual_answer:actual_answer_data
                   })
     end
     data
