@@ -42,7 +42,7 @@ class QuizzesController < ApplicationController
       in_correct_count = (total_count - (total_question_ids - in_correct_ids.flatten.uniq).count)
       skipped_count = (total_count - (total_question_ids - skipped_ids.flatten.uniq).count)
       # un_attempted_count = (total_question_ids.count - (total_question_ids - un_attempted_ids.flatten.uniq).count)
-      un_attempted_count = (total_count - (total_question_ids - (correct_ids.flatten.uniq+in_correct_ids.flatten.uniq+skipped_ids.flatten.uniq)).count)
+      un_attempted_count = (total_count - (correct_count+in_correct_count+skipped_count))
 
       cd = {}
       cd['name'] = d[guid]['name']
@@ -52,7 +52,7 @@ class QuizzesController < ApplicationController
       cd['skipped_questions'] = ((skipped_count/total_count.to_f)*100).round(1)
       cd['unattempted_questions'] = ((un_attempted_count/total_count.to_f)*100).round(1)
 
-      data << cd if concept_guids.include? guid
+      data << cd if (concept_guids.include? guid && total_count > 0)
     end
 
     render json: data
@@ -264,6 +264,7 @@ class QuizzesController < ApplicationController
   end
 
   def create_quiz(question_ids, name, type)
+    #q_ids = quiz_section_ids.map{|qs_id| QuizSection.find(qs_id).question_ids}.flatten
     total_marks = question_ids.map{|id| Question.find(id).default_mark}.sum
     quiz = Quiz.create(name:name,question_ids:question_ids, type:type, player:type, total_marks:total_marks)
     quiz.key = "/quiz_zips/#{quiz.guid}.zip"
