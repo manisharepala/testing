@@ -275,7 +275,7 @@ class QuizzesController < ApplicationController
   def create_quiz(question_ids, name, type)
     #q_ids = quiz_section_ids.map{|qs_id| QuizSection.find(qs_id).question_ids}.flatten
     total_marks = question_ids.map{|id| Question.find(id).default_mark}.sum
-    quiz = Quiz.create(name:name,question_ids:question_ids, type:type, player:type, total_marks:total_marks)
+    quiz = Quiz.create(quiz_language_specific_datas_attributes: [{name:name,description: 'Quiz description',instructions:'Quiz instructions', language: 'english'}],question_ids:question_ids, type:type, player:type, total_marks:total_marks)
     quiz.key = "/quiz_zips/#{quiz.guid}.zip"
     quiz.file_path = Rails.root.to_s + "/public/quiz_zips/#{quiz.guid}.zip"
     quiz.save!
@@ -549,14 +549,22 @@ class QuizzesController < ApplicationController
   def get_simple_question_hash(user_id, ques, publisher_question_bank_id)
     data = {}
     data['publisher_question_bank_ids'] = [publisher_question_bank_id]
-    data['question_text'] = ques.xpath("question/question_text").inner_text
+
+    data['question_language_specific_datas_attributes'] = []
+    d = {}
+    d['question_text'] = ques.xpath("question/question_text").inner_text
+    d['general_feedback'] = ques.xpath("question/solution")[0].inner_text rescue ''
+    d['actual_answer'] = ques.xpath("question/actual_answer").inner_text rescue ''
+    d['hint'] = ques.xpath("question/hint").inner_text rescue ''
+    d['language'] = 'english'
+
+    data['question_language_specific_datas_attributes'] << d
+
     data['qtype'] = get_qtype(ques.xpath("qtype").attr("value").to_s.downcase)
     data['default_mark'] = ques.xpath("score").attr("value").to_s.to_i rescue 1
     data['penalty'] = ques.xpath("penalty").attr("value").to_s.to_i rescue 0
-    data['general_feedback'] = ques.xpath("question/solution")[0].inner_text rescue ''
+
     data['created_by'] = user_id
-    data['actual_answer'] = ques.xpath("question/actual_answer").inner_text rescue ''
-    data['hint'] = ques.xpath("question/hint").inner_text rescue ''
 
     if ['SmcqQuestion', 'MmcqQuestion', 'TrueFalseQuestion'].include? data['qtype']
       data['question_answers_attributes'] = []
@@ -600,7 +608,7 @@ class QuizzesController < ApplicationController
         is_correct_option = 0
       end
     end
-    data1['answer'] = option.xpath("option_text").inner_text
+    data1['answer_english'] = option.xpath("option_text").inner_text
     data1['fraction'] = is_correct_option
     data1['feedback'] = option.xpath("feedback").inner_text
     return data1
@@ -620,12 +628,9 @@ class QuizzesController < ApplicationController
 
   def get_question_fill_blank_hash(option)
     data = {}
-    data['answer'] = ''
-    c = 1
+    data['answer'] = []
     option.xpath("option_blank").each do |option_blank|
-      data['answer'] = option_blank.inner_text if c == 1
-      data['answer'] = data['answer'] + "," + option_blank.inner_text
-      c = c+1
+      data['answer'] << option_blank.inner_text
     end
     data['case_sensitive'] = option.attr("value").to_s.to_i
     return data

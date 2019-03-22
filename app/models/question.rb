@@ -97,13 +97,19 @@ class Question
       actual_answer_data[d.language] = d.actual_answer
     end
 
+    if 1==1
+      question_type = self.qtype
+    else
+      question_type = self.display_q_type
+    end
+
     data = {
         id: self.id.to_s,
         marks: self.default_mark,
         penalty: self.penalty,
         partial_positive_marks: self.partial_positive_marks,
         partial_negative_marks: self.partial_negative_marks,
-        question_type: self.qtype,
+        question_type: question_type,
         tags:tags_data
     }
     if with_language_support
