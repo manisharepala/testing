@@ -16,6 +16,7 @@ class Question
   field :partial_negative_marks, type: Float, default: 0
 
   field :_type, as: :qtype, type: String
+  field :display_q_type, type: String
   field :active, type: Boolean, default: true
   field :created_by, type: Integer
   field :guid, type: String
@@ -78,32 +79,7 @@ class Question
     end
   end
 
-  def common_data_json(with_key: false, quiz_id: nil)
-    # Marks and Penalty should be fetched from quiz
-    tags_data = []
-    tag_ids.each do |guid|
-      d = TagsServer.get_tag_data(guid)
-      tags_data << {d['name']=>d['value']} if d.present?
-    end
-    data = {
-        id: self.id.to_s,
-        question_text: self.question_text,
-        marks: self.default_mark,
-        penalty: self.penalty,
-        question_type: self.qtype
-    }.merge(tags: tags_data)
-    # byebug
-    if with_key
-      data.merge!({
-                      explaination: generalfeedback,
-                      hint: hint
-                  })
-    end
-    data
-  end
-
-  def common_data_json_v1(with_key: false, quiz_id: nil)
-    # Marks and Penalty should be fetched from quiz
+  def common_data_json(with_key: false, with_language_support: false)
     tags_data = []
     tag_ids.each do |guid|
       d = TagsServer.get_tag_data(guid)
@@ -123,22 +99,35 @@ class Question
 
     data = {
         id: self.id.to_s,
-        question_text: question_text_data,
         marks: self.default_mark,
         penalty: self.penalty,
         partial_positive_marks: self.partial_positive_marks,
         partial_negative_marks: self.partial_negative_marks,
-        question_type: self.qtype
-    }.merge(tags: tags_data)
+        question_type: self.qtype,
+        tags:tags_data
+    }
+    if with_language_support
+      data.merge!(question_text:question_text_data)
+    else
+      data.merge!(question_text:question_text_data['english'])
+    end
     # byebug
     if with_key
-      data.merge!({
-                      explaination: general_feedback_data,
-                      hint: hint_data,
-                      actual_answer:actual_answer_data
-                  })
+      if with_language_support
+        data.merge!({
+                        explaination: general_feedback_data,
+                        hint: hint_data,
+                        actual_answer:actual_answer_data
+                    })
+      else
+        data.merge!({
+                        explaination: general_feedback_data['english'],
+                        hint: hint_data['english'],
+                        actual_answer:actual_answer_data['english']
+                    })
+      end
     end
-    data
+    return data
   end
 
   def add_tag(name,value)

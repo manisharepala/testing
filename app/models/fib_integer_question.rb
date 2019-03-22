@@ -1,5 +1,9 @@
-class FibQuestion < Question
+class FibIntegerQuestion < Question
   DASH = '#DASH#'
+
+  field :no_of_int_digits, type: Integer, default: 2
+  field :no_of_decimal_digits, type: Integer, default: 2
+
   embeds_many :question_fill_blanks, cascade_callbacks: :true
   validate :dash_presence
   validates_presence_of :question_fill_blanks
@@ -11,7 +15,7 @@ class FibQuestion < Question
   end
 
   def as_json(with_key: false,with_language_support:false)
-    final_data = common_data_json(with_key: with_key,with_language_support:with_language_support).merge(blanks: question_fill_blanks.map{|b| b.as_json(with_key: with_key,with_language_support:with_language_support)})
+    final_data = common_data_json(with_key: with_key,with_language_support:with_language_support).merge(blanks: question_fill_blanks.map{|b| b.as_json(with_key: with_key,with_language_support:with_language_support)}).merge(no_of_int_digits:no_of_int_digits,no_of_decimal_digits:no_of_decimal_digits)
     JSON.parse(final_data.to_json)
   end
 

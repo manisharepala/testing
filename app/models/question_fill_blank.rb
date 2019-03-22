@@ -1,12 +1,12 @@
 class QuestionFillBlank
   include Mongoid::Document
-  field :answer, type: String
+  field :answer, type: Array
   field :case_sensitive, type: Boolean, default: false
   validates_presence_of :answer
-  before_create :remove_extra_spaces
+  # before_create :remove_extra_spaces
   embedded_in :fib_question
 
-  def as_json(with_key: false)
+  def as_json(with_key: false,with_language_support:false)
     if with_key
       {
         id: self.id.to_s,

@@ -2,15 +2,17 @@ class Quiz
   include Mongoid::Document
   include Mongoid::Timestamps
 
-  field :name, type: String
-  field :description, type: String
-  field :instructions, type: BSON::Binary
-  field :total_marks, type: Float
+  # field :name, type: String
+  # field :description, type: String
+  # field :instructions, type: BSON::Binary
+  embeds_many :quiz_language_specific_datas, cascade_callbacks: true
+  accepts_nested_attributes_for :quiz_language_specific_datas
+  field :total_marks, type: Float, default:100
 
-  field :total_time, type: Integer # in minutes
+  field :total_time, type: Integer, default:180 # in minutes
   field :created_by, type: Integer
-  field :tag_ids, type: Array
-  field :question_ids, type: Array
+  field :tag_ids, type: Array, default: []
+  field :question_ids, type: Array, default: []
   field :guid, type: String
   field :type, type: String
   field :player, type: String
@@ -19,13 +21,12 @@ class Quiz
   field :final, type: Boolean, default: false
   field :uploaded, type: Boolean, default: false
   field :focus_area, type: BSON::Binary
-  field :time_open, type: DateTime
-  field :time_close, type: DateTime
   field :quiz_json, type: BSON::Binary
 
-  embeds_many :quiz_targeted_groups
-  embeds_many :quiz_sections
-  embeds_many :quiz_question_instances, as: :question_instances
+  #embeds_many :quiz_targeted_groups
+  has_many :quiz_sections
+  field :quiz_section_ids, type: Array, default: []
+  #embeds_many :quiz_question_instances, as: :question_instances
 
   before_create :create_guid
 
@@ -47,6 +48,10 @@ class Quiz
     self.guid = SecureRandom.uuid
   end
 
+  def id
+    self._id.to_s
+  end
+
   def create_zip
     quiz = self
 
@@ -65,7 +70,11 @@ class Quiz
     end
 
     File.open(quiz_zip_path+"assessment.json","w") do |f|
-      f.write((quiz.as_json(with_key:true)).to_json)
+      if (1==1)
+        f.write((quiz.as_json(with_key:true)).to_json)
+      else
+        f.write((quiz.as_json(with_key:true, with_language_support:true)).to_json)
+      end
     end
 
     Archive::Zip.archive(zip_name, quiz_zip_path)
@@ -119,43 +128,52 @@ class Quiz
     q.save!
   end
 
-  def as_json(with_key: false)
-    des = '' if !description.present?
-    ins = '' if !instructions.present?
-    t_marks = question_ids.map{|id| Question.find(id).default_mark}.sum if !total_marks.present?
-    t_time = 180 if !total_time.present?
-    data = {name:name, description:des, instructions:'Attempt all Questions', total_marks:t_marks, total_time:t_time, player:player, time_open:'', time_close:''} #,quiz_detail:quiz_detail.as_json
+  def as_json(with_key: false,with_language_support: false)
+    quiz_name_data = {}
+    quiz_description_data = {}
+    quiz_instructions_data = {}
 
-    if quiz_sections.count > 0
-      quiz_sections_data = []
-      quiz_sections.each do |qs|
-        qqi_data = {name:qs.name, instructions:qs.instructions}
-        questions_data = []
-        qs.quiz_question_instances.each do |qqi|
-          if with_key
-            questions_data << qqi.question.as_json(with_key:with_key)
-          else
-            questions_data << qqi.question.as_json
-          end
-        end
-        qqi_data = qqi_data.merge(questions:questions_data)
-        quiz_sections_data << qqi_data
-      end
-      data = data.merge(quiz_sections:quiz_sections_data)
-    else
-      questions_data = []
-      question_ids.each do |id|
-        q = Question.find(id)
-        if with_key
-          questions_data << q.as_json(with_key:with_key)
-        else
-          questions_data << q.as_json
-        end
-      end
-      data = data.merge(questions:questions_data)
+    quiz_language_specific_datas.each do |d|
+      quiz_name_data[d.language] = d.name
+      quiz_description_data[d.language] = d.description
+      quiz_instructions_data[d.language] = d.instructions
     end
 
-    return data
+    if with_language_support
+      data = {name:quiz_name_data, description:quiz_description_data, instructions:quiz_instructions_data, total_marks:total_marks, total_time:total_time, player:player, languages_supported:['english','hindi']}
+    else
+      data = {name:quiz_name_data['english'], description:quiz_description_data['english'], instructions:quiz_instructions_data['english'], total_marks:total_marks, total_time:total_time, player:player, languages_supported:['english']}
+    end
+
+    tags_data = []
+    tag_ids.each do |guid|
+      d = TagsServer.get_tag_data(guid)
+      tags_data << {d['name']=>d['value']} if d.present?
+    end
+    # tags_data = [{"course"=>"CBSE"}, {"grade"=>"4"}, {"subject"=>"Social"}, {"chapter"=>"Our Natural Resources – Soil and Water"}, {"concept"=>"Our Natural Resources – Soil and Water"}]
+    data.merge(tags:tags_data)
+
+    if quiz_section_ids.count > 0
+      q_ids = quiz_section_ids.map{|qs_id| QuizSection.find(qs_id).question_ids}.flatten
+      quiz_sections_data = []
+      quiz_section_ids.each do |qs_id|
+        qs = QuizSection.find(qs_id)
+        quiz_sections_data << qs.as_json(with_language_support:with_language_support)
+      end
+    else
+      q_ids = question_ids
+      quiz_sections_data = []
+    end
+
+    questions_data = []
+    q_ids.each do |id|
+      q = Question.find(id)
+      questions_data << q.as_json(with_key:with_key,with_language_support:with_language_support)
+    end
+    data = data.merge(questions:questions_data)
+    data = data.merge(quiz_sections:quiz_sections_data)
+
+    return JSON.parse(data.to_json)
   end
 
   def self.migrate_quizzes(guid)
