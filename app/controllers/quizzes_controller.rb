@@ -197,7 +197,7 @@ class QuizzesController < ApplicationController
   def update_focus_area
     quiz = (Quiz.where(:guid.in => [params[:guid]]))[0]
     if !quiz.present?
-      quiz = Quiz.create(name:'quiz')
+      quiz = Quiz.create(quiz_language_specific_datas_attributes: [{name:'Quiz', language: 'english'}])
       quiz.guid = params[:guid]
       quiz.save!
     end
