@@ -114,7 +114,7 @@ class Quiz
       #    tags << d
       #  end
       # tags = {"grade"=>"177acf20-32ce-421b-8f32-c3b920c58e54", "subject"=>"fef249d0-4deb-454b-ba3a-70f6317f95d2", "chapter"=>"d84b02e8-6993-4e3a-9746-19de19a4b628", "concept"=>"99756e2f-b32b-417d-9fb4-190003131ce", "course"=>"99756e2f-b32b-417d-9fb4-190003131ce"}
-      success = content_server.upload_file(name,file_path, tags)
+      success = content_server.upload_file(quiz_language_specific_datas.where(language:Language::ENGLISH)[0].name,file_path, tags)
       if success
         self.update_attributes(uploaded:success)
         File.delete(file_path) if File.exist?(file_path)
