@@ -272,10 +272,10 @@ class QuizzesController < ApplicationController
     render json: data
   end
 
-  def create_quiz(question_ids, name, type)
+  def create_quiz(question_ids, name, type, duration, instructions)
     #q_ids = quiz_section_ids.map{|qs_id| QuizSection.find(qs_id).question_ids}.flatten
     total_marks = question_ids.map{|id| Question.find(id).default_mark}.sum
-    quiz = Quiz.create(quiz_language_specific_datas_attributes: [{name:name,description: 'Quiz description',instructions:'Quiz instructions', language: 'english'}],question_ids:question_ids, type:type, player:type, total_marks:total_marks)
+    quiz = Quiz.create(quiz_language_specific_datas_attributes: [{name:name,description: 'Quiz description',instructions:instructions, language: 'english'}],question_ids:question_ids, type:type, player:type, total_marks:total_marks, total_time:duration)
     quiz.key = "/quiz_zips/#{quiz.guid}.zip"
     quiz.file_path = Rails.root.to_s + "/public/quiz_zips/#{quiz.guid}.zip"
     quiz.save!
@@ -283,7 +283,7 @@ class QuizzesController < ApplicationController
 
   def zip_upload_question
     @publisher_question_banks = PublisherQuestionBank.all
-    @quiz_types = [['Concept Practice Objective' ,'concept_practice_objective'],['Concept Test Objective' ,'concept_test_objective'],['Concept Practice Subjective' ,'concept_practice_subjective'],['Concept Test Subjective' ,'concept_test_subjective'],['Challenge Test Objective' ,'challenge_test_objective'],['Challenge Test Subjective' ,'challenge_test_subjective'],['Chapter Practice Objective' ,'chapter_practice_objective'],['Chapter Test Objective' ,'chapter_test_objective'],['Chapter Practice Subjective' ,'chapter_practice_subjective'],['Chapter Test Subjective' ,'chapter_test_subjective'],['Challenge Test' ,'challenge test'], ['Subjective', 'subjective'], ['Try Out', 'tryout'], ['Concept Practice', 'concept_practice']]
+    @quiz_types = [['All Types', 'all_types'],['Concept Practice Objective' ,'concept_practice_objective'],['Concept Test Objective' ,'concept_test_objective'],['Concept Practice Subjective' ,'concept_practice_subjective'],['Concept Test Subjective' ,'concept_test_subjective'],['Challenge Test Objective' ,'challenge_test_objective'],['Challenge Test Subjective' ,'challenge_test_subjective'],['Chapter Practice Objective' ,'chapter_practice_objective'],['Chapter Test Objective' ,'chapter_test_objective'],['Chapter Practice Subjective' ,'chapter_practice_subjective'],['Chapter Test Subjective' ,'chapter_test_subjective'],['Challenge Test' ,'challenge test'], ['Subjective', 'subjective'], ['Try Out', 'tryout'], ['Concept Practice', 'concept_practice']]
   end
 
   def post_zip_upload_question
@@ -403,11 +403,13 @@ class QuizzesController < ApplicationController
     publisher_question_bank = PublisherQuestionBank.find(publisher_question_bank_id)
     file = File.open(etx_file)
     etx = Nokogiri::XML(file)
-    test_paper = etx.xpath("/ignitor_questions")
+    test_paper = etx.xpath("/assessment")
+    duration = test_paper.xpath("time").inner_text
+    instructions = test_paper.xpath("instructions").inner_text
     question_ids = []
 
     test_paper.xpath("group_questions").each do |group_ques|
-      question = create_group_question(user_id, group_ques,publisher_question_bank_id, hidden)
+      question = create_group_question(user_id, group_ques,publisher_question_bank_id,s3_path,master_dir,images_dir)
       question_ids << question._id
     end
 
@@ -418,12 +420,10 @@ class QuizzesController < ApplicationController
     publisher_question_bank.attributes = {question_ids:(publisher_question_bank.question_ids + question_ids)}
     publisher_question_bank.save!
 
-    create_quiz(question_ids,quiz_name, type)
+    create_quiz(question_ids,quiz_name, type,duration, instructions)
 
     puts ("Successfully updated #{question_ids.count} -- #{question_ids}")
   end
-
-
 
   def create_simple_question(user_id, ques,publisher_question_bank_id, s3_path,master_dir,images_dir)
     question_data = get_simple_question_hash(user_id,ques, publisher_question_bank_id)
@@ -435,10 +435,12 @@ class QuizzesController < ApplicationController
 
   def update_image_path(ques_id,s3_path)
     question = Question.find(ques_id)
-    question.update_attributes(question_text:update_img_src(question.question_text,s3_path,ques_id), general_feedback:update_img_src(question.general_feedback,s3_path,ques_id))
-    if question.qtype == 'MmcqQuestion' || question.qtype == 'SmcqQuestion'
+    question.question_language_specific_datas.each do |qlsd|
+      qlsd.update_attributes(question_text:update_img_src(qlsd.question_text,s3_path,ques_id), general_feedback:update_img_src(qlsd.general_feedback,s3_path,ques_id))
+    end
+    if question.qtype == 'MmcqQuestion' || question.qtype == 'SmcqQuestion' || question.qtype == 'AssertionReasonQuestion' || question.qtype == 'McqMatrixQuestion' || question.qtype == 'TrueFalseQuestion'
       question.question_answers.each do |qa|
-        qa.update_attributes(answer:update_img_src(qa.answer,s3_path,ques_id))
+        qa.update_attributes(answer_english:update_img_src(qa.answer_english,s3_path,ques_id))
       end
     end
   end
@@ -464,25 +466,21 @@ class QuizzesController < ApplicationController
   def copy_question_images(ques_id,master_dir, images_dir)
     ques_images = []
     question = Question.find(ques_id)
-    Nokogiri::HTML(question.question_text).css('img').map{ |i| i['src'] }.each do |img|
-      ques_images << img.split("/").last
-    end
+    question.question_language_specific_datas.each do |qlsd|
+      Nokogiri::HTML(qlsd.question_text).css('img').map{ |i| i['src'] }.each do |img|
+        ques_images << img.split("/").last
+      end
 
-    Nokogiri::HTML(question.general_feedback).css('img').map{ |i| i['src'] }.each do |img|
-      ques_images << img.split("/").last
-    end
-
-    if question.qtype == 'MmcqQuestion' || question.qtype == 'SmcqQuestion'
-      question.question_answers.each do |qa|
-        Nokogiri::HTML(qa.answer).css('img').map{ |i| i['src'] }.each do |img|
-          ques_images << img.split("/").last
-        end
+      Nokogiri::HTML(qlsd.general_feedback).css('img').map{ |i| i['src'] }.each do |img|
+        ques_images << img.split("/").last
       end
     end
 
-    if question.qtype == 'Passage'
-      question.questions.each do |q|
-        copy_question_images(q._id,master_dir,images_dir)
+    if question.qtype == 'MmcqQuestion' || question.qtype == 'SmcqQuestion' || question.qtype == 'AssertionReasonQuestion' || question.qtype == 'McqMatrixQuestion' || question.qtype == 'TrueFalseQuestion'
+      question.question_answers.each do |qa|
+        Nokogiri::HTML(qa.answer_english).css('img').map{ |i| i['src'] }.each do |img|
+          ques_images << img.split("/").last
+        end
       end
     end
 
@@ -511,39 +509,40 @@ class QuizzesController < ApplicationController
     question.upload_images
   end
 
-  def create_group_question(user_id, group_ques,publisher_question_bank_id, hidden=false)
-    question = Question.new
-    question.publisher_question_bank_ids = [publisher_question_bank_id]
-    question.question_text = group_ques.xpath("instruction").inner_text
-    question.qtype = 'PassageQuestion'
-    question.createdby = user_id
-    question.default_mark = 0
-    question.hidden = hidden
-    question.save(:validate => false)
+  def create_group_question(user_id, group_ques,publisher_question_bank_id,s3_path,master_dir,images_dir)
+    question_data = get_group_question_hash(user_id,group_ques, publisher_question_bank_id,s3_path,master_dir,images_dir)
+    question = Question.create_question(question_data)
+    update_image_path(question._id,s3_path)
+    copy_question_images(question._id,master_dir,images_dir)
+    return question
+  end
 
+  def get_group_question_hash(user_id, group_ques, publisher_question_bank_id,s3_path,master_dir,images_dir)
+    data = {}
+    data['publisher_question_bank_ids'] = [publisher_question_bank_id]
+    data['question_language_specific_datas_attributes'] = []
+    d = {}
+    d['question_text'] = group_ques.xpath("instruction").inner_text rescue ''
+    d['language'] = Language::ENGLISH
+
+    data['question_language_specific_datas_attributes'] << d
+    data['qtype'] = 'PassageQuestion'
+    data['created_by'] = user_id
+    data['tag_ids'] = []
     group_ques.xpath("itags/itag").each do |tag|
       name = tag.attr("name").to_s
       value = tag.attr("value").to_s
-      if ["course", "academic_class", "subject", "chapter", "concept_names"].include? name
-        question.add_tag(name, value).tag_id
-      else
-        if name == "subjective_lines"
-          question.answer_lines = value
-          question.save(:validate => false)
-        else
-          question.add_tag(name, value)
-        end
+      if ["course", "grade", "subject", "chapter", "concept"].include? name
+        data['tag_ids'] << TagsServer.get_tag_guid(name, value)
       end
     end
-
-    child_questions = []
+    data['question_guids'] = []
     group_ques.xpath("question_set").each do |ques|
-      q = get_simple_question_hash(user_id, ques, publisher_question_bank_id)
-      child_questions << q
+      child_question = create_simple_question(user_id, ques,publisher_question_bank_id, s3_path,master_dir,images_dir)
+      data['question_guids'] << child_question.guid
     end
-
-    question.attributes = {questions_attributes: child_questions}
-    return question
+    data['default_mark'] = data['question_guids'].map{|guid| Question.where(guid:guid)[0].default_mark}.sum
+    return data
   end
 
   def get_simple_question_hash(user_id, ques, publisher_question_bank_id)
@@ -566,13 +565,13 @@ class QuizzesController < ApplicationController
 
     data['created_by'] = user_id
 
-    if ['SmcqQuestion', 'MmcqQuestion', 'TrueFalseQuestion'].include? data['qtype']
+    if ['SmcqQuestion', 'MmcqQuestion', 'TrueFalseQuestion', 'McqMatrixQuestion', 'AssertionReasonQuestion'].include? data['qtype']
       data['question_answers_attributes'] = []
       fraction = ques.xpath("question/answer").attr("value").to_s.split(",") if !ques.xpath("question/answer").nil?
       ques.xpath("question/option").each_with_index do |option, index|
         data['question_answers_attributes'] << get_question_answer_hash(fraction, index, option)
       end
-    elsif ['FibQuestion'].include? data['qtype']
+    elsif ['FibQuestion', 'FibIntegerQuestion'].include? data['qtype']
       data['question_fill_blanks_attributes'] = []
       ques.xpath("question/options_fib").each do |option|
         data['question_fill_blanks_attributes'] << get_question_fill_blank_hash(option)
@@ -583,7 +582,7 @@ class QuizzesController < ApplicationController
     ques.xpath("itags/itag").each do |tag|
       name = tag.attr("name").to_s
       value = tag.attr("value").to_s
-      if ["course", "academic_class", "subject", "chapter", "concept_names"].include? name
+      if ["course", "grade", "subject", "chapter", "concept"].include? name
         data['tag_ids'] << TagsServer.get_tag_guid(name, value)
       else
         if name == "subjective_lines" && (['SubjectiveQuestion'].include? data['qtype'])
@@ -643,8 +642,14 @@ class QuizzesController < ApplicationController
       "MmcqQuestion"
     elsif qtype == "fib"
       "FibQuestion"
-    elsif qtype == "tof"
+    elsif qtype == "tof" || qtype == "truefalse"
       "TrueFalseQuestion"
+    elsif qtype == "fibinteger"
+      "FibIntegerQuestion"
+    elsif qtype == "mcqmatrix"
+      "McqMatrixQuestion"
+    elsif qtype == "assertionreason"
+      "AssertionReasonQuestion"
     elsif qtype == "saq" || qtype == "laq" || qtype == "vsaq"
       "SubjectiveQuestion"
     end

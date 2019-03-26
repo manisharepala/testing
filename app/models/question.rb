@@ -2,12 +2,6 @@ class Question
   include Mongoid::Document
   include Mongoid::Timestamps
 
-  # remove_later
-  field :question_text,as: :questiontext, type: BSON::Binary
-  field :generalfeedback,as: :general_feedback, type: BSON::Binary
-  field :hint, type: BSON::Binary
-  field :actual_answer, type: BSON::Binary
-
   embeds_many :question_language_specific_datas, cascade_callbacks: true
 
   field :default_mark,as: :defaultmark, type: Float, default: 1
@@ -151,7 +145,7 @@ class Question
   end
 
   def id
-    self._id
+    self._id.to_s
   end
 
   def self.get_updated_text(text)
