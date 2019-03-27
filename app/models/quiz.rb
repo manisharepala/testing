@@ -117,7 +117,7 @@ class Quiz
       success = content_server.upload_file(quiz_language_specific_datas.where(language:Language::ENGLISH)[0].name,file_path, tags)
       success = content_server.update_file(quiz_language_specific_datas.where(language:Language::ENGLISH)[0].name,file_path, tags)
       if success
-        self.update_attributes(uploaded:success)
+        self.set(uploaded:true)
         File.delete(file_path) if File.exist?(file_path)
       end
     end
