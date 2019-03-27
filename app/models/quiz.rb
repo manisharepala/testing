@@ -71,9 +71,9 @@ class Quiz
 
     File.open(quiz_zip_path+"assessment.json","w") do |f|
       if (1==2)
-        f.write((quiz.as_json(with_key:true)).to_json)
+        f.write(((quiz.as_json(with_key:true)).to_json).to_json)
       else
-        f.write((quiz.as_json(with_key:true, with_language_support:true)).to_json)
+        f.write(((quiz.as_json(with_key:true, with_language_support:true)).to_json).to_json)
       end
     end
 
