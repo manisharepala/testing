@@ -3,7 +3,7 @@
     %tbody
       %tr
         %td=1
-        %td=(Question.get_updated_text(@question.question_language_specific_datas.where(language: Language::ENGLISH)[0].question_text)).html_safe
+        %td=(Question.get_updated_text(@question.question_language_specific_datas.where(language: Language::ENGLISH)[0].question_text) rescue 'question text').html_safe
       -if (@question.qtype=='SmcqQuestion')||(@question.qtype=='MmcqQuestion')||(@question.qtype=='TrueFalseQuestion')
         - @question.question_answers.each_with_index do |qa,i|
           %tr
@@ -27,7 +27,7 @@
       -#  %td= @question.actual_answer.html_safe
       %tr
         %td Explanation:
-        %td=(Question.get_updated_text(@question.question_language_specific_datas.where(language: Language::ENGLISH)[0].general_feedback)).html_safe
+        %td=(Question.get_updated_text(@question.question_language_specific_datas.where(language: Language::ENGLISH)[0].general_feedback) rescue 'explanation').html_safe
       %tr
         %td Marks:
         %td= @question.default_mark
