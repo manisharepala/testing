@@ -272,13 +272,14 @@ class QuizzesController < ApplicationController
     render json: data
   end
 
-  def create_quiz(question_ids, name, type, duration, instructions)
+  def create_quiz(question_ids, name, type, duration, instructions,quiz_section_ids)
     #q_ids = quiz_section_ids.map{|qs_id| QuizSection.find(qs_id).question_ids}.flatten
     total_marks = question_ids.map{|id| Question.find(id).default_mark}.sum
-    quiz = Quiz.create(quiz_language_specific_datas_attributes: [{name:name,description: 'Quiz description',instructions:instructions, language: 'english'}],question_ids:question_ids, type:type, player:type, total_marks:total_marks, total_time:duration)
+    quiz = Quiz.create(quiz_language_specific_datas_attributes: [{name:name,description: 'Quiz description',instructions:instructions, language: 'english'}],question_ids:question_ids,quiz_section_ids:quiz_section_ids, type:type, player:type, total_marks:total_marks, total_time:duration)
     quiz.key = "/quiz_zips/#{quiz.guid}.zip"
     quiz.file_path = Rails.root.to_s + "/public/quiz_zips/#{quiz.guid}.zip"
     quiz.save!
+    return quiz
   end
 
   def zip_upload_question
@@ -407,20 +408,52 @@ class QuizzesController < ApplicationController
     duration = test_paper.xpath("time").inner_text
     instructions = test_paper.xpath("instructions").inner_text
     question_ids = []
+    quiz_section_ids = []
 
-    test_paper.xpath("group_questions").each do |group_ques|
-      question = create_group_question(user_id, group_ques,publisher_question_bank_id,s3_path,master_dir,images_dir)
-      question_ids << question._id
+    are_sections_present = (test_paper.xpath("section").count > 0)
+    if are_sections_present
+      test_paper.xpath("section").each do |section|
+        quiz_section_name = section.xpath("name").inner_text
+        quiz_section_instructions = section.xpath("instructions").inner_text
+
+        quiz_section_question_ids = []
+        section.xpath("group_questions").each do |group_ques|
+          question = create_group_question(user_id, group_ques,publisher_question_bank_id,s3_path,master_dir,images_dir)
+          quiz_section_question_ids << question._id
+        end
+
+        section.xpath("question_set").each do |ques|
+          question = create_simple_question(user_id, ques,publisher_question_bank_id, s3_path,master_dir,images_dir)
+          quiz_section_question_ids << question._id
+        end
+
+        quiz_section = QuizSection.create(question_ids:quiz_section_question_ids,quiz_section_language_specific_datas_attributes: [{name:quiz_section_name,instructions:quiz_section_instructions, language: 'english'}])
+
+        quiz_section_ids << quiz_section.id.to_s
+      end
+    else
+      test_paper.xpath("group_questions").each do |group_ques|
+        question = create_group_question(user_id, group_ques,publisher_question_bank_id,s3_path,master_dir,images_dir)
+        question_ids << question._id
+      end
+
+      test_paper.xpath("question_set").each do |ques|
+        question = create_simple_question(user_id, ques,publisher_question_bank_id, s3_path,master_dir,images_dir)
+        question_ids << question._id
+      end
     end
 
-    test_paper.xpath("question_set").each do |ques|
-      question = create_simple_question(user_id, ques,publisher_question_bank_id, s3_path,master_dir,images_dir)
-      question_ids << question._id
-    end
     publisher_question_bank.attributes = {question_ids:(publisher_question_bank.question_ids + question_ids)}
     publisher_question_bank.save!
 
-    create_quiz(question_ids,quiz_name, type,duration, instructions)
+    quiz = create_quiz(question_ids,quiz_name, type,duration, instructions,quiz_section_ids)
+    if are_sections_present
+      quiz_section_ids.each do |qs_id|
+        qs = QuizSection.find(qs_id)
+        qs.quiz_id = quiz.id.to_s
+        qs.save!
+      end
+    end
 
     puts ("Successfully updated #{question_ids.count} -- #{question_ids}")
   end

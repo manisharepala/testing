@@ -10,7 +10,7 @@ class QuizSection
   field :parent_id, type: String
   field :child_ids, type: Array
 
-  belongs_to :quiz
+  field :quiz_id, type: String
   # embedded_in :quiz
   #embeds_many :quiz_question_instances, as: :question_instances
   # has_many :questions, :through=>:quiz_question_instances

@@ -24,7 +24,7 @@ class Quiz
   field :quiz_json, type: BSON::Binary
 
   #embeds_many :quiz_targeted_groups
-  has_many :quiz_sections
+  # has_many :quiz_sections
   field :quiz_section_ids, type: Array, default: []
   #embeds_many :quiz_question_instances, as: :question_instances
 
