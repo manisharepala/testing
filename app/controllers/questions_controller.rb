@@ -15,15 +15,15 @@ class QuestionsController < ApplicationController
     logger.info "11111111111222222222222222222111111"
     logger.info question_params
     qd_params = question_params['question_language_specific_datas_attributes'].to_h
-    logger.info "2222222222222222222222222222222222222222222222222222222222222222222222222222222222222"
-    logger.info qd_params.values[0]['question_text']
+    # logger.info "2222222222222222222222222222222222222222222222222222222222222222222222222222222222222"
+    # logger.info qd_params.values[0]['question_text']
     # @question.question_language_specific_datas_attributes = qd_params.values
     # @question.save!
 
     if params[:qtype] == 'SmcqQuestion' || params[:qtype] == 'MmcqQuestion' || params[:qtype] == 'TrueFalseQuestion' || params[:qtype] == 'McqMatrixQuestion' || params[:qtype] == 'AssertionReasonQuestion'
       qa_params = question_params['question_answers_attributes'].to_h
-      logger.info "33333333333333333333333333333333333333333333333333333333333"
-      logger.info qa_params
+      # logger.info "33333333333333333333333333333333333333333333333333333333333"
+      # logger.info qa_params
       @question.question_answers_attributes = qa_params.values
       @question.save!
     elsif params[:qtype] == 'FibQuestion'
