@@ -210,4 +210,4 @@ qtg = QuizTargetedGroup.create(quiz_targeted_group_data)
 qtg = QuizTargetedGroup.find("5c84f28b957966328b7205d3")
 {"id"=>"5c84f28b957966328b7205d3", "quiz_id"=>"5c84f12695796631967205de", "password"=>"4123", "shuffle_questions"=>false, "shuffle_options"=>false, "pause"=>false, "time_open"=>1552216714, "time_close"=>1583773666, "show_score_after"=>60, "show_answers_after"=>120, "message_subject"=>"Quiz publish subject", "message_body"=>"quiz publish body", "max_no_of_attempts"=>100, "evaluate_server_side"=>false,"key_update"=>false}
 
-quiz.as_json(with_key:true,with_language_support:false)
+quiz.as_json(with_key:true,with_language_support:true)

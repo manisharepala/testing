@@ -24,7 +24,7 @@ class Quiz
   field :quiz_json, type: BSON::Binary
 
   #embeds_many :quiz_targeted_groups
-  has_many :quiz_sections
+  # has_many :quiz_sections
   field :quiz_section_ids, type: Array, default: []
   #embeds_many :quiz_question_instances, as: :question_instances
 
@@ -70,10 +70,10 @@ class Quiz
     end
 
     File.open(quiz_zip_path+"assessment.json","w") do |f|
-      if (1==1)
-        f.write((quiz.as_json(with_key:true)).to_json)
+      if (1==2)
+        f.write(((quiz.as_json(with_key:true)).to_json).to_json)
       else
-        f.write((quiz.as_json(with_key:true, with_language_support:true)).to_json)
+        f.write(((quiz.as_json(with_key:true, with_language_support:true)).to_json).to_json)
       end
     end
 
@@ -115,8 +115,9 @@ class Quiz
       #  end
       # tags = {"grade"=>"177acf20-32ce-421b-8f32-c3b920c58e54", "subject"=>"fef249d0-4deb-454b-ba3a-70f6317f95d2", "chapter"=>"d84b02e8-6993-4e3a-9746-19de19a4b628", "concept"=>"99756e2f-b32b-417d-9fb4-190003131ce", "course"=>"99756e2f-b32b-417d-9fb4-190003131ce"}
       success = content_server.upload_file(quiz_language_specific_datas.where(language:Language::ENGLISH)[0].name,file_path, tags)
+      success = content_server.update_file(quiz_language_specific_datas.where(language:Language::ENGLISH)[0].name,file_path, tags)
       if success
-        self.update_attributes(uploaded:success)
+        self.set(uploaded:true)
         File.delete(file_path) if File.exist?(file_path)
       end
     end
@@ -173,7 +174,7 @@ class Quiz
     data = data.merge(questions:questions_data)
     data = data.merge(quiz_sections:quiz_sections_data)
 
-    return JSON.parse(data.to_json)
+    data
   end
 
   def self.migrate_quizzes(guid)
