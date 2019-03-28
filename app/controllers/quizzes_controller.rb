@@ -273,8 +273,13 @@ class QuizzesController < ApplicationController
   end
 
   def create_quiz(question_ids, name, type, duration, instructions,quiz_section_ids)
-    #q_ids = quiz_section_ids.map{|qs_id| QuizSection.find(qs_id).question_ids}.flatten
-    total_marks = question_ids.map{|id| Question.find(id).default_mark}.sum
+    if quiz_section_ids.count > 0
+      q_ids = quiz_section_ids.map{|qs_id| QuizSection.find(qs_id).question_ids}.flatten
+      total_marks = q_ids.map{|id| Question.find(id).default_mark}.sum
+    else
+      total_marks = question_ids.map{|id| Question.find(id).default_mark}.sum
+    end
+
     quiz = Quiz.create(quiz_language_specific_datas_attributes: [{name:name,description: 'Quiz description',instructions:instructions, language: 'english'}],question_ids:question_ids,quiz_section_ids:quiz_section_ids, type:type, player:type, total_marks:total_marks, total_time:duration)
     quiz.key = "/quiz_zips/#{quiz.guid}.zip"
     quiz.file_path = Rails.root.to_s + "/public/quiz_zips/#{quiz.guid}.zip"
