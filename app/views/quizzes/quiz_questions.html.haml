@@ -5,7 +5,7 @@
       %tbody
         %tr
           %td=i+1
-          %td=(Question.get_updated_text(q.question_language_specific_datas.where(language: Language::ENGLISH)[0].question_text)).html_safe
+          %td=(Question.get_updated_text(q.question_language_specific_datas.where(language: Language::ENGLISH)[0].question_text rescue q.question_text)).html_safe
         -if (q.qtype=='SmcqQuestion')||(q.qtype=='MmcqQuestion')||(q.qtype=='TrueFalseQuestion')
           - q.question_answers.each_with_index do |qa,i|
             %tr
