@@ -5,9 +5,14 @@
       %tbody
         %tr
           %th.text-center{style:"width:40%;"}= f.label :Name
+          %th.text-center{style:"width:40%;"}= f.label :Instructions
           %th.text-center= f.label :Final
         %tr
-          %td.text-center=f.text_area :name
+          - @quiz.quiz_language_specific_datas.each_with_index do |quiz_language_specific_data, i|
+            = f.simple_fields_for :quiz_language_specific_datas, quiz_language_specific_data do |qd|
+              - if(quiz_language_specific_data.language == Language::ENGLISH)
+                %td.text-center=qd.text_area :name
+                %td.text-center=qd.text_area :instructions.to_s.html_safe
           %td.text-center=f.check_box :final, :checked => (@quiz.final == true) ? true : false
     %br
     = f.submit class:'btn btn-default'

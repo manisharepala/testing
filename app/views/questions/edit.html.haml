@@ -13,7 +13,21 @@
       %tbody
         %tr
           %th.text-center= f.label :question_text
-          %td= f.cktext_area :question_text, :class => "form-control", required:true, :ckeditor => {:toolbar => 'Full'}, :ckeditor => { :height => 200 }
+        %tr
+          %td
+            - @question.question_language_specific_datas.each_with_index do |question_language_specific_data, i|
+              = f.simple_fields_for :question_language_specific_datas, question_language_specific_data do |qd|
+                %tr
+                  %td.text-center{style:"width:10%;"}
+                  %td
+                    - if(question_language_specific_data.language == Language::ENGLISH)
+                      = qd.cktext_area :question_text, :class => "form-control", required:true, :class => "form-control", required:true, :ckeditor => {:toolbar =>    'Full'}, :ckeditor => { :height => 200 }
+                      %tr
+                        %th.text-center Explanation
+                      %tr
+                        %td.text-center{style:"width:10%;"}
+                        %td
+                          = qd.cktext_area :general_feedback, :class => "form-control", required:true, :class => "form-control", required:true, :ckeditor => {:toolbar =>    'Full'}, :ckeditor => { :height => 200 }
         %tr
           %th.text-center{style: "height: 3.5em"} Options
         %tr
@@ -27,10 +41,7 @@
                         =qa.check_box :fraction, :checked => (question_answer.fraction == true) ? true : false, class: 'SmcqQuestions'
                       - else
                         =qa.check_box :fraction, :checked => (question_answer.fraction == true) ? true : false
-                    %td= qa.cktext_area :answer, :class => "form-control", required:true, value: question_answer.answer, :ckeditor => { :height => 100 }
-        %tr
-          %th.text-center Explanation
-          %td= f.cktext_area :general_feedback, :class => "form-control", required:true, :ckeditor => {:toolbar => 'Full'}, :ckeditor => { :height => 200 }
+                    %td= qa.cktext_area :answer, :class => "form-control", required:true, value: question_answer.answer_english, :ckeditor => { :height => 100 }
         %tr
           %th.text-center Marks
           %td= f.text_area :default_mark
