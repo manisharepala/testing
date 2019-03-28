@@ -28,7 +28,7 @@ class QuestionsController < ApplicationController
       @question.save!
     elsif params[:qtype] == 'FibQuestion'
     end
-     @question.update_attributes( default_mark: question_params['default_mark'],question_language_specific_datas: [question_text: qd_params.values[0]['question_text'],general_feedback: qd_params.values[0]['general_feedback']])
+     @question.update_attributes( default_mark: question_params['default_mark'],question_language_specific_datas: [question_text: qd_params.values[0]['question_text'],general_feedback: qd_params.values[0]['general_feedback']]) rescue 'question text and explanation'
 
     respond_to do |format|
       if true
