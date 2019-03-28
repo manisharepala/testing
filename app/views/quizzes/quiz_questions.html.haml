@@ -12,7 +12,7 @@
               %td{style:"width:10%;"}
                 %input{:name => "#{q.id}_#{qa.id}", :type => "radio", value:"1", checked: (qa.fraction==true) ? true : false, style:'cursor: not-allowed;pointer-events: none;'}
               %td
-                %span= Question.get_updated_text(qa.answer_english).html_safe
+                %span= Question.get_updated_text(qa.answer_english) rescue 'answer'.html_safe
 
         -elsif q.qtype=="FibQuestion"
           %tr
