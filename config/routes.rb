@@ -13,6 +13,12 @@ Rails.application.routes.draw do
   get '/assessment/question/edit', to: 'questions#edit'
   post '/assessment/question/update', to: 'questions#update'
 
+  get '/assessment/quiz_sections', to: 'sections#get_quiz_sections'
+  get '/assessment/section_questions', to: 'sections#section_questions'
+  get 'assessment/section/edit', to: 'sections#section_edit'
+  get 'assessment/section/show', to: 'sections#section_show'
+  post 'assessment/section/update', to: 'sections#section_update'
+
   get '/assessment/get_quizzes', to: 'quizzes#get_quizzes'
   get '/assessment/get_quiz_json', to: 'quizzes#get_quiz_json'
 

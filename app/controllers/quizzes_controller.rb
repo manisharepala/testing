@@ -178,7 +178,8 @@ class QuizzesController < ApplicationController
 
   def quiz_update
     @quiz = Quiz.find(params[:id])
-    if @quiz.update_attributes(name: quiz_params[:name], final: quiz_params[:final])
+    q_params = quiz_params['quiz_language_specific_datas_attributes'].to_h
+    if @quiz.update_attributes(quiz_language_specific_datas: [name: q_params.values[0]['name']], final: quiz_params[:final])
       redirect_to assessment_all_quizzes_path
     else
       render 'edit'
@@ -695,6 +696,6 @@ class QuizzesController < ApplicationController
 
   private
   def quiz_params
-    params.require(:quiz).permit(:name,:final)
+    params.require(:quiz).permit(:final,quiz_language_specific_datas_attributes: [:name])
   end
 end

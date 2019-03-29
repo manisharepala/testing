@@ -1,0 +1,13 @@
+.container{style:'margin-top:4%;'}
+  %h3 Sections
+  %table.table.table-bordered.table-hover
+    %thead
+      %tr
+        %th S.no
+        %th Name
+        %th No of Questions
+    %tbody
+      %tr
+        %td=@section.quiz_section_language_specific_datas.where(language: Language::ENGLISH)[0].name
+        %td= @section.question_ids.count
+        %td= link_to "Edit",assessment_section_edit_path(id:@section.id), target:'_blank'
