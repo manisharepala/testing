@@ -72,7 +72,7 @@ class QuizzesController < ApplicationController
   def get_assessments_active_duration
     data = {}
     assessment_ids = params[:assessment_ids]
-    duration_sum = QuizAttemptData.where("data.guid"=>{:$in=>assessment_ids},user_id:params[:user_id],"data.player_subtype"=>{ :$ne=> "tryout" }).map{|qad| qad.data['active_duration']}.sum rescue 0
+    duration_sum = QuizAttemptData.where("data.asset_download_id"=>{:$in=>assessment_ids},user_id:params[:user_id],"data.player_subtype"=>{ :$ne=> "tryout" }).map{|qad| qad.data['active_duration']}.sum rescue 0
 
     data['duration'] = duration_sum
     render json: data
