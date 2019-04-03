@@ -15,7 +15,7 @@ class QuizzesController < ApplicationController
 
     assessment_ids.each do |guid|
       quiz = Quiz.where(guid:guid)[0]
-      qad = QuizAttemptData.where("data.guid"=>{:$in=>[guid]},user_id:params[:user_id]).last
+      qad = QuizAttemptData.where("data.asset_download_id"=>{:$in=>[guid]},user_id:params[:user_id]).last
 
       if quiz.present?
         (JSON.parse(quiz.focus_area)).each do |fa|
@@ -61,7 +61,7 @@ class QuizzesController < ApplicationController
   def get_assessments_attempted_count
     data = {}
     assessment_ids = params[:assessment_ids]
-    uniq_count = QuizAttemptData.where("data.guid"=>{:$in=>assessment_ids},user_id:params[:user_id]).group_by{|i| i.data["guid"]}.count
+    uniq_count = QuizAttemptData.where("data.asset_download_id"=>{:$in=>assessment_ids},user_id:params[:user_id]).group_by{|i| i.data["guid"]}.count
 
     data['attempted'] = uniq_count
     data['un_attempted'] = assessment_ids.count - uniq_count
@@ -87,7 +87,7 @@ class QuizzesController < ApplicationController
     un_attempted_ids = []
 
     assessment_ids.each do |guid|
-      qad = QuizAttemptData.where("data.guid"=>{:$in=>[guid]},user_id:params[:user_id]).last
+      qad = QuizAttemptData.where("data.asset_download_id"=>{:$in=>[guid]},user_id:params[:user_id]).last
 
       if qad.present?
         correct_ids << qad.data['correct']
@@ -127,7 +127,7 @@ class QuizzesController < ApplicationController
         un_attempted_ids = []
 
         v['assessment_ids'].each do |guid|
-          qad = QuizAttemptData.where("data.guid"=>{:$in=>[guid]},user_id:params[:user_id]).last
+          qad = QuizAttemptData.where("data.asset_download_id"=>{:$in=>[guid]},user_id:params[:user_id]).last
 
           if qad.present?
             correct_ids << qad.data['correct']
@@ -164,7 +164,7 @@ class QuizzesController < ApplicationController
 
   def get_quiz_attempt_data
     data = {}
-    qad = QuizAttemptData.where("data.guid"=>{:$in=>[params[:guid]]},user_id:params[:user_id].to_s).last
+    qad = QuizAttemptData.where("data.asset_download_id"=>{:$in=>[params[:guid]]},user_id:params[:user_id].to_s).last
     if qad.present?
       data = qad.data
     end
