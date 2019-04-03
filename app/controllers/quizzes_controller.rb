@@ -61,7 +61,7 @@ class QuizzesController < ApplicationController
   def get_assessments_attempted_count
     data = {}
     assessment_ids = params[:assessment_ids]
-    uniq_count = QuizAttemptData.where("data.asset_download_id"=>{:$in=>assessment_ids},user_id:params[:user_id]).group_by{|i| i.data["guid"]}.count
+    uniq_count = QuizAttemptData.where("data.asset_download_id"=>{:$in=>assessment_ids},user_id:params[:user_id]).group_by{|i| i.data["asset_download_id"]}.count
 
     data['attempted'] = uniq_count
     data['un_attempted'] = assessment_ids.count - uniq_count
