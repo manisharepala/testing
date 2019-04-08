@@ -1,0 +1,9 @@
+.container{style:'margin-top:4%;'}
+  %h3 Migrate Assessment from old Portal to new Portal
+  %br
+  %div
+    =form_tag(assessment_process_migrate_quiz_path,{:multipart=>true,:method=>:post}) do
+      %input{:name => "name", :type => "text", :placeholder => "assessment guid", style:'width:25%;'}
+      %br
+      %br
+      =submit_tag "Migrate", class:'btn btn-default'

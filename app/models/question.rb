@@ -115,13 +115,13 @@ class Question
     if with_key
       if with_language_support
         data.merge!({
-                        explaination: general_feedback_data,
+                        explanation: general_feedback_data,
                         hint: hint_data,
                         actual_answer:actual_answer_data
                     })
       else
         data.merge!({
-                        explaination: general_feedback_data['english'],
+                        explanation: general_feedback_data['english'],
                         hint: hint_data['english'],
                         actual_answer:actual_answer_data['english']
                     })

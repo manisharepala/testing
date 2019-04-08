@@ -7,6 +7,9 @@ Rails.application.routes.draw do
   get "/assessment/zip_upload_question" => "quizzes#zip_upload_question"
   post "/assessment/post_zip_upload_question" => "quizzes#post_zip_upload_question"
 
+  get "/assessment/migrate_quiz" => "quizzes#migrate_quiz"
+  post "/assessment/process_migrate_quiz" => "quizzes#process_migrate_quiz"
+
   get '/assessment/all_quizzes', to: 'quizzes#all_quizzes'
   get '/assessment/quiz_questions', to: 'quizzes#quiz_questions'
   get '/assessment/question/show', to: 'questions#show'
