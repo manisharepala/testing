@@ -152,11 +152,23 @@ class Question
     if text.present?
       replacement_paths = []
       Nokogiri::HTML(text).css('img').map{ |i| i['src'] }.each do |img|
-        replacement_paths << img
+        replacement_paths << img.split("?").first
+        logger.info "-------------------------------------------------------------------------------------replacement_paths----------------------------------------------------------------------------------"
+        logger.info replacement_paths
       end
       replacement_paths.uniq.each do |rp|
+        logger.info "---------------------------------------------------------------------------------------download_url-------------------------------------------------------------------------------------"
+        logger.info rp
+        logger.info "-------------------------------------------------------------------------key---------------------------------------------------------------------"
+        logger.info (Image.where(:key.in=>[rp])[0]).get_download_url
         s3_image_download_url = (Image.where(:key.in=>[rp])[0]).get_download_url
+        logger.info rp
+        logger.info "---------------------------------------------------------------------------------------url_ text-------------------------------------------------------------------------------------"
+        logger.info  s3_image_download_url
+        logger.info rp
+        logger.info (Image.where(:key.in=>[rp])[0]).get_download_url
         text = text.gsub(rp, s3_image_download_url)
+        logger.info text
       end
     end
     return text
