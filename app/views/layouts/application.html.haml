@@ -16,6 +16,8 @@
               %a{:href => assessment_all_quizzes_path}All Assessments
             %li
               %a{:href => assessment_zip_upload_question_path}Upload Zip
+            %li
+              %a{:href => assessment_migrate_quiz_path}Migrate Quiz
     .container
       - flash.each do |name, msg|
         = content_tag :div, msg, class: "alert alert-info"

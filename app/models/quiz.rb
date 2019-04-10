@@ -178,9 +178,8 @@ class Quiz
   end
 
   def self.migrate_quizzes(guid)
+    # guid = '0aca3033-6752-4641-976d-4996632a80b1'
     require 'zip'
-    guid = "f1a77f71-3044-40bb-add6-052d51cdea44" #objective
-    guid = "6176cb03-6305-42bb-b8ca-2fdb77e9a044" #subjective
     tempfile = S3Server.download_quiz_zip(guid)
     zip_path = File.join(Rails.root.to_s,"public/quiz_zips/#{guid}") #"/home/inayath/edutor/assessment_app/public/quiz_zips/472508b1-6f7d-4f80-a1f0-b4ca4202be7b"
     FileUtils.mkdir_p (zip_path)
@@ -203,19 +202,26 @@ class Quiz
     question_wise_tags_not_present += tags_not_present_data[1]
 
     question_ids = []
+    quiz_section_ids = []
 
     if (tags_not_present.count == 0) && (question_wise_tags_not_present.count == 0)
-      data[:questions].each do |ques_data|
+      data['questions'].each do |ques_data|
         question = Question.create_question(Quiz.get_simple_question_hash(ques_data,user_id,publisher_question_bank_id))
         Quiz.update_image_path(question._id,s3_path)
         Quiz.copy_question_images(question._id,images_dir)
-        question_ids << question._id
+        question_ids << question._id.to_s
       end
+
+      # data['quiz_sections'].each do |quiz_section|
+      #   # quiz_section = QuizSection.create(question_ids:question_ids_1, quiz_id: quiz.id.to_s,quiz_section_language_specific_datas_attributes: [{name:'Quiz Section 1 name in english',instructions:'quiz section 1 instructions in english', language: 'english'}, {name:'Quiz section 1 name in hindi',instructions:'quiz section 1 instructions in hindi', language: 'hindi'}])
+      #
+      # end
+
       publisher_question_bank.attributes = {question_ids:(publisher_question_bank.question_ids + question_ids)}
       publisher_question_bank.save!
 
-      quiz = Quiz.create!(name:data[:name], description:data[:description], instructions:data[:instructions], total_marks:data[:total_marks], total_time:data[:total_time],player:data[:player], type:data[:player], time_open:data[:time_open], time_close:data[:time_close])
-      quiz.question_ids = question_ids
+
+      quiz = Quiz.create(quiz_language_specific_datas_attributes: [{name:data['name'],description: data['description'],instructions:data['instructions'], language: 'english'}],question_ids:question_ids,quiz_section_ids:quiz_section_ids, type:data['player'], player:data['player'], total_marks:data['total_marks'], total_time:data['total_time'])
       quiz.key = "/quiz_zips/#{quiz.guid}.zip"
       quiz.file_path = Rails.root.to_s + "/public/quiz_zips/#{quiz.guid}.zip"
       quiz.quiz_json = data
@@ -229,10 +235,12 @@ class Quiz
 
   def Quiz.update_image_path(ques_id,s3_path)
     question = Question.find(ques_id)
-    question.update_attributes(question_text:Quiz.update_img_src(question.question_text,s3_path,ques_id), general_feedback:Quiz.update_img_src(question.general_feedback,s3_path,ques_id))
-    if question.qtype == 'MmcqQuestion' || question.qtype == 'SmcqQuestion'
+    question.question_language_specific_datas.each do |qlsd|
+      qlsd.update_attributes(question_text:update_img_src(qlsd.question_text,s3_path,ques_id), general_feedback:update_img_src(qlsd.general_feedback,s3_path,ques_id))
+    end
+    if question.qtype == 'MmcqQuestion' || question.qtype == 'SmcqQuestion' || question.qtype == 'AssertionReasonQuestion' || question.qtype == 'McqMatrixQuestion' || question.qtype == 'TrueFalseQuestion'
       question.question_answers.each do |qa|
-        qa.update_attributes(answer:Quiz.update_img_src(qa.answer,s3_path,ques_id))
+        qa.update_attributes(answer_english:update_img_src(qa.answer_english,s3_path,ques_id))
       end
     end
   end
@@ -259,25 +267,21 @@ class Quiz
   def Quiz.copy_question_images(ques_id, images_dir)
     ques_images = []
     question = Question.find(ques_id)
-    Nokogiri::HTML(question.question_text).css('img').map{ |i| i['src'] }.each do |img|
-      ques_images << img.split("/").last
-    end
+    question.question_language_specific_datas.each do |qlsd|
+      Nokogiri::HTML(qlsd.question_text).css('img').map{ |i| i['src'] }.each do |img|
+        ques_images << img.split("/").last
+      end
 
-    Nokogiri::HTML(question.general_feedback).css('img').map{ |i| i['src'] }.each do |img|
-      ques_images << img.split("/").last
-    end
-
-    if question.qtype == 'MmcqQuestion' || question.qtype == 'SmcqQuestion'
-      question.question_answers.each do |qa|
-        Nokogiri::HTML(qa.answer).css('img').map{ |i| i['src'] }.each do |img|
-          ques_images << img.split("/").last
-        end
+      Nokogiri::HTML(qlsd.general_feedback).css('img').map{ |i| i['src'] }.each do |img|
+        ques_images << img.split("/").last
       end
     end
 
-    if question.qtype == 'Passage'
-      question.questions.each do |q|
-        copy_question_images(q._id,images_dir)
+    if question.qtype == 'MmcqQuestion' || question.qtype == 'SmcqQuestion' || question.qtype == 'AssertionReasonQuestion' || question.qtype == 'McqMatrixQuestion' || question.qtype == 'TrueFalseQuestion'
+      question.question_answers.each do |qa|
+        Nokogiri::HTML(qa.answer_english).css('img').map{ |i| i['src'] }.each do |img|
+          ques_images << img.split("/").last
+        end
       end
     end
 
@@ -318,6 +322,9 @@ class Quiz
       tag_names = []
       ques['tags'].each do |tag|
         name = tags_hash[tag.keys[0]]
+        if !name.present?
+          name = tag.keys[0]
+        end
         value = tag.values[0]
         d = {}
         d['name'] = name
@@ -325,7 +332,7 @@ class Quiz
         tag_names << name
         all_tags << d
         if !TagsServer.get_tag_guid(name, value).present?
-          tag_not_present << d
+          tag_not_present << d if (must_present_tag_names_for_each_question.include? name)
         end
       end
       absent_tags = must_present_tag_names_for_each_question - tag_names
@@ -345,40 +352,40 @@ class Quiz
     #[:id, :question_text, :marks, :penalty, :question_type, :tags, :explanation, :hint, :options, :answers, :blanks]
     data = {}
     data['publisher_question_bank_ids'] = [publisher_question_bank_id]
-    data['created_by'] = user_id
-    data['question_text'] = ques_data['question_text']
-    data['default_mark'] = ques_data['marks']
-    data['penalty'] = ques_data['penalty']
+
+    data['question_language_specific_datas_attributes'] = []
+    d = {}
+    d['question_text'] = ques_data['question_text']
+    d['general_feedback'] = ques_data['explanation']
+    d['actual_answer'] = ques_data['actual_answer']
+    d['hint'] = ques_data['question_text']
+    d['language'] = 'english'
+
+    data['question_language_specific_datas_attributes'] << d
+
     data['qtype'] = ques_data['question_type']
     data['qtype'] = 'SubjectiveQuestion' if ques_data['question_type'] == nil
-    data['generalfeedback'] = data['explanation']
-    data['hint'] = ques_data['hint']
+    data['default_mark'] = ques_data['marks']
+    data['penalty'] = ques_data['penalty']
 
-    data['tag_ids'] = []
-    ques_data['tags'].each do |tag|
-      data['tag_ids'] << "abcde" #TagsServer.get_tag_guid(tag.keys[0], tag.values[0])
+    data['created_by'] = user_id
+
+    if ['SmcqQuestion', 'MmcqQuestion', 'TrueFalseQuestion', 'McqMatrixQuestion', 'AssertionReasonQuestion'].include? data['qtype']
+      data['question_answers_attributes'] = []
+      correct_option_ids = ques_data['answers'][0]
+      ques_data['options'].each do |option|
+        data['question_answers_attributes'] << {'fraction'=>(correct_option_ids.include? option['id']), 'answer_english'=>option['option_text']}
+      end
+    elsif ['FibQuestion', 'FibIntegerQuestion'].include? data['qtype']
+      data['question_fill_blanks_attributes'] = []
+      ques_data['blanks'].each do |blank|
+        data['question_fill_blanks_attributes'] << {'case_sensitive'=>blank['case_sensitive'], 'answer'=>blank['answer']}
+      end
     end
 
-    if ['SmcqQuestion', 'MmcqQuestion', 'TrueFalseQuestion'].include? ques_data['question_type']
-      data['question_answers_attributes'] = []
-      ques_data['options'].each do |option|
-        option_data = {}
-        option_data['answer'] = option['option_text']
-        option_data['feedback'] = ""
-
-        if (ques_data['answers'].flatten).include? option['id']
-          option_data['fraction'] = true
-        else
-          option_data['fraction'] = false
-        end
-
-        data['question_answers_attributes'] << option_data
-      end
-    elsif ['FibQuestion'].include? data['question_type']
-      data['question_fill_blanks_attributes'] = []
-      # ques.xpath("question/options_fib").each do |option|
-      #   data['question_fill_blanks_attributes'] << get_question_fill_blank_hash(option)
-      # end
+    data['tag_ids'] = []
+    ques_data['tags'].each do |hash|
+      data['tag_ids'] << (TagsServer.get_tag_guid(hash.key, hash.value) rescue '')
     end
 
     return data

@@ -11,6 +11,24 @@ class ApplicationController < ActionController::Base
     render json: {success: true}, status: 201
   end
 
+  def multi_chapter_quiz_attempt_data
+    records = params.to_unsafe_h[:data]
+    records.each do |data|
+      qad = QuizAttemptData.where("data.asset_download_id"=>{:$in=>[data['asset_download_id']]},user_id:current_user.id).last
+      if qad.present?
+        if qad.data['total_questions'].uniq == qad.data['attempted'].uniq
+          QuizAttemptData.create!(data: data, user_id: current_user.id)
+        else
+          qad.data = data
+          qad.save!
+        end
+      else
+        QuizAttemptData.create!(data: data, user_id: current_user.id)
+      end
+    end
+    render json: {success: true}, status: 201
+  end
+
 
   private
   def authenticate_user!

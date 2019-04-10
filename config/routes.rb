@@ -3,9 +3,13 @@ Rails.application.routes.draw do
 
   mount Ckeditor::Engine => '/ckeditor'
   post '/assessment/quiz_attempt_data', to: 'application#quiz_attempt_data'
+  post '/assessment/multi_chapter_quiz_attempt_data', to: 'application#multi_chapter_quiz_attempt_data'
 
   get "/assessment/zip_upload_question" => "quizzes#zip_upload_question"
   post "/assessment/post_zip_upload_question" => "quizzes#post_zip_upload_question"
+
+  get "/assessment/migrate_quiz" => "quizzes#migrate_quiz"
+  post "/assessment/process_migrate_quiz" => "quizzes#process_migrate_quiz"
 
   get '/assessment/all_quizzes', to: 'quizzes#all_quizzes'
   get '/assessment/quiz_questions', to: 'quizzes#quiz_questions'
@@ -35,6 +39,7 @@ Rails.application.routes.draw do
   post '/assessment/get_assessments_active_duration', to: 'quizzes#get_assessments_active_duration'
 
   get '/assessment/get_quiz_attempt_data', to: 'quizzes#get_quiz_attempt_data'
+  get '/assessment/get_multi_chapter_quiz_attempt_data', to: 'quizzes#get_multi_chapter_quiz_attempt_data'
 
 #teacher web api's
   # get '/assessment/user_assessments_by_category', to: 'api#user_assessments_by_category'
