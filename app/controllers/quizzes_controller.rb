@@ -224,37 +224,6 @@ class QuizzesController < ApplicationController
     render json: response
   end
 
-  def process_quiz_attempt_data
-    qad = QuizAttemptData.last
-    data = {"correct"=>[], "item_type"=>"assessment", "chapter_guid"=>"755246e6-1c2b-46ca-8447-4ea3da6a9e13", "package_id"=>"com.ignitor", "concept_guid"=>"com.ignitor.models.Toc@d1bb130", "score"=>0, "uid"=>"e6806b4f-d7de-4efc-b993-623cc8644ec3", "asset_guid"=>"43fcfeee-7b16-4487-b84d-d00d1536b647", "total_questions"=>[3281703, 3281704, 3281705, 3281706, 3281707], "unattempted"=>[3281703], "active_duration"=>11, "user_agent"=>"", "player"=>"assessment", "device_id"=>"f50774e513d85556", "incorrect"=>[], "end_time"=>"2019-04-09T07:25:11.049Z", "book_id"=>"eaa8d247-3e8d-405f-8e2c-0034ce4168e4", "ip_address"=>"10.10.2.81", "asset_download_id"=>"6176cb03-6305-42bb-b8ca-2fdb77e9a044", "display_name"=>"", "time_zone"=>"India Standard Time", "skipped_questions"=>[3281704, 3281705, 3281706], "tags"=>"", "start_time"=>"2019-04-09T07:24:57.854Z", "player_subtype"=>"subjective", "launch_path"=>"book/eaa8d247-3e8d-405f-8e2c-0034ce4168e4/core/content-player/43fcfeee-7b16-4487-b84d-d00d1536b647?chapter=0&topic=e9c48692-e871-404f-a15c-f09596b4df49", "timeline"=>[{"sessions"=>[{"start_time"=>"2019-04-09T07:24:57.854Z", "end_time"=>"2019-04-09T07:25:00.465Z", "attempted_answer"=>""}, {"start_time"=>"2019-04-09T07:25:00.465Z", "end_time"=>"2019-04-09T07:25:01.114Z", "attempted_answer"=>""}], "question_id"=>3281703}, {"sessions"=>[{"start_time"=>"2019-04-09T07:25:01.114Z", "end_time"=>"2019-04-09T07:25:11.028Z", "attempted_answer"=>""}], "question_id"=>3281707}], "attempted"=>[3281707]}
-
-    keys = ["correct", "item_type", "chapter_guid", "package_id", "concept_guid", "score", "uid", "asset_guid", "total_questions", "unattempted", "active_duration", "user_agent", "player", "device_id", "incorrect", "end_time", "book_id", "ip_address", "asset_download_id", "display_name", "time_zone", "skipped_questions", "tags", "start_time", "player_subtype", "launch_path", "timeline", "attempted"]
-
-    quiz = Quiz.where(:guid.in=>data['asset_download_id'])[0]
-    quiz_json = quiz.quiz_json
-
-    QuizAttempt.create(publish_id:publish_id)
-
-    quiz_attempt_data = {}
-    quiz_attempt_data['guid'] = data['guid']
-    quiz_attempt_data['start_time'] = data['start_time']
-    quiz_attempt_data['end_time'] = data['end_time']
-    quiz_attempt_data['active_duration'] = data['active_duration']
-    quiz_attempt_data['publish_id'] = data['publish_id']
-    quiz_attempt_data['book_id'] = data['book_id']
-    quiz_attempt_data['total_marks'] = quiz.total_marks
-
-    question_attempts_attributes = []
-
-    data['timeline'].each do |q_data|
-      question = Question.where(:guid.in=>q_data['question_id'])[0]
-      question_attempt_data = {}
-      question_attempt_data['question_attributes'] = question
-      question_attempt_data['qtype'] = question.qtype
-    end
-
-  end
-
   def home
 
   end

@@ -2,7 +2,7 @@ class QuizAttempt
   include Mongoid::Document
   field :publish_id, type: Integer
   field :user_id, type: Integer
-  field :book_id, type: String
+  field :book_guid, type: String
   field :quiz_id, type: String
   field :attempt_no, type: Integer
   field :marks_scored, type: Float
