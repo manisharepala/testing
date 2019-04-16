@@ -222,6 +222,8 @@ class Quiz
 
 
       quiz = Quiz.create(quiz_language_specific_datas_attributes: [{name:data['name'],description: data['description'],instructions:data['instructions'], language: 'english'}],question_ids:question_ids,quiz_section_ids:quiz_section_ids, type:data['player'], player:data['player'], total_marks:data['total_marks'], total_time:data['total_time'],guid:guid)
+      quiz.guid = guid
+      quiz.save!
       quiz.key = "/quiz_zips/#{quiz.guid}.zip"
       quiz.file_path = Rails.root.to_s + "/public/quiz_zips/#{quiz.guid}.zip"
       quiz.quiz_json = data
