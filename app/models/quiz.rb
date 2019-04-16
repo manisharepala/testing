@@ -141,7 +141,8 @@ class Quiz
     end
 
     if with_language_support
-      data = {name:quiz_name_data, description:quiz_description_data, instructions:quiz_instructions_data, total_marks:total_marks, total_time:total_time, player:player, languages_supported:['english','hindi']}
+      #data = {name:quiz_name_data, description:quiz_description_data, instructions:quiz_instructions_data, total_marks:total_marks, total_time:total_time, player:player, languages_supported:['english','hindi']}
+      data = {name:quiz_name_data, description:quiz_description_data, instructions:quiz_instructions_data, total_marks:total_marks, total_time:total_time, player:player}
     else
       data = {name:quiz_name_data['english'].to_s, description:quiz_description_data['english'].to_s, instructions:quiz_instructions_data['english'].to_s, total_marks:total_marks.to_f, total_time:total_time.to_i, player:player, languages_supported:['english']}
     end
@@ -172,7 +173,7 @@ class Quiz
       questions_data << q.as_json(with_key:with_key,with_language_support:with_language_support)
     end
     data = data.merge(questions:questions_data)
-    data = data.merge(quiz_sections:quiz_sections_data)
+    #data = data.merge(quiz_sections:quiz_sections_data)
 
     data
   end
@@ -249,7 +250,7 @@ class Quiz
 
   def Quiz.update_img_src(text,s3_path,ques_id)
     if text.present?
-      text = JSON.parse(text)
+      text = JSON.parse(text).
       replacement_paths = []
       Nokogiri::HTML(text).css('img').map{ |i| i['src'] }.each do |img|
         replacement_paths << (img.reverse.split('/', 2).map(&:reverse).reverse)[0]
