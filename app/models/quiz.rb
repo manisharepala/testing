@@ -57,7 +57,7 @@ class Quiz
 
     quiz_zips_dir = Rails.root.to_s + "/public/quiz_zips/"
     zip_name = quiz_zips_dir + "#{quiz.guid}.zip"
-    quiz_zip_path = quiz_zips_dir + quiz.guid + "/"
+    quiz_zip_path = quiz_zips_dir + quiz.guid + "/."
 
     FileUtils.mkdir_p (quiz_zips_dir) if !Dir.exists?(quiz_zips_dir)
     FileUtils.mkdir_p (quiz_zip_path) if !Dir.exists?(quiz_zip_path)
@@ -70,7 +70,7 @@ class Quiz
     end
 
     File.open(quiz_zip_path+"assessment.json","w") do |f|
-      if (1==2)
+      if true
         f.write(((quiz.as_json(with_key:true)).to_json).to_json)
       else
         f.write(((quiz.as_json(with_key:true, with_language_support:true)).to_json).to_json)
