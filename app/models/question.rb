@@ -107,23 +107,23 @@ class Question
         tags:tags_data
     }
     if with_language_support
-      data.merge!(question_text:question_text_data)
+      data.merge!(question_text:question_text_data.to_json)
     else
-      data.merge!(question_text:question_text_data['english'])
+      data.merge!(question_text:question_text_data['english'].to_json)
     end
     # byebug
     if with_key
       if with_language_support
         data.merge!({
-                        explanation: general_feedback_data,
-                        hint: hint_data,
-                        actual_answer:actual_answer_data
+                        explanation: general_feedback_data.to_json,
+                        hint: [hint_data.to_json],
+                        actual_answer:actual_answer_data.to_json
                     })
       else
         data.merge!({
-                        explanation: general_feedback_data['english'],
-                        hint: hint_data['english'],
-                        actual_answer:actual_answer_data['english']
+                        explanation: general_feedback_data['english'].to_json,
+                        hint: [hint_data['english'].to_json],
+                        actual_answer:actual_answer_data['english'].to_json
                     })
       end
     end
