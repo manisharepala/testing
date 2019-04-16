@@ -204,7 +204,7 @@ class Quiz
     question_ids = []
     quiz_section_ids = []
 
-    if (tags_not_present.count == 0) && (question_wise_tags_not_present.count == 0)
+    #if (tags_not_present.count == 0) && (question_wise_tags_not_present.count == 0)
       data['questions'].each do |ques_data|
         question = Question.create_question(Quiz.get_simple_question_hash(ques_data,user_id,publisher_question_bank_id))
         Quiz.update_image_path(question._id,s3_path)
@@ -227,10 +227,10 @@ class Quiz
       quiz.quiz_json = data
       quiz.final = true
       quiz.save!
-    else
+    #else
       logger.info "Tags not present -------------------------------- #{tags_not_present}"
       raise Exception.new("Following tags are not present #{tags_not_present} and Following questions do not have the compulsory 5 tags -> #{question_wise_tags_not_present} ")
-    end
+    #end
   end
 
   def Quiz.update_image_path(ques_id,s3_path)
