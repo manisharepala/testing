@@ -250,7 +250,7 @@ class Quiz
 
   def Quiz.update_img_src(text,s3_path,ques_id)
     if text.present?
-      text = JSON.parse(text).
+      text = JSON.parse(text)
       replacement_paths = []
       Nokogiri::HTML(text).css('img').map{ |i| i['src'] }.each do |img|
         replacement_paths << (img.reverse.split('/', 2).map(&:reverse).reverse)[0]
