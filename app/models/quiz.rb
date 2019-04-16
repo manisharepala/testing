@@ -57,7 +57,7 @@ class Quiz
 
     quiz_zips_dir = Rails.root.to_s + "/public/quiz_zips/"
     zip_name = quiz_zips_dir + "#{quiz.guid}.zip"
-    quiz_zip_path = quiz_zips_dir + quiz.guid + "/."
+    quiz_zip_path = quiz_zips_dir + quiz.guid + "/"
 
     FileUtils.mkdir_p (quiz_zips_dir) if !Dir.exists?(quiz_zips_dir)
     FileUtils.mkdir_p (quiz_zip_path) if !Dir.exists?(quiz_zip_path)
@@ -71,13 +71,13 @@ class Quiz
 
     File.open(quiz_zip_path+"assessment.json","w") do |f|
       if 1==1
-        f.write(((quiz.as_json(with_key:true)).to_json).to_json)
+        f.write(((quiz.as_json(with_key:true))).to_json)
       else
-        f.write(((quiz.as_json(with_key:true, with_language_support:true)).to_json).to_json)
+        f.write(((quiz.as_json(with_key:true, with_language_support:true))).to_json)
       end
     end
 
-    Archive::Zip.archive(zip_name, quiz_zip_path)
+    Archive::Zip.archive(zip_name, quiz_zip_path+'.')
     FileUtils.rm_rf Dir.glob("#{zip_name.gsub('.zip','')}") if (zip_name.gsub('.zip','')).present?
   end
 
@@ -143,7 +143,7 @@ class Quiz
     if with_language_support
       data = {name:quiz_name_data, description:quiz_description_data, instructions:quiz_instructions_data, total_marks:total_marks, total_time:total_time, player:player, languages_supported:['english','hindi']}
     else
-      data = {name:quiz_name_data['english'], description:quiz_description_data['english'], instructions:quiz_instructions_data['english'], total_marks:total_marks, total_time:total_time, player:player, languages_supported:['english']}
+      data = {name:quiz_name_data['english'].to_s, description:quiz_description_data['english'].to_s, instructions:quiz_instructions_data['english'].to_s, total_marks:total_marks.to_f, total_time:total_time.to_i, player:player, languages_supported:['english']}
     end
 
     tags_data = []
