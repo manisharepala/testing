@@ -116,14 +116,14 @@ class Question
       if with_language_support
         data.merge!({
                         explanation: general_feedback_data.to_json,
-                        hint: [hint_data.to_json],
-                        actual_answer:actual_answer_data.to_json
+                        hint: [hint_data.to_json]
+                        #actual_answer:actual_answer_data.to_json
                     })
       else
         data.merge!({
                         explanation: general_feedback_data['english'].to_json,
-                        hint: [hint_data['english'].to_json],
-                        actual_answer:actual_answer_data['english'].to_json
+                        hint: [hint_data['english'].to_json]
+                       # actual_answer:actual_answer_data['english'].to_json
                     })
       end
     end

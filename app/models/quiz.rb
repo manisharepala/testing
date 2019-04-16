@@ -141,10 +141,11 @@ class Quiz
     end
 
     if with_language_support
-      #data = {name:quiz_name_data, description:quiz_description_data, instructions:quiz_instructions_data, total_marks:total_marks, total_time:total_time, player:player, languages_supported:['english','hindi']}
-      data = {name:quiz_name_data, description:quiz_description_data, instructions:quiz_instructions_data, total_marks:total_marks, total_time:total_time, player:player}
+      data = {name:quiz_name_data, description:quiz_description_data, instructions:quiz_instructions_data, total_marks:total_marks, total_time:total_time, player:player, languages_supported:['english','hindi']}
+      #data = {name:quiz_name_data, description:quiz_description_data, instructions:quiz_instructions_data, total_marks:total_marks, total_time:total_time, player:player}
     else
-      data = {name:quiz_name_data['english'].to_s, description:quiz_description_data['english'].to_s, instructions:quiz_instructions_data['english'].to_s, total_marks:total_marks.to_f, total_time:total_time.to_i, player:player, languages_supported:['english']}
+      #data = {name:quiz_name_data['english'].to_s, description:quiz_description_data['english'].to_s, instructions:quiz_instructions_data['english'].to_s, total_marks:total_marks.to_f, total_time:total_time.to_i, player:player, languages_supported:['english']}
+      data = {name:quiz_name_data['english'].to_s, description:quiz_description_data['english'].to_s, instructions:quiz_instructions_data['english'].to_s, total_marks:total_marks.to_f, total_time:total_time.to_i, player:player}
     end
 
     tags_data = []

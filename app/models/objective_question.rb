@@ -13,7 +13,7 @@ class ObjectiveQuestion < Question
     question_answers.each do |qa|
       d = {}
       d['id'] = qa.id.to_s
-      d['fraction'] = qa.fraction
+      #d['fraction'] = qa.fraction
       if with_language_support
         d['option_text'] = {}
         d['option_text']['english'] = qa.answer_english.to_json
