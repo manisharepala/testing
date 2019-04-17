@@ -75,10 +75,12 @@ class Question
 
   def common_data_json(with_key: false, with_language_support: false)
     tags_data = []
+    qtypes = { 'SmcqQuestion' => 'multichoice', 'SubjectiveQuestion' => 'subjective' }
     tag_ids.each do |guid|
       d = TagsServer.get_tag_data(guid)
       tags_data << {d['name']=>d['value']} if d.present?
     end
+    tags_data["qsubtype"] =  qtypes[_type]
 
     question_text_data = {}
     hint_data = {}
@@ -107,22 +109,22 @@ class Question
         tags:tags_data
     }
     if with_language_support
-      data.merge!(question_text:question_text_data.to_json)
+      data.merge!(question_text:question_text_data)
     else
-      data.merge!(question_text:question_text_data['english'].to_json)
+      data.merge!(question_text:question_text_data['english'])
     end
     # byebug
     if with_key
       if with_language_support
         data.merge!({
-                        explanation: general_feedback_data.to_json,
-                        hint: [hint_data.to_json]
+                        explanation: general_feedback_data,
+                        hint: [hint_data]
                         #actual_answer:actual_answer_data.to_json
                     })
       else
         data.merge!({
-                        explanation: general_feedback_data['english'].to_json,
-                        hint: [hint_data['english'].to_json]
+                        explanation: general_feedback_data['english'],
+                        hint: [hint_data['english']]
                        # actual_answer:actual_answer_data['english'].to_json
                     })
       end
