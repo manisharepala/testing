@@ -80,7 +80,7 @@ class Question
       d = TagsServer.get_tag_data(guid)
       tags_data << {d['name']=>d['value']} if d.present?
     end
-    tags_data["qsubtype"] =  qtypes[_type]
+    tags_data <<  {"qsubtype"=>qtypes[_type]}
 
     question_text_data = {}
     hint_data = {}
