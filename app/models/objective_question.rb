@@ -29,7 +29,8 @@ class ObjectiveQuestion < Question
         answers: ([self.question_answers.map{|a| a._id.to_s if a.fraction == true} - [nil]]),
         blanks: []
     )
-    JSON.parse(final_data.to_json)
+    #JSON.parse(final_data.to_json)
+    JSON.parse(JSON.generate(final_data))
   end
 
   protected
