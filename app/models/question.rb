@@ -106,25 +106,25 @@ class Question
         partial_positive_marks: self.partial_positive_marks,
         partial_negative_marks: self.partial_negative_marks,
         question_type: question_type,
-        tags:tags_data.to_json
+        tags:tags_data
     }
     if with_language_support
-      data.merge!(question_text:question_text_data)
+      data.merge!(question_text:question_text_data.to_json)
     else
-      data.merge!(question_text:question_text_data['english'])
+      data.merge!(question_text:question_text_data['english'].to_json)
     end
     # byebug
     if with_key
       if with_language_support
         data.merge!({
-                        explanation: general_feedback_data,
-                        hint: [hint_data]
+                        explanation: general_feedback_data.to_json,
+                        hint: [hint_data].to_json
                         #actual_answer:actual_answer_data.to_json
                     })
       else
         data.merge!({
-                        explanation: general_feedback_data['english'],
-                        hint: [hint_data['english']]
+                        explanation: general_feedback_data['english'].to_json,
+                        hint: [hint_data['english']].to_json
                        # actual_answer:actual_answer_data['english'].to_json
                     })
       end
