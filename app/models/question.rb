@@ -106,7 +106,7 @@ class Question
         partial_positive_marks: self.partial_positive_marks,
         partial_negative_marks: self.partial_negative_marks,
         question_type: question_type,
-        tags:tags_data
+        tags:tags_data.to_json
     }
     if with_language_support
       data.merge!(question_text:question_text_data)
