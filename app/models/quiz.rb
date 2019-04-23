@@ -73,9 +73,11 @@ class Quiz
       if 1==1
         #f.write(((quiz.as_json(with_key:true))).to_json)
         f.write(JSON.generate(quiz.as_json(with_key:true)))
+        f.write(quiz.as_json(with_key:true))
       else
         #f.write(((quiz.as_json(with_key:true, with_language_support:true))).to_json)
-        f.write(JSON.generate(quiz.as_json(with_key:true, with_language_support:true)))
+        #f.write(JSON.generate(quiz.as_json(with_key:true, with_language_support:true)))
+        f.write(quiz.as_json(with_key:true, with_language_support:true))
       end
     end
 

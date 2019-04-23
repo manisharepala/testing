@@ -16,10 +16,10 @@ class ObjectiveQuestion < Question
       #d['fraction'] = qa.fraction
       if with_language_support
         d['option_text'] = {}
-        d['option_text']['english'] = qa.answer_english.to_json
-        d['option_text']['hindi'] = qa.answer_hindi.to_json
+        d['option_text']['english'] = JSON.generate(qa.answer_english.to_s)
+        d['option_text']['hindi'] = JSON.generate(qa.answer_hindi.to_s)
       else
-        d['option_text'] = qa.answer_english.to_json
+        d['option_text'] = JSON.generate(qa.answer_english.to_s)
       end
 
       options_data << d
@@ -30,7 +30,7 @@ class ObjectiveQuestion < Question
         blanks: []
     )
     #JSON.parse(final_data.to_json)
-    JSON.parse(JSON.generate(final_data))
+    #JSON.parse(JSON.generate(final_data))
   end
 
   protected
