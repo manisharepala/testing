@@ -7,6 +7,11 @@ class ApplicationController < ActionController::Base
 
   def quiz_attempt_data
     records = params.to_unsafe_h[:data]
+    if current_user.id == 48
+      logger.info "-------------------------------------------------------------------------11111111111111111111111111----------------------------------------------"
+      logger.info records
+      logger.info "-------------------------------------------------------------------------11111111111111111111111111----------------------------------------------"
+    end
     records.each {|r| QuizAttemptData.create!(data: r, user_id: current_user.id)}
     render json: {success: true}, status: 201
   end
