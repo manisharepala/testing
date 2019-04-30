@@ -1,6 +1,7 @@
 class S3Server
   include HTTParty
-  base_uri '13.233.76.145'
+  base_uri '13.234.165.191'
+  # base_uri '13.233.76.145'
   UPLOAD_URL = '/s3/add_file'
   attr_reader :guid, :type, :user_id
 

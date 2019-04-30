@@ -1,6 +1,7 @@
 class ContentServer
   include HTTParty
-  base_uri '13.233.76.145'
+  base_uri '13.234.165.191'
+  # base_uri '13.233.76.145'
   CREATION_URL = '/content_assets.json'
   attr_reader :guid, :type, :user_id
 

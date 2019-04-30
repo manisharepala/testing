@@ -1,7 +1,8 @@
 class AuthServer
   include HTTParty
   #base_uri ENV.fetch('AUTH_SERVER')
-  base_uri '13.233.76.145'
+  base_uri '13.234.165.191'
+  # base_uri '13.233.76.145'
   VERIFY_URL = '/users/validate_token'
   attr_reader :token, :data
   def initialize token
