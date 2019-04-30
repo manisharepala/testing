@@ -61,7 +61,7 @@ class QuizzesController < ApplicationController
   def get_are_assessments_attempted
     data = {}
     params[:assessment_ids].each do |assessment_id|
-      data[assessment_id] = QuizAttemptData.where("data.asset_download_id"=>{:$in=>assessment_id},user_id:params[:user_id])[0].present? ? true : false
+      data[assessment_id] = QuizAttemptData.where("data.asset_download_id"=>{:$in=>[assessment_id]},user_id:params[:user_id])[0].present? ? true : false
     end
 
     render json: data
