@@ -43,12 +43,17 @@ Rails.application.routes.draw do
   get '/assessment/get_multi_chapter_quiz_attempt_data', to: 'quizzes#get_multi_chapter_quiz_attempt_data'
 
 #teacher web api's
-  # get '/assessment/user_assessments_by_category', to: 'api#user_assessments_by_category'
-  # post '/assessment/edit_due_time', to: 'api#edit_due_time'
-  # post '/assessment/cancel_published_assessment', to: 'api#cancel_published_assessment'
-  # post '/assessment/publish_assessment', to: 'api#publish_assessment'
-  # get '/assessment/assessment_details', to: 'api#assessment_details'
-  # get '/assessment/user_tags_by_category', to: 'api#user_tags_by_category'
-  # post '/assessment/create_duplicate_assessment', to: 'api#create_duplicate_assessment'
+  get '/assessment/user_assessments_by_category', to: 'api#user_assessments_by_category'
+  post '/assessment/edit_due_time', to: 'api#edit_due_time'
+  post '/assessment/cancel_published_assessment', to: 'api#cancel_published_assessment'
+  post '/assessment/publish_assessment', to: 'api#publish_assessment'
+
+  get '/assessment/different_question_types_by_marks', to: 'api#different_question_types_by_marks'
+  get '/assessment/different_question_types_by_difficulty', to: 'api#different_question_types_by_difficulty'
+
+
+  get '/assessment/assessment_details', to: 'api#assessment_details'
+  get '/assessment/user_tags_by_category', to: 'api#user_tags_by_category'
+  post '/assessment/create_duplicate_assessment', to: 'api#create_duplicate_assessment'
 
 end

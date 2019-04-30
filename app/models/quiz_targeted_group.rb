@@ -17,7 +17,8 @@ class QuizTargetedGroup
 
   field :published_by, type: Integer
   field :published_on, type: DateTime
-  field :group_id, type: Integer
+  field :group_ids, type: Array, default: []
+  field :user_ids, type: Array, default: []
   field :user_id, type: Integer
   field :guid, type: String
 
@@ -25,6 +26,8 @@ class QuizTargetedGroup
   field :message_body, type: String
 
   field :quiz_id, type: String
+  field :is_cancelled, type: Boolean, default: false
+  belongs_to :quiz
 
   before_create :set_defaults
 

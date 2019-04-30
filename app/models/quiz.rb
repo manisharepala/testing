@@ -23,7 +23,7 @@ class Quiz
   field :focus_area, type: BSON::Binary
   field :quiz_json, type: BSON::Binary
 
-  #embeds_many :quiz_targeted_groups
+  has_many :quiz_targeted_groups
   # has_many :quiz_sections
   field :quiz_section_ids, type: Array, default: []
   #embeds_many :quiz_question_instances, as: :question_instances
@@ -50,6 +50,10 @@ class Quiz
 
   def id
     self._id.to_s
+  end
+
+  def name
+    quiz_language_specific_datas.where(language:Language::ENGLISH)[0].name rescue 'quiz_name'
   end
 
   def create_zip
@@ -118,11 +122,11 @@ class Quiz
       #    tags << d
       #  end
       # tags = {"grade"=>"177acf20-32ce-421b-8f32-c3b920c58e54", "subject"=>"fef249d0-4deb-454b-ba3a-70f6317f95d2", "chapter"=>"d84b02e8-6993-4e3a-9746-19de19a4b628", "concept"=>"99756e2f-b32b-417d-9fb4-190003131ce", "course"=>"99756e2f-b32b-417d-9fb4-190003131ce"}
-      success = content_server.upload_file(quiz_language_specific_datas.where(language:Language::ENGLISH)[0].name,file_path, tags)
-      success = content_server.update_file(quiz_language_specific_datas.where(language:Language::ENGLISH)[0].name,file_path, tags)
-      if success
-        self.set(uploaded:true)
-        File.delete(file_path) if File.exist?(file_path)
+        success = content_server.upload_file(quiz_language_specific_datas.where(language:Language::ENGLISH)[0].name,file_path, tags)
+        success = content_server.update_file(quiz_language_specific_datas.where(language:Language::ENGLISH)[0].name,file_path, tags)
+        if success
+          self.set(uploaded:true)
+          File.delete(file_path) if File.exist?(file_path)
       end
     end
   end
@@ -211,30 +215,30 @@ class Quiz
     quiz_section_ids = []
 
     #if (tags_not_present.count == 0) && (question_wise_tags_not_present.count == 0)
-      data['questions'].each do |ques_data|
-        question = Question.create_question(Quiz.get_simple_question_hash(ques_data,user_id,publisher_question_bank_id))
-        Quiz.update_image_path(question._id,s3_path)
-        Quiz.copy_question_images(question._id,images_dir)
-        question_ids << question._id.to_s
-      end
+    data['questions'].each do |ques_data|
+      question = Question.create_question(Quiz.get_simple_question_hash(ques_data,user_id,publisher_question_bank_id))
+      Quiz.update_image_path(question._id,s3_path)
+      Quiz.copy_question_images(question._id,images_dir)
+      question_ids << question._id.to_s
+    end
 
-      # data['quiz_sections'].each do |quiz_section|
-      #   # quiz_section = QuizSection.create(question_ids:question_ids_1, quiz_id: quiz.id.to_s,quiz_section_language_specific_datas_attributes: [{name:'Quiz Section 1 name in english',instructions:'quiz section 1 instructions in english', language: 'english'}, {name:'Quiz section 1 name in hindi',instructions:'quiz section 1 instructions in hindi', language: 'hindi'}])
-      #
-      # end
+    # data['quiz_sections'].each do |quiz_section|
+    #   # quiz_section = QuizSection.create(question_ids:question_ids_1, quiz_id: quiz.id.to_s,quiz_section_language_specific_datas_attributes: [{name:'Quiz Section 1 name in english',instructions:'quiz section 1 instructions in english', language: 'english'}, {name:'Quiz section 1 name in hindi',instructions:'quiz section 1 instructions in hindi', language: 'hindi'}])
+    #
+    # end
 
-      publisher_question_bank.attributes = {question_ids:(publisher_question_bank.question_ids + question_ids)}
-      publisher_question_bank.save!
+    publisher_question_bank.attributes = {question_ids:(publisher_question_bank.question_ids + question_ids)}
+    publisher_question_bank.save!
 
 
-      quiz = Quiz.create(quiz_language_specific_datas_attributes: [{name:data['name'],description: data['description'],instructions:data['instructions'], language: 'english'}],question_ids:question_ids,quiz_section_ids:quiz_section_ids, type:data['player'], player:data['player'], total_marks:data['total_marks'], total_time:data['total_time'],guid:guid)
-      quiz.guid = guid
-      quiz.save!
-      quiz.key = "/quiz_zips/#{quiz.guid}.zip"
-      quiz.file_path = Rails.root.to_s + "/public/quiz_zips/#{quiz.guid}.zip"
-      quiz.quiz_json = data
-      quiz.final = true
-      quiz.save!
+    quiz = Quiz.create(quiz_language_specific_datas_attributes: [{name:data['name'],description: data['description'],instructions:data['instructions'], language: 'english'}],question_ids:question_ids,quiz_section_ids:quiz_section_ids, type:data['player'], player:data['player'], total_marks:data['total_marks'], total_time:data['total_time'],guid:guid)
+    quiz.guid = guid
+    quiz.save!
+    quiz.key = "/quiz_zips/#{quiz.guid}.zip"
+    quiz.file_path = Rails.root.to_s + "/public/quiz_zips/#{quiz.guid}.zip"
+    quiz.quiz_json = data
+    quiz.final = true
+    quiz.save!
     #else
     #  logger.info "Tags not present -------------------------------- #{tags_not_present}"
     #  raise Exception.new("Following tags are not present #{tags_not_present} and Following questions do not have the compulsory 5 tags -> #{question_wise_tags_not_present} ")
