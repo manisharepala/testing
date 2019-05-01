@@ -118,7 +118,7 @@ class Question
       if with_language_support
         data.merge!({
                         explanation: JSON.generate(general_feedback_data),
-                        hint: JSON.generate([hint_data])
+                        hint: JSON.generate([JSON.parse(hint_data)])
                         #actual_answer:actual_answer_data.to_json
                     })
       else
