@@ -11,7 +11,7 @@ class QuizAttemptData
   def self.process_quiz_attempt_data(qad_id)
     qad = QuizAttemptData.find(qad_id)
     data = qad.data
-    quiz = Quiz.where(:guid.in=>data['asset_download_id'])[0]
+    quiz = Quiz.where(guid:data['asset_download_id'])[0]
     quiz_json = quiz.quiz_json
     quiz_json_questions = quiz_json['questions']
     question_attempts_attributes = []

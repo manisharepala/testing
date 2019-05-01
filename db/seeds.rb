@@ -211,3 +211,21 @@ qtg = QuizTargetedGroup.find("5c84f28b957966328b7205d3")
 {"id"=>"5c84f28b957966328b7205d3", "quiz_id"=>"5c84f12695796631967205de", "password"=>"4123", "shuffle_questions"=>false, "shuffle_options"=>false, "pause"=>false, "time_open"=>1552216714, "time_close"=>1583773666, "show_score_after"=>60, "show_answers_after"=>120, "message_subject"=>"Quiz publish subject", "message_body"=>"quiz publish body", "max_no_of_attempts"=>100, "evaluate_server_side"=>false,"key_update"=>false}
 
 quiz.as_json(with_key:true,with_language_support:true)
+
+#teachers apis
+id = 363
+q1 = Quiz.where(guid:'4c9deb52-8ad8-435f-bcaa-8dde996ce0d1')[0]
+
+q2 = Quiz.where(guid:'71ad4cb0-f47d-47e7-9f94-9194bd16ff21')[0]
+q2.created_by = 363
+q2.quiz_json = q2.as_json
+q2.save!
+
+Quiz.where(created_by:id).count
+QuizTargetedGroup.where(published_by:id).count
+
+quiz_targeted_group_data = {password:'4123', time_open:(Time.now.to_i), time_close:(Time.now.to_i+1.year.to_i), show_score_after:1*60, show_answers_after:2*60, published_by:id, group_ids:[43,44],user_ids:[361], message_subject:'Quiz publish subject', message_body:'quiz publish body',quiz_id:q2.id}
+qtg2 = QuizTargetedGroup.create(quiz_targeted_group_data)
+
+UserManagementServer.get_group_details(43,'abc')
+UserManagementServer.get_user_details(361,'abc')
