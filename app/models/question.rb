@@ -124,7 +124,7 @@ class Question
       else
         data.merge!({
                         explanation: JSON.generate(general_feedback_data['english']),
-                        hint: JSON.generate([hint_data['english'].presnt? ? JSON.parse(hint_data['english']) :nil])
+                        hint: JSON.generate([hint_data['english'].present? ? JSON.parse(hint_data['english']) :nil])
                        # actual_answer:actual_answer_data['english'].to_json
                     })
       end
