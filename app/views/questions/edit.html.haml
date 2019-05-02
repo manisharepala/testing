@@ -41,7 +41,7 @@
                         =qa.check_box :fraction, :checked => (question_answer.fraction == true) ? true : false, class: 'SmcqQuestions'
                       - else
                         =qa.check_box :fraction, :checked => (question_answer.fraction == true) ? true : false
-                    %td= qa.cktext_area :answer, :class => "form-control", required:true, value: question_answer.answer_english, :ckeditor => { :height => 100 }
+                    %td= qa.cktext_area :answer_english, :class => "form-control", required:true, value: question_answer.answer_english, :ckeditor => { :height => 100 }
         %tr
           %th.text-center Marks
           %td= f.text_area :default_mark
