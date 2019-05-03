@@ -483,7 +483,7 @@ class QuizzesController < ApplicationController
   def update_image_path(ques_id,s3_path)
     question = Question.find(ques_id)
     question.question_language_specific_datas.each do |qlsd|
-      qlsd.update_attributes(question_text:update_img_src(qlsd.question_text,s3_path,ques_id), general_feedback:update_img_src(qlsd.general_feedback,s3_path,ques_id))
+      qlsd.update_attributes(question_text:update_img_src(qlsd.question_text,s3_path,ques_id), general_feedback:update_img_src(qlsd.general_feedback,s3_path,ques_id),hint:update_img_src(qlsd.hint,s3_path,ques_id),actual_answer:update_img_src(qlsd.actual_answer,s3_path,ques_id))
     end
     if question.qtype == 'MmcqQuestion' || question.qtype == 'SmcqQuestion' || question.qtype == 'AssertionReasonQuestion' || question.qtype == 'McqMatrixQuestion' || question.qtype == 'TrueFalseQuestion'
       question.question_answers.each do |qa|
@@ -514,12 +514,10 @@ class QuizzesController < ApplicationController
     ques_images = []
     question = Question.find(ques_id)
     question.question_language_specific_datas.each do |qlsd|
-      Nokogiri::HTML(qlsd.question_text).css('img').map{ |i| i['src'] }.each do |img|
-        ques_images << img.split("/").last
-      end
-
-      Nokogiri::HTML(qlsd.general_feedback).css('img').map{ |i| i['src'] }.each do |img|
-        ques_images << img.split("/").last
+      [qlsd.question_text,qlsd.general_feedback,qlsd.hint,qlsd.actual_answer].each do |text|
+        Nokogiri::HTML(text).css('img').map{ |i| i['src'] }.each do |img|
+          ques_images << img.split("/").last
+        end
       end
     end
 
@@ -536,11 +534,11 @@ class QuizzesController < ApplicationController
     image_ids = []
 
     dir_path = Rails.root.to_s + "/public/question_images/#{ques_id}/"
-    FileUtils.mkdir_p(dir_path)
     Dir["#{master_dir}/#{images_dir}/*"].each do |img|
       index = image_names.index(File.basename(img).split('.')[0].downcase)
 
       if index.present?
+        FileUtils.mkdir_p(dir_path) unless File.exists?(dir_path)
         # copying to public folder
         img_name = (ques_images[index]).split('.')[0] + ".jpg"
         image = Magick::Image.read(img).first
