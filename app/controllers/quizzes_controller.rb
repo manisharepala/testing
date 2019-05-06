@@ -181,6 +181,15 @@ class QuizzesController < ApplicationController
     render json: data
   end
 
+  def get_assessments_attempt_data
+    data = {}
+    params[:assessment_ids].each do |assessment_id|
+      data[assessment_id] = (QuizAttemptData.where("data.asset_download_id"=>{:$in=>[assessment_id]},user_id:params[:user_id].to_s).last.data rescue {})
+    end
+
+    render json: data
+  end
+
   def get_multi_chapter_quiz_attempt_data
     data = {}
     qad = QuizAttemptData.where("data.asset_download_id"=>{:$in=>[params[:guid]]},user_id:params[:user_id].to_s).last
