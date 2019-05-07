@@ -1,14 +1,6 @@
 .container{style:'margin-top:4%;'}
   %h3 Edit Question
   = simple_form_for @question, :url => assessment_question_update_path(id:@question.id, qtype:@question.qtype), :method => :post do |f|
-    -#- if @question.errors.any?
-    -#  #errors
-    -#    %h2
-    -#      = pluralize(@question.errors.count, "error")
-    -#      prevented this post from saving:
-    -#    %ul
-    -#      - @question.errors.full_messages.each do |msg|
-    -#        %li= msg
     %table.table-striped.table-bordered{style:"width: 100%;"}
       %tbody
         %tr
@@ -21,13 +13,19 @@
                   %td.text-center{style:"width:10%;"}
                   %td
                     - if(question_language_specific_data.language == Language::ENGLISH)
-                      = qd.cktext_area :question_text, :class => "form-control", required:true, :class => "form-control", required:true, :ckeditor => {:toolbar =>    'Full'}, :ckeditor => { :height => 200 }
+                      = qd.cktext_area :question_text, :class => "form-control", required:true, :class => "form-control", required:true, :ckeditor => {:toolbar =>    'Full'}, :ckeditor => { :height => 200 },value:(Question.get_updated_text(question_language_specific_data.question_text)).html_safe
                       %tr
                         %th.text-center Explanation
                       %tr
                         %td.text-center{style:"width:10%;"}
                         %td
-                          = qd.cktext_area :general_feedback, :class => "form-control", required:true, :class => "form-control", required:true, :ckeditor => {:toolbar =>    'Full'}, :ckeditor => { :height => 200 }
+                          = qd.cktext_area :general_feedback, :class => "form-control", required:true, :class => "form-control", required:true, :ckeditor => {:toolbar =>    'Full'}, :ckeditor => { :height => 200 },value:(Question.get_updated_text(question_language_specific_data.general_feedback)).html_safe
+                      %tr
+                        %th.text-center Hint
+                      %tr
+                        %td.text-center{style:"width:10%;"}
+                        %td
+                          = qd.cktext_area :hint, :class => "form-control", required:true, :class => "form-control", required:true, :ckeditor => {:toolbar =>    'Full'}, :ckeditor => { :height => 200 },value:(Question.get_updated_text(question_language_specific_data.hint)).html_safe
         %tr
           %th.text-center{style: "height: 3.5em"} Options
         %tr
@@ -41,7 +39,7 @@
                         =qa.check_box :fraction, :checked => (question_answer.fraction == true) ? true : false, class: 'SmcqQuestions'
                       - else
                         =qa.check_box :fraction, :checked => (question_answer.fraction == true) ? true : false
-                    %td= qa.cktext_area :answer, :class => "form-control", required:true, value: question_answer.answer_english, :ckeditor => { :height => 100 }
+                    %td= qa.cktext_area :answer_english, :class => "form-control", required:true, :ckeditor => { :height => 100 },value:(Question.get_updated_text(question_answer.answer_english)).html_safe
         %tr
           %th.text-center Marks
           %td= f.text_area :default_mark

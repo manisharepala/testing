@@ -69,8 +69,10 @@ class Quiz
     question_images_path = Rails.root.to_s + "/public/question_images/"
 
     quiz.question_ids.each do |id|
-      FileUtils.mkdir_p (quiz_zip_path+id)
-      FileUtils.cp_r(Dir["#{question_images_path+id}/*"],quiz_zip_path+id)
+      if Dir.exists?(question_images_path+id)
+        FileUtils.mkdir_p (quiz_zip_path+id)
+        FileUtils.cp_r(Dir["#{question_images_path+id}/*"],quiz_zip_path+id)
+      end
     end
 
     File.open(quiz_zip_path+"assessment.json","w") do |f|
@@ -122,11 +124,11 @@ class Quiz
       #    tags << d
       #  end
       # tags = {"grade"=>"177acf20-32ce-421b-8f32-c3b920c58e54", "subject"=>"fef249d0-4deb-454b-ba3a-70f6317f95d2", "chapter"=>"d84b02e8-6993-4e3a-9746-19de19a4b628", "concept"=>"99756e2f-b32b-417d-9fb4-190003131ce", "course"=>"99756e2f-b32b-417d-9fb4-190003131ce"}
-        success = content_server.upload_file(quiz_language_specific_datas.where(language:Language::ENGLISH)[0].name,file_path, tags)
-        success = content_server.update_file(quiz_language_specific_datas.where(language:Language::ENGLISH)[0].name,file_path, tags)
-        if success
-          self.set(uploaded:true)
-          File.delete(file_path) if File.exist?(file_path)
+      success = content_server.upload_file(quiz_language_specific_datas.where(language:Language::ENGLISH)[0].name,file_path, tags)
+      success = content_server.update_file(quiz_language_specific_datas.where(language:Language::ENGLISH)[0].name,file_path, tags)
+      if success
+        self.set(uploaded:true)
+        File.delete(file_path) if File.exist?(file_path)
       end
     end
   end
@@ -137,7 +139,7 @@ class Quiz
     q.save!
   end
 
-  def as_json(with_key: false,with_language_support: false)
+  def as_json(with_key: true,with_language_support: false)
     quiz_name_data = {}
     quiz_description_data = {}
     quiz_instructions_data = {}
@@ -190,14 +192,14 @@ class Quiz
   def self.migrate_quizzes(guid)
     # guid = '0aca3033-6752-4641-976d-4996632a80b1'
     require 'zip'
-    tempfile = S3Server.download_quiz_zip(guid)
     zip_path = File.join(Rails.root.to_s,"public/quiz_zips/#{guid}") #"/home/inayath/edutor/assessment_app/public/quiz_zips/472508b1-6f7d-4f80-a1f0-b4ca4202be7b"
+    tempfile = S3Server.download_quiz_zip(guid)
     FileUtils.mkdir_p (zip_path)
     Archive::Zip.extract(tempfile, zip_path)
 
     data = JSON.parse(File.read(zip_path+"/assessment.json"))
 
-    images_dir = zip_path + "/#{data['name']}_files"
+    images_dir = zip_path + "/" #zip_path + "/#{data['name']}_files"
     user_id = 1
     publisher_question_bank_id = PublisherQuestionBank.first._id
     publisher_question_bank = PublisherQuestionBank.find(publisher_question_bank_id)
@@ -248,11 +250,11 @@ class Quiz
   def Quiz.update_image_path(ques_id,s3_path)
     question = Question.find(ques_id)
     question.question_language_specific_datas.each do |qlsd|
-      qlsd.update_attributes(question_text:update_img_src(qlsd.question_text,s3_path,ques_id), general_feedback:update_img_src(qlsd.general_feedback,s3_path,ques_id))
+      qlsd.update_attributes(question_text:Quiz.update_img_src(qlsd.question_text,s3_path,ques_id), general_feedback:Quiz.update_img_src(qlsd.general_feedback,s3_path,ques_id),hint:Quiz.update_img_src(qlsd.hint,s3_path,ques_id),actual_answer:Quiz.update_img_src(qlsd.actual_answer,s3_path,ques_id))
     end
     if question.qtype == 'MmcqQuestion' || question.qtype == 'SmcqQuestion' || question.qtype == 'AssertionReasonQuestion' || question.qtype == 'McqMatrixQuestion' || question.qtype == 'TrueFalseQuestion'
       question.question_answers.each do |qa|
-        qa.update_attributes(answer_english:update_img_src(qa.answer_english,s3_path,ques_id))
+        qa.update_attributes(answer_english:Quiz.update_img_src(qa.answer_english,s3_path,ques_id))
       end
     end
   end
@@ -261,12 +263,24 @@ class Quiz
     if text.present?
       text = JSON.parse(text)
       replacement_paths = []
+      image_names = []
       Nokogiri::HTML(text).css('img').map{ |i| i['src'] }.each do |img|
-        replacement_paths << (img.reverse.split('/', 2).map(&:reverse).reverse)[0]
+        if img.include? '/'
+          replacement_paths << (img.reverse.split('/', 2).map(&:reverse).reverse)[0]
+        else
+          image_names << img
+        end
       end
-      replacement_paths.uniq.each do |rp|
-        text = text.gsub(rp, s3_path+ques_id)
+      if image_names.present?
+        image_names.uniq.each do |image_name|
+          text = text.gsub(image_name, s3_path+ques_id+'/'+image_name)
+        end
+      else
+        replacement_paths.uniq.each do |rp|
+          text = text.gsub(rp, s3_path+ques_id)
+        end
       end
+
       ['.png', '.wmz'].each do |f|
         text = text.gsub(f, '.jpg')
       end
@@ -280,12 +294,10 @@ class Quiz
     ques_images = []
     question = Question.find(ques_id)
     question.question_language_specific_datas.each do |qlsd|
-      Nokogiri::HTML(qlsd.question_text).css('img').map{ |i| i['src'] }.each do |img|
-        ques_images << img.split("/").last
-      end
-
-      Nokogiri::HTML(qlsd.general_feedback).css('img').map{ |i| i['src'] }.each do |img|
-        ques_images << img.split("/").last
+      [qlsd.question_text,qlsd.general_feedback,qlsd.hint,qlsd.actual_answer].each do |text|
+        Nokogiri::HTML(text).css('img').map{ |i| i['src'] }.each do |img|
+          ques_images << img.split("/").last
+        end
       end
     end
 
@@ -302,11 +314,11 @@ class Quiz
     image_ids = []
 
     dir_path = Rails.root.to_s + "/public/question_images/#{ques_id}/"
-    FileUtils.mkdir_p(dir_path)
-    Dir["#{images_dir}/*"].each do |img|
+    Dir["#{images_dir}/**/*"].each do |img|
       index = image_names.index(File.basename(img).split('.')[0].downcase)
 
       if index.present?
+        FileUtils.mkdir_p(dir_path) unless File.exists?(dir_path)
         # copying to public folder
         img_name = (ques_images[index]).split('.')[0] + ".jpg"
         image = Magick::Image.read(img).first

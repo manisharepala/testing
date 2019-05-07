@@ -1,10 +1,10 @@
 class QuestionLanguageSpecificData
   include Mongoid::Document
 
-  field :question_text, type: BSON::Binary
-  field :general_feedback, type: BSON::Binary
-  field :hint, type: BSON::Binary
-  field :actual_answer, type: BSON::Binary
+  field :question_text, type: BSON::Binary, default: ''
+  field :general_feedback, type: BSON::Binary, default: ''
+  field :hint, type: BSON::Binary, default: ''
+  field :actual_answer, type: BSON::Binary, default: ''
 
   field :language, type: String, default: 'english'
 
