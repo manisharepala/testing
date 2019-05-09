@@ -37,7 +37,7 @@ class ApplicationController < ActionController::Base
 
   private
   def authenticate_user!
-    if params["CKEditor"].present?
+    if params["CKEditor"].present? || params["qqfile"].present? || params["ckCsrfToken"].present?
       true
     else
       if get_token.nil?
