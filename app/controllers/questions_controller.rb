@@ -10,62 +10,26 @@ class QuestionsController < ApplicationController
   end
 
   def update
-    logger.info "11111111111111111111111111111111111111111"
-    logger.info params
-    logger.info "11111111111222222222222222222111111"
-    logger.info question_params
-    qd_params = question_params['question_language_specific_datas_attributes'].to_h
-    logger.info "2222222222222222222222222222222222222222222222222222222222222222222222222222222222222"
-    logger.info qd_params.values[0]['question_text']
-    # @question.question_language_specific_datas_attributes = qd_params.values
-    # @question.save!
+    qlsd_params = question_params['question_language_specific_datas_attributes'].to_h
+    data = {default_mark: question_params['default_mark'],question_language_specific_datas: [question_text: Question.get_original_text(qlsd_params.values[0]['question_text']),general_feedback: Question.get_original_text(qlsd_params.values[0]['general_feedback']),hint: Question.get_original_text(qlsd_params.values[0]['hint']),actual_answer: Question.get_original_text(qlsd_params.values[0]['actual_answer'])]}
 
-    logger.info "3333333333333333333333333333333333333333333333333333333333333333333333333333333"
-    logger.info question_params['question_language_specific_datas_attributes'].values[0]['question_text']
-    logger.info question_params[:qtype]
-    logger.info "44444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444"
-    logger.info @question.question_language_specific_datas[0].question_text.html_safe
-    ques_images = []
-    images = []
-    @question.question_language_specific_datas.each do |qlsd|
-      Nokogiri::HTML(qlsd.question_text).css('img').map{ |i| i['src'] }.each do |img|
-        ques_images << img.split("/").last
-        images << img
-      end
-
-      Nokogiri::HTML(qlsd.general_feedback).css('img').map{ |i| i['src'] }.each do |img|
-        images << img
-        ques_images << img.split("/").last
-      end
-    end
-
-    if @question.qtype == 'MmcqQuestion' || @question.qtype == 'SmcqQuestion' || @question.qtype == 'AssertionReasonQuestion' || @question.qtype == 'McqMatrixQuestion' || @question.qtype == 'TrueFalseQuestion'
-      @question.question_answers.each do |qa|
-        logger.info "---------------------------------------------------------------------qa---------------------------------------------------------------------------------------------------------"
-        logger.info qa
-        Nokogiri::HTML(qa.answer_english).css('img').map{ |i| i['src'] }.each do |img|
-          images << img
-          ques_images << img.split("/").last
-        end
-      end
-    end
 
     if params[:qtype] == 'SmcqQuestion' || params[:qtype] == 'MmcqQuestion' || params[:qtype] == 'TrueFalseQuestion' || params[:qtype] == 'McqMatrixQuestion' || params[:qtype] == 'AssertionReasonQuestion'
       qa_params = question_params['question_answers_attributes'].to_h
-      logger.info "------------------------------------------------------------------------qa_params-----------------------------------------------------------------------------------------------------"
-      logger.info qa_params
-      @question.question_answers_attributes = qa_params.values
-      @question.save!
+      qa_values = []
+      qa_params.values.each do |h|
+        d = {}
+        d['answer_english'] = Question.get_original_text(h['answer_english'])
+        d['id'] = h['id']
+        qa_values << d
+      end
+      data.merge(question_answers_attributes:qa_values)
     elsif params[:qtype] == 'FibQuestion'
     end
-     @question.update_attributes( default_mark: question_params['default_mark'],question_language_specific_datas: [question_text: qd_params.values[0]['question_text'],general_feedback: qd_params.values[0]['general_feedback']]) rescue 'question text and explanation'
 
-     send_question_images(images,question_params)
-     # if @question.update_attributes( default_mark: question_params['default_mark'],question_language_specific_datas: [question_text: qd_params.values[0]['question_text'],general_feedback: qd_params.values[0]['general_feedback']])
-     #
-     # end
     respond_to do |format|
-      if true
+      if @question.update_attributes(data)
+        Question.process_new_images(@question.id)
         format.html { redirect_to assessment_question_show_path(id:@question.id), notice: 'Question was successfully updated.' }
       else
         format.html { render :edit }
@@ -132,15 +96,15 @@ class QuestionsController < ApplicationController
   private
   def question_params
     if params[:qtype] == 'SmcqQuestion'
-      params.require(:smcq_question).permit(:default_mark,question_language_specific_datas_attributes: [:question_text,:general_feedback], question_answers_attributes: [:answer_english,:answer_hindi, :id, :fraction])
+      params.require(:smcq_question).permit(:default_mark,question_language_specific_datas_attributes: [:question_text,:general_feedback,:actual_answer,:hint], question_answers_attributes: [:answer_english,:answer_hindi, :id, :fraction])
     elsif params[:qtype] == 'TrueFalseQuestion'
-      params.require(:true_false_question).permit(:default_mark,question_language_specific_datas_attributes: [:question_text,:general_feedback], question_answers_attributes: [:answer_english,:answer_hindi, :id, :fraction])
+      params.require(:true_false_question).permit(:default_mark,question_language_specific_datas_attributes: [:question_text,:general_feedback,:actual_answer,:hint], question_answers_attributes: [:answer_english,:answer_hindi, :id, :fraction])
     elsif params[:qtype] == 'MmcqQuestion'
-      params.require(:mmcq_question).permit(:default_mark,question_language_specific_datas_attributes: [:question_text,:general_feedback], question_answers_attributes: [:answer_english,:answer_hindi, :id, :fraction])
+      params.require(:mmcq_question).permit(:default_mark,question_language_specific_datas_attributes: [:question_text,:general_feedback,:actual_answer,:hint], question_answers_attributes: [:answer_english,:answer_hindi, :id, :fraction])
     elsif params[:qtype] == 'FibQuestion'
-      params.require(:fib_question).permit(:default_mark,question_language_specific_datas_attributes: [:question_text,:general_feedback])
+      params.require(:fib_question).permit(:default_mark,question_language_specific_datas_attributes: [:question_text,:general_feedback,:actual_answer,:hint])
     elsif params[:qtype] == 'SubjectiveQuestion'
-      params.require(:subjective_question).permit(:default_mark,question_language_specific_datas_attributes: [:question_text,:general_feedback])
+      params.require(:subjective_question).permit(:default_mark,question_language_specific_datas_attributes: [:question_text,:general_feedback,:actual_answer,:hint])
     elsif params[:qtype] == 'PassageQuestion'
       params.require(:passage_question).permit(:default_mark,question_language_specific_datas_attributes: [:question_text,:general_feedback,:actual_answer,:hint])
     elsif params[:qtype] == 'McqMatrixQuestion'

@@ -37,18 +37,22 @@ class ApplicationController < ActionController::Base
 
   private
   def authenticate_user!
-    if get_token.nil?
-      render json: {}, status: 401
-      return
-    end
-    auth = AuthServer.new(get_token)
-    if auth.valid?
-      set_current_user(auth.data)
-      store_token
+    if params["CKEditor"].present?
       true
     else
-      render json: {}, status: 401
-      return
+      if get_token.nil?
+        render json: {}, status: 401
+        return
+      end
+      auth = AuthServer.new(get_token)
+      if auth.valid?
+        set_current_user(auth.data)
+        store_token
+        true
+      else
+        render json: {}, status: 401
+        return
+      end
     end
   end
 

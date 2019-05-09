@@ -66,12 +66,13 @@ class Quiz
     FileUtils.mkdir_p (quiz_zips_dir) if !Dir.exists?(quiz_zips_dir)
     FileUtils.mkdir_p (quiz_zip_path) if !Dir.exists?(quiz_zip_path)
 
-    question_images_path = Rails.root.to_s + "/public/question_images/"
-
     quiz.question_ids.each do |id|
-      if Dir.exists?(question_images_path+id)
-        FileUtils.mkdir_p (quiz_zip_path+id)
-        FileUtils.cp_r(Dir["#{question_images_path+id}/*"],quiz_zip_path+id)
+      require 'open-uri'
+      Question.find(id).image_ids.each do |image_id|
+        FileUtils.mkdir_p (quiz_zip_path+id) if !Dir.exists?(quiz_zip_path+id)
+        img = Image.where(guid:image_id)[0]
+        image = open(img.get_download_url)
+        IO.copy_stream(image, "#{quiz_zip_path+id}/"+img.key.split('/').last)
       end
     end
 

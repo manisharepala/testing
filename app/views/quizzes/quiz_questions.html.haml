@@ -31,6 +31,9 @@
           %td Explanation:
           %td=(Question.get_updated_text(q.question_language_specific_datas.where(language: Language::ENGLISH)[0].general_feedback) rescue 'explanation').html_safe
         %tr
+          %td Hint:
+          %td=(Question.get_updated_text(q.question_language_specific_datas.where(language: Language::ENGLISH)[0].hint) rescue 'hint').html_safe
+        %tr
           %td= link_to "Edit", assessment_question_edit_path(id:q.id), class:'btn btn-default', target:'_blank'
           %td
         %br

@@ -49,7 +49,7 @@ class Question
 
   def upload_images
     image_ids.each do |guid|
-      image = Image.where(:guid.in=>[guid])[0]
+      image = Image.where(guid:guid)[0]
       image.upload_image
     end
   end
@@ -165,6 +165,71 @@ class Question
         s3_image_download_url = Image.where(key:key).last.get_download_url
         text = text.gsub(rp, s3_image_download_url)
       end
+    end
+    return text
+  end
+
+  def self.get_original_text(text)
+    if text.present?
+      replacement_paths = []
+      Nokogiri::HTML(text).css('img').map{ |i| i['src'] }.each do |img|
+        replacement_paths << img
+      end
+      replacement_paths.uniq.each do |rp|
+        if rp.include?('amazonaws.com')
+          key = '/question_images' + rp.split('?')[0].split('question_images')[1]
+          text = text.gsub(rp.gsub('&','&amp;'), key)
+        end
+      end
+    end
+    return text
+  end
+
+  def self.process_new_images(ques_id)
+    s3_path = '/question_images/'
+    question = Question.find(ques_id)
+    question.question_language_specific_datas.each do |qlsd|
+      qlsd.update_attributes(question_text:Question.process_text(qlsd.question_text,s3_path,ques_id), general_feedback:Question.process_text(qlsd.general_feedback,s3_path,ques_id),hint:Question.process_text(qlsd.hint,s3_path,ques_id),actual_answer:Question.process_text(qlsd.actual_answer,s3_path,ques_id))
+    end
+    if question.qtype == 'MmcqQuestion' || question.qtype == 'SmcqQuestion' || question.qtype == 'AssertionReasonQuestion' || question.qtype == 'McqMatrixQuestion' || question.qtype == 'TrueFalseQuestion'
+      question.question_answers.each do |qa|
+        qa.update_attributes(answer_english:Question.process_text(qa.answer_english,s3_path,ques_id))
+      end
+    end
+  end
+
+  def Question.process_text(text,s3_path,ques_id)
+    if text.present?
+      # text = JSON.parse(text)
+      image_names = []
+      Nokogiri::HTML(text).css('img').map{ |i| i['src'] }.each do |img|
+        image_names << img
+      end
+
+      image_names.uniq.each do |image_name|
+        if !image_name.include? (ques_id)
+          if image_name.include? ('question_images')
+            img_base_name = image_name.split('/').last.split('?')[0]
+            text = text.gsub(image_name, s3_path+ques_id+'/'+img_base_name)
+
+            image = Magick::Image.read(Rails.root.to_s+"/public"+image_name.split('?')[0]).first
+
+            FileUtils.mkdir_p(Rails.root.to_s+"/public"+s3_path+ques_id) unless File.exists?(Rails.root.to_s+"/public"+s3_path+ques_id)
+            image.write(Rails.root.to_s+"/public"+s3_path+ques_id+'/'+img_base_name)
+
+            # creating Image reference for S3
+            image1 = (Image.create(name: img_base_name, key: "/question_images/#{ques_id}/#{img_base_name}", file_path:(Rails.root.to_s+"/public"+s3_path+ques_id+'/'+img_base_name)))
+            q = Question.find(ques_id)
+            q.image_ids << image1.guid
+            q.save!
+            image1.upload_image
+          else
+
+          end
+        end
+      end
+    else
+      text = ''
     end
     return text
   end

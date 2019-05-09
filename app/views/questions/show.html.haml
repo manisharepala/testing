@@ -31,6 +31,9 @@
         %td Explanation:
         %td=(Question.get_updated_text(@question.question_language_specific_datas.where(language: Language::ENGLISH)[0].general_feedback) rescue 'explanation').html_safe
       %tr
+        %td Hint:
+        %td=(Question.get_updated_text(@question.question_language_specific_datas.where(language: Language::ENGLISH)[0].hint) rescue 'hint').html_safe
+      %tr
         %td Marks:
         %td= @question.default_mark
       %tr
