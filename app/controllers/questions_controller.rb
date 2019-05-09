@@ -23,7 +23,7 @@ class QuestionsController < ApplicationController
         d['id'] = h['id']
         qa_values << d
       end
-      data.merge(question_answers_attributes:qa_values)
+      data = data.merge(question_answers_attributes:qa_values)
     elsif params[:qtype] == 'FibQuestion'
     end
 
