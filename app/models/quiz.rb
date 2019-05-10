@@ -62,17 +62,19 @@ class Quiz
     quiz_zips_dir = Rails.root.to_s + "/public/quiz_zips/"
     zip_name = quiz_zips_dir + "#{quiz.guid}.zip"
     quiz_zip_path = quiz_zips_dir + quiz.guid + "/"
+    quiz_zip_images_path = quiz_zips_dir + quiz.guid + "/question_images/"
 
     FileUtils.mkdir_p (quiz_zips_dir) if !Dir.exists?(quiz_zips_dir)
     FileUtils.mkdir_p (quiz_zip_path) if !Dir.exists?(quiz_zip_path)
+    FileUtils.mkdir_p (quiz_zip_images_path) if !Dir.exists?(quiz_zip_images_path)
 
     quiz.question_ids.each do |id|
       require 'open-uri'
       Question.find(id).image_ids.each do |image_id|
-        FileUtils.mkdir_p (quiz_zip_path+id) if !Dir.exists?(quiz_zip_path+id)
+        FileUtils.mkdir_p (quiz_zip_images_path+id) if !Dir.exists?(quiz_zip_images_path+id)
         img = Image.where(guid:image_id)[0]
         image = open(img.get_download_url)
-        IO.copy_stream(image, "#{quiz_zip_path+id}/"+img.key.split('/').last)
+        IO.copy_stream(image, "#{quiz_zip_images_path+id}/"+img.key.split('/').last)
       end
     end
 
