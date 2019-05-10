@@ -158,7 +158,7 @@ class Question
       end
       replacement_paths.uniq.each do |rp|
         if rp.include?('amazonaws.com')
-          key = '/question_images' + rp.split('?')[0].split('question_images')[1]
+          key = 'question_images' + rp.split('?')[0].split('question_images')[1]
         else
           key = rp
         end
@@ -177,7 +177,7 @@ class Question
       end
       replacement_paths.uniq.each do |rp|
         if rp.include?('amazonaws.com')
-          key = '/question_images' + rp.split('?')[0].split('question_images')[1]
+          key = 'question_images' + rp.split('?')[0].split('question_images')[1]
           text = text.gsub(rp.gsub('&','&amp;'), key)
         end
       end
@@ -186,7 +186,7 @@ class Question
   end
 
   def self.process_new_images(ques_id)
-    s3_path = '/question_images/'
+    s3_path = 'question_images/'
     question = Question.find(ques_id)
     question.question_language_specific_datas.each do |qlsd|
       qlsd.update_attributes(question_text:Question.process_text(qlsd.question_text,s3_path,ques_id), general_feedback:Question.process_text(qlsd.general_feedback,s3_path,ques_id),hint:Question.process_text(qlsd.hint,s3_path,ques_id),actual_answer:Question.process_text(qlsd.actual_answer,s3_path,ques_id))
@@ -218,7 +218,7 @@ class Question
             image.write(Rails.root.to_s+"/public"+s3_path+ques_id+'/'+img_base_name)
 
             # creating Image reference for S3
-            image1 = (Image.create(name: img_base_name, key: "/question_images/#{ques_id}/#{img_base_name}", file_path:(Rails.root.to_s+"/public"+s3_path+ques_id+'/'+img_base_name)))
+            image1 = (Image.create(name: img_base_name, key: "question_images/#{ques_id}/#{img_base_name}", file_path:(Rails.root.to_s+"/public"+s3_path+ques_id+'/'+img_base_name)))
             q = Question.find(ques_id)
             q.image_ids << image1.guid
             q.save!

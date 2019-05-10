@@ -421,7 +421,7 @@ class QuizzesController < ApplicationController
   end
 
   def process_etx(etx_file, user_id, publisher_question_bank_id,quiz_name, hidden=false, type)
-    s3_path = '/question_images/' #"learnflix-question-images/"
+    s3_path = 'question_images/' #"learnflix-question-images/"
     master_dir = (File.dirname etx_file) + "/" # "/home/inayath/edutor/assessment/public/zip_uploads/1/Maths-F2-C9-1-MCQ-EN/"
     images_dir = etx_file.split('/').last.split('.').first + '_files' #"Maths-F2-C9-1-MCQ-EN_files"
     publisher_question_bank = PublisherQuestionBank.find(publisher_question_bank_id)
@@ -554,7 +554,7 @@ class QuizzesController < ApplicationController
         image.write(dir_path+img_name)
 
         # creating Image reference for S3
-        image_ids << (Image.create(name: img_name, key: "/question_images/#{ques_id}/#{img_name}", file_path:(dir_path+img_name))).guid
+        image_ids << (Image.create(name: img_name, key: "question_images/#{ques_id}/#{img_name}", file_path:(dir_path+img_name))).guid
       end
 
     end

@@ -206,7 +206,7 @@ class Quiz
     user_id = 1
     publisher_question_bank_id = PublisherQuestionBank.first._id
     publisher_question_bank = PublisherQuestionBank.find(publisher_question_bank_id)
-    s3_path = '/question_images/'
+    s3_path = 'question_images/'
 
     data.keys #[:name, :description, :instructions, :total_marks, :total_time, :player, :time_open, :time_close, :questions]
 
@@ -328,7 +328,7 @@ class Quiz
         image.write(dir_path+img_name)
 
         # creating Image reference for S3
-        image_ids << (Image.create(name: img_name, key: "/question_images/#{ques_id}/#{img_name}", file_path:(dir_path+img_name))).guid
+        image_ids << (Image.create(name: img_name, key: "question_images/#{ques_id}/#{img_name}", file_path:(dir_path+img_name))).guid
       end
 
     end
