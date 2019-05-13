@@ -214,6 +214,7 @@ class Quiz
     question_wise_tags_not_present = []
     tags_not_present_data = Quiz.verify_tags(data)
     tags_not_present += tags_not_present_data[0]
+    tags_not_present = tags_not_present.uniq
     question_wise_tags_not_present += tags_not_present_data[1]
 
     question_ids = []
@@ -337,41 +338,68 @@ class Quiz
   end
 
   def Quiz.verify_tags(data)
-    all_tags = []
     tag_not_present = []
-    must_present_tag_names_for_each_question = ["course", "grade", "subject", "chapter", "concept"]
     question_wise_tags_not_present = []
 
-    tags_hash = {"academic_class"=>"grade", "concept_names"=>"concept", "course"=>"course", "chapter"=>"chapter", "subject"=>"subject"}
+    data['questions'].each do |ques|
+      tag_keys = Quiz.get_question_tag_keys(ques)
 
-    data['questions'].each_with_index do |ques,i|
-      tag_names = []
-      ques['tags'].each do |tag|
-        name = tags_hash[tag.keys[0]]
-        if !name.present?
-          name = tag.keys[0]
+      if tag_keys.count == 5
+        tag_keys.each do |key|
+          if !TagsServer.get_tag_guid_by_key(key).present?
+            tag_not_present << key
+          end
         end
-        value = tag.values[0]
-        d = {}
-        d['name'] = name
-        d['value'] = value
-        tag_names << name
-        all_tags << d
-        if !TagsServer.get_tag_guid(name, value).present?
-          tag_not_present << d if (must_present_tag_names_for_each_question.include? name)
-        end
+      else
+        tag_not_present = ["course", "grade", "subject", "chapter", "concept"] - tag_keys
       end
-      absent_tags = must_present_tag_names_for_each_question - tag_names
-      if absent_tags.count > 0
+
+      if tag_keys.count != 5
         question_tag_not_present = {}
         question_tag_not_present['id'] = ques['id']
         question_tag_not_present['type'] = ques['question_type']
-        question_tag_not_present['tags_not_present'] = absent_tags
+        question_tag_not_present['tags_not_present'] = ["course", "grade", "subject", "chapter", "concept"] - tag_keys
         question_wise_tags_not_present << question_tag_not_present
       end
     end
-    logger.info "All tags - #{all_tags.count} - #{all_tags}"
-    return [tag_not_present,question_wise_tags_not_present]
+    return [tag_not_present.uniq,question_wise_tags_not_present]
+  end
+
+  def Quiz.get_question_tag_keys(ques)
+    must_present_tag_names_for_each_question = ["course", "grade", "subject", "chapter", "concept"]
+    tags_hash = {"academic_class"=>"grade", "concept_names"=>"concept", "course"=>"course", "chapter"=>"chapter", "subject"=>"subject"}
+    five_compulsory_tags_data = {}
+    ques['tags'].each do |tag|
+      name = tags_hash[tag.keys[0].strip]
+      if name.present?
+        value = tag.values[0].strip
+        if name == 'course' # && value == "DS Digital"
+          value = 'CBSE'
+        end
+        five_compulsory_tags_data[name] = value
+      end
+    end
+
+    if five_compulsory_tags_data.keys.count == 5
+      five_compulsory_tags_data_1 = {}
+      five_compulsory_tags_data.keys.each_with_index do |k,i|
+        five_compulsory_tags_data_1[must_present_tag_names_for_each_question[i]] = five_compulsory_tags_data[must_present_tag_names_for_each_question[i]]
+      end
+      key = ''
+      five_compulsory_tags_data = {}
+      five_compulsory_tags_data_1.keys.each_with_index do |k,i|
+        if i!= 0
+          key = key + '_' +five_compulsory_tags_data_1[k]
+          five_compulsory_tags_data[k] = key
+        else
+          key = five_compulsory_tags_data_1[k]
+          five_compulsory_tags_data[k] = key
+        end
+      end
+      return five_compulsory_tags_data.values
+    else
+      return five_compulsory_tags_data.keys
+    end
   end
 
   def Quiz.get_simple_question_hash(ques_data,user_id,publisher_question_bank_id)
@@ -390,7 +418,9 @@ class Quiz
     data['question_language_specific_datas_attributes'] << d
 
     data['qtype'] = ques_data['question_type']
-    data['qtype'] = 'SubjectiveQuestion' if ques_data['question_type'] == nil
+    if ques_data['question_type'] == nil || ques_data['question_type'] == 'subjective'
+      data['qtype'] = 'SubjectiveQuestion'
+    end
     data['default_mark'] = ques_data['marks']
     data['penalty'] = ques_data['penalty']
 
@@ -410,8 +440,10 @@ class Quiz
     end
 
     data['tag_ids'] = []
-    ques_data['tags'].each do |hash|
-      data['tag_ids'] << (TagsServer.get_tag_guid(hash.key, hash.value) rescue '')
+
+    tag_keys = Quiz.get_question_tag_keys(ques_data)
+    tag_keys.each do |key|
+      data['tag_ids'] << TagsServer.get_tag_guid_by_key(key)
     end
 
     return data
