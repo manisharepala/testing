@@ -219,35 +219,34 @@ class Quiz
     question_ids = []
     quiz_section_ids = []
 
-    #if (tags_not_present.count == 0) && (question_wise_tags_not_present.count == 0)
-    data['questions'].each do |ques_data|
-      question = Question.create_question(Quiz.get_simple_question_hash(ques_data,user_id,publisher_question_bank_id))
-      Quiz.update_image_path(question._id,s3_path)
-      Quiz.copy_question_images(question._id,images_dir)
-      question_ids << question._id.to_s
+    if (tags_not_present.count == 0) && (question_wise_tags_not_present.count == 0)
+      data['questions'].each do |ques_data|
+        question = Question.create_question(Quiz.get_simple_question_hash(ques_data,user_id,publisher_question_bank_id))
+        Quiz.update_image_path(question._id,s3_path)
+        Quiz.copy_question_images(question._id,images_dir)
+        question_ids << question._id.to_s
+      end
+
+      # data['quiz_sections'].each do |quiz_section|
+      #   quiz_section = QuizSection.create(question_ids:question_ids_1, quiz_id: quiz.id.to_s,quiz_section_language_specific_datas_attributes: [{name:'Quiz Section 1 name in english',instructions:'quiz section 1 instructions in english', language: 'english'}, {name:'Quiz section 1 name in hindi',instructions:'quiz section 1 instructions in hindi', language: 'hindi'}])
+      # end
+
+      publisher_question_bank.attributes = {question_ids:(publisher_question_bank.question_ids + question_ids)}
+      publisher_question_bank.save!
+
+
+      quiz = Quiz.create(quiz_language_specific_datas_attributes: [{name:data['name'],description: data['description'],instructions:data['instructions'], language: 'english'}],question_ids:question_ids,quiz_section_ids:quiz_section_ids, type:data['player'], player:data['player'], total_marks:data['total_marks'], total_time:data['total_time'],guid:guid)
+      quiz.guid = guid
+      quiz.save!
+      quiz.key = "/quiz_zips/#{quiz.guid}.zip"
+      quiz.file_path = Rails.root.to_s + "/public/quiz_zips/#{quiz.guid}.zip"
+      quiz.quiz_json = data
+      quiz.final = true
+      quiz.save!
+    else
+      logger.info "Tags not present -------------------------------- #{tags_not_present}"
+      raise Exception.new("Following tags are not present #{tags_not_present} and Following questions do not have the compulsory 5 tags -> #{question_wise_tags_not_present} ")
     end
-
-    # data['quiz_sections'].each do |quiz_section|
-    #   # quiz_section = QuizSection.create(question_ids:question_ids_1, quiz_id: quiz.id.to_s,quiz_section_language_specific_datas_attributes: [{name:'Quiz Section 1 name in english',instructions:'quiz section 1 instructions in english', language: 'english'}, {name:'Quiz section 1 name in hindi',instructions:'quiz section 1 instructions in hindi', language: 'hindi'}])
-    #
-    # end
-
-    publisher_question_bank.attributes = {question_ids:(publisher_question_bank.question_ids + question_ids)}
-    publisher_question_bank.save!
-
-
-    quiz = Quiz.create(quiz_language_specific_datas_attributes: [{name:data['name'],description: data['description'],instructions:data['instructions'], language: 'english'}],question_ids:question_ids,quiz_section_ids:quiz_section_ids, type:data['player'], player:data['player'], total_marks:data['total_marks'], total_time:data['total_time'],guid:guid)
-    quiz.guid = guid
-    quiz.save!
-    quiz.key = "/quiz_zips/#{quiz.guid}.zip"
-    quiz.file_path = Rails.root.to_s + "/public/quiz_zips/#{quiz.guid}.zip"
-    quiz.quiz_json = data
-    quiz.final = true
-    quiz.save!
-    #else
-    #  logger.info "Tags not present -------------------------------- #{tags_not_present}"
-    #  raise Exception.new("Following tags are not present #{tags_not_present} and Following questions do not have the compulsory 5 tags -> #{question_wise_tags_not_present} ")
-    #end
   end
 
   def Quiz.update_image_path(ques_id,s3_path)
