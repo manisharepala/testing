@@ -554,7 +554,8 @@ class QuizzesController < ApplicationController
         image.write(dir_path+img_name)
 
         # creating Image reference for S3
-        image_ids << (Image.create(name: img_name, key: "question_images/#{ques_id}/#{img_name}", file_path:(dir_path+img_name))).guid
+        if_img = Image.where(key:"question_images/#{ques_id}/#{img_name}")[0]
+        image_ids << (Image.create(name: img_name, key: "question_images/#{ques_id}/#{img_name}", file_path:(dir_path+img_name))).guid if !if_img.present?
       end
 
     end

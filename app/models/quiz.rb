@@ -328,7 +328,8 @@ class Quiz
         image.write(dir_path+img_name)
 
         # creating Image reference for S3
-        image_ids << (Image.create(name: img_name, key: "question_images/#{ques_id}/#{img_name}", file_path:(dir_path+img_name))).guid
+        if_img = Image.where(key:"question_images/#{ques_id}/#{img_name}")[0]
+        image_ids << (Image.create(name: img_name, key: "question_images/#{ques_id}/#{img_name}", file_path:(dir_path+img_name))).guid if !if_img.present?
       end
 
     end
@@ -445,6 +446,12 @@ class Quiz
     tag_keys = Quiz.get_question_tag_keys(ques_data)
     tag_keys.each do |key|
       data['tag_ids'] << TagsServer.get_tag_guid_by_key(key)
+    end
+    ques_data['tags'].each do |hash|
+      if hash.key == "difficulty_level" || hash.key == "blooms_taxonomy"
+        guid = TagsServer.get_tag_guid(hash.key, hash.value)
+        data['tag_ids'] << guid if guid.present?
+      end
     end
 
     return data
