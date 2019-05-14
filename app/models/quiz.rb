@@ -368,7 +368,7 @@ class Quiz
   def Quiz.get_question_tag_keys(ques)
     must_present_tag_names_for_each_question = ["course", "grade", "subject", "chapter", "concept"]
     #tags_hash = {"academic_class"=>"grade", "concept_names"=>"concept", "course"=>"course", "chapter"=>"chapter", "subject"=>"subject"}
-    tags_hash = {"grade"=>"grade", "concept"=>"concept", "course"=>"course", "chapter"=>"chapter", "subject"=>"subject"}
+    tags_hash = {"academic_class"=>"grade","concept_names"=>"concept","grade"=>"grade", "concept"=>"concept", "course"=>"course", "chapter"=>"chapter", "subject"=>"subject"}
     five_compulsory_tags_data = {}
     ques['tags'].each do |tag|
       name = tags_hash[tag.keys[0].strip]
