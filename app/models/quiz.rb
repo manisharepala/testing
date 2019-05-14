@@ -449,7 +449,7 @@ class Quiz
     end
     ques_data['tags'].each do |hash|
       if (hash.keys[0] == "difficulty_level") || (hash.keys[0] == "blooms_taxonomy")
-        guid = TagsServer.get_tag_guid(hash.key, hash.value)
+        guid = TagsServer.get_tag_guid(hash.keys[0], hash.values[0])
         data['tag_ids'] << guid if guid.present?
       end
     end
