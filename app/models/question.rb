@@ -214,8 +214,8 @@ class Question
 
             image = Magick::Image.read(Rails.root.to_s+"/public"+image_name.split('?')[0]).first
 
-            FileUtils.mkdir_p(Rails.root.to_s+"/public"+s3_path+ques_id) unless File.exists?(Rails.root.to_s+"/public"+s3_path+ques_id)
-            image.write(Rails.root.to_s+"/public"+s3_path+ques_id+'/'+img_base_name)
+            FileUtils.mkdir_p(Rails.root.to_s+"/public/"+s3_path+ques_id) unless File.exists?(Rails.root.to_s+"/public/"+s3_path+ques_id)
+            image.write(Rails.root.to_s+"/public/"+s3_path+ques_id+'/'+img_base_name)
 
             # creating Image reference for S3
             if_img = Image.where(key:"question_images/#{ques_id}/#{img_base_name}")[0]
