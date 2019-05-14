@@ -7,6 +7,7 @@ class Image
   field :uploaded, type: Boolean, default: false
 
   before_create :create_guid
+  validates :key, uniqueness: { scope: :guid, message: "Same key, guid can not be duplicated" }
   # include Mongoid::Paperclip
 
   # embedded_in :question, :inverse_of => :images

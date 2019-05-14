@@ -218,11 +218,14 @@ class Question
             image.write(Rails.root.to_s+"/public"+s3_path+ques_id+'/'+img_base_name)
 
             # creating Image reference for S3
-            image1 = (Image.create(name: img_base_name, key: "question_images/#{ques_id}/#{img_base_name}", file_path:(Rails.root.to_s+"/public"+s3_path+ques_id+'/'+img_base_name)))
-            q = Question.find(ques_id)
-            q.image_ids << image1.guid
-            q.save!
-            image1.upload_image
+            if_img = Image.where(key:"question_images/#{ques_id}/#{img_base_name}")[0]
+            if !if_img.present?
+              image1 = (Image.create(name: img_base_name, key: "question_images/#{ques_id}/#{img_base_name}", file_path:(Rails.root.to_s+"/public/"+s3_path+ques_id+'/'+img_base_name)))
+              q = Question.find(ques_id)
+              q.image_ids << image1.guid
+              q.save!
+              image1.upload_image
+            end
           else
 
           end

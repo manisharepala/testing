@@ -412,7 +412,7 @@ class Quiz
     d['question_text'] = ques_data['question_text']
     d['general_feedback'] = ques_data['explanation']
     d['actual_answer'] = ques_data['actual_answer']
-    d['hint'] = ques_data['question_text']
+    d['hint'] = ques_data['hint'] rescue ''
     d['language'] = 'english'
 
     data['question_language_specific_datas_attributes'] << d
