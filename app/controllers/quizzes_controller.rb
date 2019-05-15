@@ -15,7 +15,7 @@ class QuizzesController < ApplicationController
 
     assessment_ids.each do |guid|
       quiz = Quiz.where(guid:guid)[0]
-      qad = QuizAttemptData.where("data.asset_download_id"=>{:$in=>[guid]},user_id:params[:user_id]).last
+      qad = QuizAttemptData.where("data.asset_download_id"=>guid,user_id:params[:user_id]).last
 
       if quiz.present?
         (JSON.parse(quiz.focus_area)).each do |fa|
@@ -61,7 +61,7 @@ class QuizzesController < ApplicationController
   def get_are_assessments_attempted
     data = {}
     params[:assessment_ids].each do |assessment_id|
-      data[assessment_id] = QuizAttemptData.where("data.asset_guid"=>{:$in=>[assessment_id]},user_id:params[:user_id])[0].present? ? true : false
+      data[assessment_id] = QuizAttemptData.where("data.asset_guid"=>assessment_id,user_id:params[:user_id])[0].present? ? true : false
     end
 
     render json: data
@@ -101,7 +101,7 @@ class QuizzesController < ApplicationController
     un_attempted_ids = []
 
     assessment_ids.each do |guid|
-      qad = QuizAttemptData.where("data.asset_download_id"=>{:$in=>[guid]},user_id:params[:user_id]).last
+      qad = QuizAttemptData.where("data.asset_download_id"=>guid,user_id:params[:user_id]).last
 
       if qad.present?
         correct_ids << qad.data['correct']
@@ -141,7 +141,7 @@ class QuizzesController < ApplicationController
         un_attempted_ids = []
 
         v['assessment_ids'].each do |guid|
-          qad = QuizAttemptData.where("data.asset_download_id"=>{:$in=>[guid]},user_id:params[:user_id]).last
+          qad = QuizAttemptData.where("data.asset_download_id"=>guid,user_id:params[:user_id]).last
 
           if qad.present?
             correct_ids << qad.data['correct']
@@ -178,7 +178,7 @@ class QuizzesController < ApplicationController
 
   def get_quiz_attempt_data
     data = {}
-    qad = QuizAttemptData.where("data.asset_download_id"=>{:$in=>[params[:guid]]},user_id:params[:user_id].to_s).last
+    qad = QuizAttemptData.where("data.asset_download_id"=>params[:guid],user_id:params[:user_id].to_s).last
     if qad.present?
       data = qad.data
     end
@@ -189,7 +189,7 @@ class QuizzesController < ApplicationController
   def get_assessments_attempt_data
     data = {}
     params[:assessment_ids].each do |assessment_id|
-      data[assessment_id] = (QuizAttemptData.where("data.asset_download_id"=>{:$in=>[assessment_id]},user_id:params[:user_id].to_s).last.data rescue {})
+      data[assessment_id] = (QuizAttemptData.where("data.asset_download_id"=>assessment_id,user_id:params[:user_id].to_s).last.data rescue {})
     end
 
     render json: data
@@ -197,7 +197,7 @@ class QuizzesController < ApplicationController
 
   def get_multi_chapter_quiz_attempt_data
     data = {}
-    qad = QuizAttemptData.where("data.asset_download_id"=>{:$in=>[params[:guid]]},user_id:params[:user_id].to_s).last
+    qad = QuizAttemptData.where("data.asset_download_id"=>params[:guid],user_id:params[:user_id].to_s).last
     if qad.present?
       data = qad.data
     end
@@ -220,8 +220,13 @@ class QuizzesController < ApplicationController
     end
   end
 
+  def quiz_delete
+    Quiz.find(params[:id]).destroy
+    redirect_to assessment_all_quizzes_path
+  end
+
   def get_focus_area
-    quiz = (Quiz.where(:guid.in => [params[:guid]]))[0]
+    quiz = Quiz.where(guid: params[:guid])[0]
     if quiz.present?
       render json: quiz.focus_area.present? ? quiz.focus_area : {}
     else
@@ -230,7 +235,7 @@ class QuizzesController < ApplicationController
   end
 
   def update_focus_area
-    quiz = (Quiz.where(:guid.in => [params[:guid]]))[0]
+    quiz = Quiz.where(guid:params[:guid])[0]
     if !quiz.present?
       quiz = Quiz.create(quiz_language_specific_datas_attributes: [{name:'Quiz', language: 'english'}])
       quiz.guid = params[:guid]
@@ -307,6 +312,31 @@ class QuizzesController < ApplicationController
     Quiz.migrate_quizzes(params[:name])
     respond_to do |format|
       format.html { redirect_to assessment_migrate_quiz_path, notice: 'Assessment was successfully migrated.'}
+    end
+  end
+
+  def bulk_migrate_quizzes
+    errors = []
+    csv = CSV.parse(params[:file].read, :headers => true)
+    csv.each do |row|
+      begin
+        Quiz.migrate_quizzes(row[0])
+      rescue
+        errors << row
+      end
+    end
+    if errors.any?
+      errFile ="errors_#{Date.today.strftime('%d%b%y')}.csv"
+      errors.insert(0, 'guid'.split(','))
+      errCSV = CSV.generate do |csv|
+        errors.each {|row| csv << row}
+      end
+      send_data errCSV,
+                :type => 'text/csv; charset=iso-8859-1; header=present',
+                :disposition => "attachment; filename=#{errFile}.csv"
+    else
+      flash[:notice] = 'Quizzes successfully migrated'
+      redirect_to assessment_migrate_quiz_path
     end
   end
 
@@ -471,8 +501,8 @@ class QuizzesController < ApplicationController
       end
     end
 
-    publisher_question_bank.attributes = {question_ids:(publisher_question_bank.question_ids + question_ids)}
-    publisher_question_bank.save!
+    # publisher_question_bank.attributes = {question_ids:(publisher_question_bank.question_ids + question_ids)}
+    # publisher_question_bank.save!
 
     quiz = create_quiz(question_ids,quiz_name, type,duration, instructions,quiz_section_ids)
     if are_sections_present

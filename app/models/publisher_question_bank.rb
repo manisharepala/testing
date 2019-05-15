@@ -7,9 +7,9 @@ class PublisherQuestionBank
 
   # belongs_to :tags_db
   validates_presence_of :name, :description
-  has_and_belongs_to_many :questions
+  # has_and_belongs_to_many :questions
 
-  accepts_nested_attributes_for :questions
+  # accepts_nested_attributes_for :questions
 
   def self.valid_ids?(ids, user_id)
     true
