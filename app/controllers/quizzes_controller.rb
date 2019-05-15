@@ -67,6 +67,11 @@ class QuizzesController < ApplicationController
     render json: data
   end
 
+  def get_book_assessments_attempted
+    data = QuizAttemptData.where("data.book_id"=>params[:book_id],:user_id=>params[:user_id]).distinct("data.asset_guid")
+    render json: data
+  end
+
   def get_assessments_attempted_count
     data = {}
     assessment_ids = params[:assessment_ids]
