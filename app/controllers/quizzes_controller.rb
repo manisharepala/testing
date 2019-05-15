@@ -215,6 +215,11 @@ class QuizzesController < ApplicationController
     end
   end
 
+  def quiz_delete
+    Quiz.find(params[:id]).destroy
+    redirect_to assessment_all_quizzes_path
+  end
+
   def get_focus_area
     quiz = Quiz.where(guid: params[:guid])[0]
     if quiz.present?
@@ -302,6 +307,31 @@ class QuizzesController < ApplicationController
     Quiz.migrate_quizzes(params[:name])
     respond_to do |format|
       format.html { redirect_to assessment_migrate_quiz_path, notice: 'Assessment was successfully migrated.'}
+    end
+  end
+
+  def bulk_migrate_quizzes
+    errors = []
+    csv = CSV.parse(params[:file].read, :headers => true)
+    csv.each do |row|
+      begin
+        Quiz.migrate_quizzes(row[0])
+      rescue
+        errors << row
+      end
+    end
+    if errors.any?
+      errFile ="errors_#{Date.today.strftime('%d%b%y')}.csv"
+      errors.insert(0, 'guid'.split(','))
+      errCSV = CSV.generate do |csv|
+        errors.each {|row| csv << row}
+      end
+      send_data errCSV,
+                :type => 'text/csv; charset=iso-8859-1; header=present',
+                :disposition => "attachment; filename=#{errFile}.csv"
+    else
+      flash[:notice] = 'Quizzes successfully migrated'
+      redirect_to assessment_migrate_quiz_path
     end
   end
 

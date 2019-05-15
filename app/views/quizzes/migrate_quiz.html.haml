@@ -1,9 +1,45 @@
 .container{style:'margin-top:4%;'}
-  %h3 Migrate Assessment from old Portal to new Portal
-  %br
-  %div
-    =form_tag(assessment_process_migrate_quiz_path,{:multipart=>true,:method=>:post}) do
-      %input{:name => "name", :type => "text", :placeholder => "assessment guid", style:'width:25%;'}
+  %ul.nav.nav-pills.nav-justified.migrate_quizzes
+    %li.active
+      %a{"data-toggle" => "pill", :href => '#individual'}='Individual'
+    %li
+      %a{"data-toggle" => "pill", :href => '#bulk'}='Bulk'
+
+  .tab-content{style:'margin-top:1%;'}
+    #individual.tab-pane.fade.in.active
+      %h3 Migrate Assessment from old Portal to new Portal
       %br
-      %br
-      =submit_tag "Migrate", class:'btn btn-default'
+      %div
+        =form_tag(assessment_process_migrate_quiz_path,{:multipart=>true,:method=>:post}) do
+          %input{:name => "name", :type => "text", :placeholder => "assessment guid", style:'width:25%;'}
+          %br
+          %br
+          =submit_tag "Migrate", class:'btn btn-default'
+
+
+    #bulk.tab-pane.fade
+      = form_tag assessment_bulk_migrate_quizzes_path, :multipart => true do
+        %h2 Bulk Migrate Quizzes
+        %h4 The csv file should be in the following format
+        %table.table.table-responsive.table-striped{style:'background-color: #f4f5f5; box-shadow: 0 4px 8px 0 rgba(0, 0, 0, 0.2), 0 6px 20px 0 rgba(0, 0, 0, 0.19);'}
+          %thead
+            %tr
+              -["guid"].each do |h|
+                %th=h
+        %div{style:"background-color: #f9f9f9; width: 400px;"}
+        %br
+        = file_field_tag "file"
+        %br
+        = submit_tag 'Upload'
+
+
+:css
+  .migrate_quizzes a {
+    background-color: #eee;
+    color: #000000;
+    margin: 2%;
+  }
+  .migrate_quizzes.nav-pills > li.active > a {
+    color: #000;
+    background-color: grey !important;
+  }

@@ -18,7 +18,7 @@
               %a{:href => assessment_zip_upload_question_path}Upload Zip
             %li
               %a{:href => assessment_migrate_quiz_path}Migrate Quiz
-    .container
+    .container{style:'margin-top: 4%;margin-bottom: -3%;'}
       - flash.each do |name, msg|
         = content_tag :div, msg, class: "alert alert-info"
     = yield
@@ -43,5 +43,5 @@
 
 :javascript
     $(document).ready(function(){
-      $(".alert-info" ).fadeOut(3000);
+      $(".alert-info" ).fadeOut(4000);
     });

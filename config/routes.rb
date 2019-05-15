@@ -13,6 +13,7 @@ Rails.application.routes.draw do
 
   get "/assessment/migrate_quiz" => "quizzes#migrate_quiz"
   post "/assessment/process_migrate_quiz" => "quizzes#process_migrate_quiz"
+  post '/assessment/bulk_migrate_quizzes', to: 'quizzes#bulk_migrate_quizzes'
 
   get '/assessment/all_quizzes', to: 'quizzes#all_quizzes'
   get '/assessment/quiz_questions', to: 'quizzes#quiz_questions'
@@ -34,6 +35,7 @@ Rails.application.routes.draw do
 
   get '/assessment/quiz/edit', to: 'quizzes#quiz_edit'
   post '/assessment/quiz/update', to: 'quizzes#quiz_update'
+  get '/assessment/quiz/delete', to: 'quizzes#quiz_delete'
 
   post '/assessment/get_quizzes_analytics_data', to: 'quizzes#get_quizzes_analytics_data'
   post '/assessment/get_chapter_level_quizzes_analytics_data', to: 'quizzes#get_chapter_level_quizzes_analytics_data'
@@ -59,5 +61,7 @@ Rails.application.routes.draw do
   get '/assessment/assessment_details', to: 'api#assessment_details'
   get '/assessment/user_tags_by_category', to: 'api#user_tags_by_category'
   post '/assessment/create_duplicate_assessment', to: 'api#create_duplicate_assessment'
+
+  post 'get_child_tags', to: 'tags#get_child_tags'
 
 end
