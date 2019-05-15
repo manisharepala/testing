@@ -232,8 +232,8 @@ class Quiz
       #   quiz_section = QuizSection.create(question_ids:question_ids_1, quiz_id: quiz.id.to_s,quiz_section_language_specific_datas_attributes: [{name:'Quiz Section 1 name in english',instructions:'quiz section 1 instructions in english', language: 'english'}, {name:'Quiz section 1 name in hindi',instructions:'quiz section 1 instructions in hindi', language: 'hindi'}])
       # end
 
-      publisher_question_bank.attributes = {question_ids:(publisher_question_bank.question_ids + question_ids)}
-      publisher_question_bank.save!
+      # publisher_question_bank.attributes = {question_ids:(publisher_question_bank.question_ids + question_ids)}
+      # publisher_question_bank.save!
 
 
       quiz = Quiz.create(quiz_language_specific_datas_attributes: [{name:data['name'],description: data['description'],instructions:data['instructions'], language: 'english'}],question_ids:question_ids,quiz_section_ids:quiz_section_ids, type:data['player'], player:data['player'], total_marks:data['total_marks'], total_time:data['total_time'],guid:guid)
