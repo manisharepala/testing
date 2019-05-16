@@ -44,6 +44,7 @@ Rails.application.routes.draw do
   post '/assessment/get_are_assessments_attempted', to: 'quizzes#get_are_assessments_attempted'
   post '/assessment/get_assessments_active_duration', to: 'quizzes#get_assessments_active_duration'
   post '/assessment/get_assessments_attempt_data', to: 'quizzes#get_assessments_attempt_data'
+  get '/assessment/get_book_assessments_attempted/:book_id/:user_id', to: 'quizzes#get_book_assessments_attempted'
 
   get '/assessment/get_quiz_attempt_data', to: 'quizzes#get_quiz_attempt_data'
   get '/assessment/get_multi_chapter_quiz_attempt_data', to: 'quizzes#get_multi_chapter_quiz_attempt_data'
