@@ -44,12 +44,22 @@ module AssessmentApp
 
     config.autoload_paths += %w(#{config.root}/app/models/ckeditor)
 
-    config.before_configuration do
-      env_file = File.join(Rails.root, 'config', 'local_env.yml')
-      YAML.load(File.open(env_file)).each do |key, value|
-        ENV[key.to_s] = value
-      end if File.exists?(env_file)
-    end
+    # config.before_configuration do
+    #   env_file = File.join(Rails.root, 'config', 'local_env.yml')
+    #   YAML.load(File.open(env_file)).each do |key, value|
+    #     ENV[key.to_s] = value
+    #   end if File.exists?(env_file)
+    # end
+
+    options = {
+        host: ENV['REDIS_SERVER'],
+        port: ENV['REDIS_PORT'],
+        db: ENV['REDIS_DB'],
+        password: ENV['REDIS_PASSWORD'],
+        namespace: "app-cache",
+        expires_in: ENV['DEFAULT_CACHE_EXPIRY']
+    }
+    config.cache_store = :redis_cache_store, options
 
   end
 end
