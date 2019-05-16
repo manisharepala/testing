@@ -244,9 +244,9 @@ class Quiz
       quiz.quiz_json = data
       quiz.final = true
       quiz.save!
+      return 'Assessment was successfully migrated'
     else
-      logger.info "Tags not present -------------------------------- #{tags_not_present}"
-      raise Exception.new("Following tags are not present #{tags_not_present} and Following questions do not have the compulsory 5 tags -> #{question_wise_tags_not_present} ")
+      return "Following tags are not present #{tags_not_present} and Following questions do not have the compulsory 5 tags -> #{question_wise_tags_not_present} "
     end
   end
 

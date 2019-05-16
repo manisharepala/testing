@@ -309,12 +309,9 @@ class QuizzesController < ApplicationController
   end
 
   def process_migrate_quiz
-    logger.info "1111111111111111111111111111111"
-    logger.info params
-    logger.info params[:name]
-    Quiz.migrate_quizzes(params[:name])
+    response = Quiz.migrate_quizzes(params[:name])
     respond_to do |format|
-      format.html { redirect_to assessment_migrate_quiz_path, notice: 'Assessment was successfully migrated.'}
+      format.html { redirect_to assessment_migrate_quiz_path, notice: response}
     end
   end
 
@@ -323,7 +320,10 @@ class QuizzesController < ApplicationController
     csv = CSV.parse(params[:file].read, :headers => true)
     csv.each do |row|
       begin
-        Quiz.migrate_quizzes(row[0])
+        response = Quiz.migrate_quizzes(row[0])
+        if response.include? 'Following'
+          errors << row
+        end
       rescue
         errors << row
       end
