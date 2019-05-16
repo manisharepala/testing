@@ -226,12 +226,15 @@ class QuizzesController < ApplicationController
   end
 
   def get_focus_area
-    quiz = Quiz.where(guid: params[:guid])[0]
-    if quiz.present?
-      render json: quiz.focus_area.present? ? quiz.focus_area : {}
-    else
-      render json: {}
+    data = Rails.cache.fetch("focus_area_#{params[:guid]}", expires_in: 7.days) do
+      d = {}
+      quiz = Quiz.where(guid: params[:guid])[0]
+      if quiz.present? && quiz.focus_area.present?
+        d = quiz.focus_area
+      end
+      d
     end
+    render json: data
   end
 
   def update_focus_area
@@ -306,12 +309,9 @@ class QuizzesController < ApplicationController
   end
 
   def process_migrate_quiz
-    logger.info "1111111111111111111111111111111"
-    logger.info params
-    logger.info params[:name]
-    Quiz.migrate_quizzes(params[:name])
+    response = Quiz.migrate_quizzes(params[:name])
     respond_to do |format|
-      format.html { redirect_to assessment_migrate_quiz_path, notice: 'Assessment was successfully migrated.'}
+      format.html { redirect_to assessment_migrate_quiz_path, notice: response}
     end
   end
 
@@ -320,7 +320,10 @@ class QuizzesController < ApplicationController
     csv = CSV.parse(params[:file].read, :headers => true)
     csv.each do |row|
       begin
-        Quiz.migrate_quizzes(row[0])
+        response = Quiz.migrate_quizzes(row[0])
+        if response.include? 'Following'
+          errors << row
+        end
       rescue
         errors << row
       end
