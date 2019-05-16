@@ -226,12 +226,15 @@ class QuizzesController < ApplicationController
   end
 
   def get_focus_area
-    quiz = Quiz.where(guid: params[:guid])[0]
-    if quiz.present?
-      render json: quiz.focus_area.present? ? quiz.focus_area : {}
-    else
-      render json: {}
+    data = Rails.cache.fetch("focus_area_#{params[:guid]}", expires_in: 7.days) do
+      d = {}
+      quiz = Quiz.where(guid: params[:guid])[0]
+      if quiz.present? && quiz.focus_area.present?
+        d = quiz.focus_area
+      end
+      d
     end
+    render json: data
   end
 
   def update_focus_area
