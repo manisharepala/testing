@@ -64,5 +64,6 @@ Rails.application.routes.draw do
   post '/assessment/create_duplicate_assessment', to: 'api#create_duplicate_assessment'
 
   post 'get_child_tags', to: 'tags#get_child_tags'
+  get '/update_question_tags', to: 'tags#update_question_tags'
 
 end

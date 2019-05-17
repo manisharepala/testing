@@ -23,6 +23,33 @@ class TagsServer
     end
   end
 
+  def self.get_child_tags(guid)
+    res = get('/tags/get_child_tags', {query: {guid:guid}})
+    if res.code == 200
+      JSON.parse(res.body)
+    else
+      {}
+    end
+  end
+
+  def self.get_sibling_tags(guid)
+    res = get('/tags/get_sibling_tags', {query: {guid:guid}})
+    if res.code == 200
+      JSON.parse(res.body)
+    else
+      {}
+    end
+  end
+
+  def self.get_tags_by_name(name)
+    res = get('/tags/get_tags_by_name', {query: {name:name}})
+    if res.code == 200
+      JSON.parse(res.body)
+    else
+      {}
+    end
+  end
+
   def self.get_tag_data(guid)
     res = get(FIND_TAG, {query: {guid: guid}})
     if res.code == 200
