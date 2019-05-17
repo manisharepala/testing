@@ -8,11 +8,16 @@ class QuestionsController < ApplicationController
 
   def edit
     @tags = {}
-    @tags['course'] = [['CBSE','CBSE'],['SSC','SSC']]
-    @tags['grade'] = [['CBSE','CBSE'],['SSC','SSC']]
-    @tags['subject'] = [['CBSE','CBSE'],['SSC','SSC']]
-    @tags['chapter'] = [['CBSE','CBSE'],['SSC','SSC']]
-    @tags['concept'] = [['CBSE','CBSE'],['SSC','SSC']]
+    @tags['course'] = [TagsServer.get_tag_data(TagsServer.get_tag_guid('course','CBSE'))]
+    @tags['difficulty_level'] = TagsServer.get_tags_by_name('difficulty_level')
+    @tags['blooms_taxonomy'] = TagsServer.get_tags_by_name('blooms_taxonomy')
+
+    @current_tags = {}
+    @question.tag_ids.each do |guid|
+      d = TagsServer.get_tag_data(guid)
+      @current_tags[d['name']] = [d['value'],d['guid']]
+      @tags[d['name']] = TagsServer.get_sibling_tags(d['guid']) if !(d['name'] == 'course' || d['name'] == 'difficulty_level' || d['name'] == 'blooms_taxonomy')
+    end
   end
 
   def update
