@@ -63,7 +63,7 @@ Rails.application.routes.draw do
   get '/assessment/user_tags_by_category', to: 'api#user_tags_by_category'
   post '/assessment/create_duplicate_assessment', to: 'api#create_duplicate_assessment'
 
-  post 'get_child_tags', to: 'tags#get_child_tags'
-  get '/update_question_tags', to: 'tags#update_question_tags'
+  post '/assessment/get_child_tags', to: 'tags#get_child_tags'
+  get '/assessment/update_question_tags', to: 'tags#update_question_tags'
 
 end
