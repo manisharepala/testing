@@ -9,6 +9,7 @@
         %th No of Sections
         %th No of Questions
         %th Final
+        %th Tags
         %th Uploaded on
         %tbody
         - @quiz.each_with_index do |quiz,i|
@@ -27,6 +28,11 @@
                 %td= quiz.question_ids.count rescue 0
               %td
                 - if quiz.final?
+                  %i.fa.fa-check{style:'color:green; font-size:1.5em;'} True
+                - else
+                  %i.fa.fa-times{style:'color:red; font-size:1.5em;'} False
+              %td
+                - if quiz.tags_verified
                   %i.fa.fa-check{style:'color:green; font-size:1.5em;'} True
                 - else
                   %i.fa.fa-times{style:'color:red; font-size:1.5em;'} False

@@ -11,6 +11,7 @@ class QuestionsController < ApplicationController
     @tags['course'] = [TagsServer.get_tag_data(TagsServer.get_tag_guid('course','CBSE'))]
     @tags['difficulty_level'] = TagsServer.get_tags_by_name('difficulty_level')
     @tags['blooms_taxonomy'] = TagsServer.get_tags_by_name('blooms_taxonomy')
+    @tags = @tags.merge(TagsServer.get_child_tags(@tags['course'][0]['guid']))
 
     @current_tags = {}
     @question.tag_ids.each do |guid|

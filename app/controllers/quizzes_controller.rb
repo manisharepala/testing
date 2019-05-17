@@ -213,10 +213,31 @@ class QuizzesController < ApplicationController
   def quiz_update
     @quiz = Quiz.find(params[:id])
     q_params = quiz_params['quiz_language_specific_datas_attributes'].to_h
-    if @quiz.update_attributes(quiz_language_specific_datas: [name: q_params.values[0]['name']], final: quiz_params[:final])
-      redirect_to assessment_all_quizzes_path
+
+    if @quiz.tags_verified
+      if @quiz.update_attributes(quiz_language_specific_datas: [name: q_params.values[0]['name']], final: quiz_params[:final])
+        redirect_to assessment_all_quizzes_path, notice:'Successful'
+      else
+        redirect_to assessment_quiz_edit_path(id:@quiz.id), notice:'Something went wrong'
+      end
     else
-      render 'edit'
+      if quiz_params[:final] == '1'
+        if Quiz.are_all_compulsory_tags_present(params[:id])
+          if @quiz.update_attributes(quiz_language_specific_datas: [name: q_params.values[0]['name']], final: quiz_params[:final], tags_verified:true)
+            redirect_to assessment_all_quizzes_path, notice:'Successful'
+          else
+            redirect_to assessment_quiz_edit_path(id:@quiz.id), notice:'Something went wrong'
+          end
+        else
+          redirect_to assessment_quiz_edit_path(id:@quiz.id), notice:'Update Failed -> Not all questions have proper tags'
+        end
+      else
+        if @quiz.update_attributes(quiz_language_specific_datas: [name: q_params.values[0]['name']], final: quiz_params[:final])
+          redirect_to assessment_all_quizzes_path, notice:'Successful'
+        else
+          redirect_to assessment_quiz_edit_path(id:@quiz.id), notice:'Something went wrong'
+        end
+      end
     end
   end
 
@@ -320,10 +341,7 @@ class QuizzesController < ApplicationController
     csv = CSV.parse(params[:file].read, :headers => true)
     csv.each do |row|
       begin
-        response = Quiz.migrate_quizzes(row[0])
-        if response.include? 'Following'
-          errors << row
-        end
+        Quiz.migrate_quizzes(row[0])
       rescue
         errors << row
       end
