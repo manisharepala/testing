@@ -17,7 +17,7 @@ class QuizzesController < ApplicationController
       quiz = Quiz.where(guid:guid)[0]
       qad = QuizAttemptData.where("data.asset_download_id"=>guid,user_id:params[:user_id]).last
 
-      if quiz.present?
+      if quiz.present? && quiz.focus_area.present?
         (JSON.parse(quiz.focus_area)).each do |fa|
           d[fa['guid']] ||= {}
           d[fa['guid']]['name'] = fa['name']
