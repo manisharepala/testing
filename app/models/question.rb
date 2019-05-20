@@ -162,7 +162,7 @@ class Question
         else
           key = rp
         end
-        s3_image_download_url = Image.where(key:key).last.get_download_url rescue "http://13.234.165.191/icons/profile.png"
+        s3_image_download_url = Image.where(key:key).last.get_download_url rescue "http://13.234.165.191/icons/broken_image.jpg"
         text = text.gsub(rp, s3_image_download_url)
       end
     end
