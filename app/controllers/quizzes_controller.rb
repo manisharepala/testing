@@ -22,15 +22,15 @@ class QuizzesController < ApplicationController
           d[fa['guid']] ||= {}
           d[fa['guid']]['name'] = fa['name']
           d[fa['guid']]['total_questions'] ||= []
-          d[fa['guid']]['total_questions'] << fa['questionIds'].uniq.map!{|e| e.to_i}
+          d[fa['guid']]['total_questions'] << fa['questionIds'].uniq.map!{|e| e.to_s}
         end
       end
 
       if qad.present?
-        correct_ids << qad.data['correct']
-        in_correct_ids << qad.data['incorrect']
-        skipped_ids << qad.data['skipped_questions']
-        skipped_ids << qad.data['unattempted'] #logic changed here (skipped + un_attempted)
+        correct_ids << qad.data['correct'].map{|id| id.to_s}
+        in_correct_ids << qad.data['incorrect'].map{|id| id.to_s}
+        skipped_ids << qad.data['skipped_questions'].map{|id| id.to_s}
+        skipped_ids << qad.data['unattempted'].map{|id| id.to_s} #logic changed here (skipped + un_attempted)
       end
     end
 
