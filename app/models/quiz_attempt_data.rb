@@ -9,6 +9,7 @@ class QuizAttemptData
   index({'data.asset_download_id' => 1,:user_id=>1,'data.player_subtype'=>1})
   index({'data.asset_guid' =>1,:user_id=>1})
   index({'data.book_id' =>1, :user_id=>1})
+  index({'data.book_id' => 1,:user_id=>1,'data.player_subtype'=>1})
 
   def self.process_quiz_attempt_data(qad_id)
     qad = QuizAttemptData.find(qad_id)
