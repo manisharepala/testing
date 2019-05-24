@@ -47,6 +47,7 @@ Rails.application.routes.draw do
   get '/assessment/get_book_assessments_attempted/:book_id/:user_id', to: 'quizzes#get_book_assessments_attempted'
 
   get '/assessment/get_quiz_attempt_data', to: 'quizzes#get_quiz_attempt_data'
+  get '/assessment/challenge_test_attempt_data', to: 'quizzes#challenge_test_attempt_data'
   get '/assessment/get_multi_chapter_quiz_attempt_data', to: 'quizzes#get_multi_chapter_quiz_attempt_data'
 
 #teacher web api's

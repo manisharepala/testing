@@ -1,6 +1,6 @@
 class QuizzesController < ApplicationController
 
-  skip_before_action :authenticate_user!     #, only: [:show, :index]
+  skip_before_action :authenticate_user!, except:[:challenge_test_attempt_data]
 
   def get_quizzes_analytics_data
     assessment_ids = params[:assessment_ids]
@@ -54,6 +54,42 @@ class QuizzesController < ApplicationController
 
       data << cd if ((concept_guids.include? guid) && (total_count > 0))
     end
+
+    render json: data
+  end
+
+  def challenge_test_attempt_data
+    sort_stage = {
+        "$sort" => { "created_at" => 1 }
+    }
+
+    match_stage = {
+        "$match" => {
+            "$and"=> [{ "data.book_id" => params[:book_guid]},
+                      {"user_id" => current_user.id.to_s},
+                      {"data.player_subtype" => "challenge test"}
+            ]
+        }
+    }
+
+    group_stage = {
+        "$group" => {
+            "_id" => {
+                "asset_guid" => "$data.asset_guid"
+            },
+            "data"=>{ "$last"=> "$data"}
+        }
+    }
+    disk_stage = {
+        "allow_disk_use"=> true
+    }
+
+    project_stage = {
+        "$project" => { "data"=> 1}
+    }
+
+    result = QuizAttemptData.collection.aggregate([sort_stage,match_stage,project_stage,group_stage],disk_stage)
+    data = result.map{|d| {d['_id']['asset_guid']=>d['data']}}.reduce(:merge)
 
     render json: data
   end
