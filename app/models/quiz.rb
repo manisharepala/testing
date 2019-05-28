@@ -31,7 +31,7 @@ class Quiz
 
   before_create :create_guid
 
-  after_save :upload_zip
+  # after_save :upload_zip
 
   # has_and_belongs_to_many :tags, index: true, autosave: true, inverse_of: nil # one side relation
   # has_and_belongs_to_many :questions, index: true, autosave: true, inverse_of: nil # one side relation
