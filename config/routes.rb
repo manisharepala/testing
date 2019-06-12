@@ -67,4 +67,14 @@ Rails.application.routes.draw do
   post '/assessment/get_child_tags', to: 'tags#get_child_tags'
   get '/assessment/update_question_tags', to: 'tags#update_question_tags'
 
+  scope '/assessment' do
+    scope '/apis' do
+      scope '/v1' do
+        get '/student/assessments' => 'api/v1/students#assessments'
+        get '/assessment_details' => 'api/v1/students#assessment_details'
+        post '/search_assessments' => 'api/v1/students#search_assessments'
+      end
+    end
+  end
+
 end
