@@ -453,64 +453,66 @@ class QuizzesController < ApplicationController
 
     respond_to do |format|
       format.html { redirect_to assessment_zip_upload_question_path, notice: 'Quiz was successfully created.'}
-      # format.json { render json: @zip_upload.errors, status: :unprocessable_entity }
     end
   end
 
   def verify_tags(test_paper)
-    all_tags = []
     tag_not_present = []
-    must_present_tag_names_for_each_question = ["course", "grade", "subject", "chapter", "concept"]
     question_wise_tags_not_present = []
-    test_paper.xpath("group_questions").each_with_index do |group_ques,i|
-      tag_names = []
-      group_ques.xpath("itags/itag").each do |tag|
-        name = tag.attr("name").to_s
-        value = tag.attr("value").to_s
-        d = {}
-        d['name'] = name
-        d['value'] = value
-        tag_names << name
-        all_tags << d
-        if !TagsServer.get_tag_guid(name, value).present?
-          tag_not_present << d
+
+    (test_paper.xpath("group_questions") + test_paper.xpath("question_set")).each_with_index do |ques,i|
+      tag_keys = get_question_tag_keys(ques)
+
+      if tag_keys.count == 5
+        tag_keys.each do |key|
+          if !TagsServer.get_tag_guid_by_key(key).present?
+            tag_not_present << key
+          end
         end
+      else
+        tag_not_present = ["course", "grade", "subject", "chapter", "concept"] - tag_keys
       end
-      absent_tags = must_present_tag_names_for_each_question - tag_names
-      if absent_tags.count > 0
+
+      if tag_keys.count != 5
         question_tag_not_present = {}
         question_tag_not_present['id'] = i+1
-        question_tag_not_present['type'] = 'group_questions'
-        question_tag_not_present['tags_not_present'] = absent_tags
+        question_tag_not_present['type'] = ques.xpath("qtype").attr("value").to_s rescue ''
+        question_tag_not_present['tags_not_present'] = ["course", "grade", "subject", "chapter", "concept"] - tag_keys
         question_wise_tags_not_present << question_tag_not_present
       end
+    end
+    return [tag_not_present.uniq,question_wise_tags_not_present]
+  end
+
+  def get_question_tag_keys(ques)
+    must_present_tag_names_for_each_question = ["course", "grade", "subject", "chapter", "concept"]
+    five_compulsory_tags_data = {}
+    ques.xpath("itags/itag").each do |tag|
+      name = tag.attr("name").to_s
+      value = tag.attr("value").to_s
+      five_compulsory_tags_data[name] = value if must_present_tag_names_for_each_question.include? name
     end
 
-    test_paper.xpath("question_set").each_with_index do |ques,i|
-      tag_names = []
-      ques.xpath("itags/itag").each do |tag|
-        name = tag.attr("name").to_s
-        value = tag.attr("value").to_s
-        d = {}
-        d['name'] = name
-        d['value'] = value
-        tag_names << name
-        all_tags << d
-        if !TagsServer.get_tag_guid(name, value).present?
-          tag_not_present << d
+    if five_compulsory_tags_data.keys.count == 5
+      five_compulsory_tags_data_1 = {}
+      five_compulsory_tags_data.keys.each_with_index do |k,i|
+        five_compulsory_tags_data_1[must_present_tag_names_for_each_question[i]] = five_compulsory_tags_data[must_present_tag_names_for_each_question[i]]
+      end
+      key = ''
+      five_compulsory_tags_data = {}
+      five_compulsory_tags_data_1.keys.each_with_index do |k,i|
+        if i!= 0
+          key = key + '_' +five_compulsory_tags_data_1[k]
+          five_compulsory_tags_data[k] = key
+        else
+          key = five_compulsory_tags_data_1[k]
+          five_compulsory_tags_data[k] = key
         end
       end
-      absent_tags = must_present_tag_names_for_each_question - tag_names
-      if absent_tags.count > 0
-        question_tag_not_present = {}
-        question_tag_not_present['id'] = i+1
-        question_tag_not_present['type'] = 'question_set'
-        question_tag_not_present['tags_not_present'] = absent_tags
-        question_wise_tags_not_present << question_tag_not_present
-      end
+      return five_compulsory_tags_data.values
+    else
+      return five_compulsory_tags_data.keys
     end
-    logger.info "All tags - #{all_tags.count} - #{all_tags}"
-    return [tag_not_present,question_wise_tags_not_present]
   end
 
   def process_etx(etx_file, user_id, publisher_question_bank_id,quiz_name, hidden=false, type)
@@ -521,6 +523,7 @@ class QuizzesController < ApplicationController
     file = File.open(etx_file)
     etx = Nokogiri::XML(file)
     test_paper = etx.xpath("/assessment")
+    quiz_name = test_paper.xpath("name").inner_text
     duration = test_paper.xpath("time").inner_text
     instructions = test_paper.xpath("instructions").inner_text
     question_ids = []
@@ -680,7 +683,7 @@ class QuizzesController < ApplicationController
     group_ques.xpath("itags/itag").each do |tag|
       name = tag.attr("name").to_s
       value = tag.attr("value").to_s
-      if ["course", "grade", "subject", "chapter", "concept"].include? name
+      if ["course", "grade", "subject", "chapter", "concept","difficulty_level", "blooms_taxonomy"].include? name
         data['tag_ids'] << TagsServer.get_tag_guid(name, value)
       end
     end
@@ -703,7 +706,7 @@ class QuizzesController < ApplicationController
     d['general_feedback'] = ques.xpath("question/solution")[0].inner_text rescue ''
     d['actual_answer'] = ques.xpath("question/actual_answer").inner_text rescue ''
     d['hint'] = ques.xpath("question/hint").inner_text rescue ''
-    d['language'] = 'english'
+    d['language'] = Language::ENGLISH
 
     data['question_language_specific_datas_attributes'] << d
 
@@ -730,7 +733,7 @@ class QuizzesController < ApplicationController
     ques.xpath("itags/itag").each do |tag|
       name = tag.attr("name").to_s
       value = tag.attr("value").to_s
-      if ["course", "grade", "subject", "chapter", "concept"].include? name
+      if ["course", "grade", "subject", "chapter", "concept","difficulty_level", "blooms_taxonomy"].include? name
         data['tag_ids'] << TagsServer.get_tag_guid(name, value)
       else
         if name == "subjective_lines" && (['SubjectiveQuestion'].include? data['qtype'])
