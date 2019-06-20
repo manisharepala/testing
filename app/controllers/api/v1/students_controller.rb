@@ -16,7 +16,13 @@ class Api::V1::StudentsController < ApplicationController
 
       quiz = Quiz.find(qtg.quiz_id)
       d['quiz_id'] = quiz.id
+
+      d['guid'] = quiz.guid
+      d['download_id'] = quiz.guid
+      d['src'] = 'assessment.json'
+      d['player'] = 'assessment'
       d['name'] = quiz.name
+
       d['marks'] = quiz.total_marks
       d['no_of_questions'] = quiz.question_ids.count
       d['duration'] = quiz.total_time
