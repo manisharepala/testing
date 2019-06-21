@@ -60,7 +60,7 @@ class ContentServer
   end
 
   def self.get_concept_chapters(concept_guids,token)
-    res = get("/api/v1/content/get_concept_chapters",headers:{token:token}, body: {concept_guids:concept_guids})
+    res = get("/get_concept_chapters",headers:{token:token}, body: {concept_guids:concept_guids})
     res.success? ? JSON.parse(res.body) : false
   end
 
