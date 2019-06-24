@@ -104,8 +104,9 @@ class Quiz
   end
 
   def self.get_json_from_s3(guid)
-    if quiz_json.present?
-      return quiz_json
+    quiz = Quiz.where(guid:guid)[0]
+    if quiz.quiz_json.present?
+      return quiz.quiz_json
     else
       require 'zip'
       tempfile = S3Server.download_quiz_zip(guid)
