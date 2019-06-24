@@ -104,17 +104,21 @@ class Quiz
   end
 
   def self.get_json_from_s3(guid)
-    require 'zip'
-    tempfile = S3Server.download_quiz_zip(guid)
-    content = {}
-    Zip::File.open(tempfile) do |zip_file|
-      zip_file.each do |entry|
-        if entry.name == "assessment.json"
-          content = entry.get_input_stream.read
+    if quiz_json.present?
+      return quiz_json
+    else
+      require 'zip'
+      tempfile = S3Server.download_quiz_zip(guid)
+      content = {}
+      Zip::File.open(tempfile) do |zip_file|
+        zip_file.each do |entry|
+          if entry.name == "assessment.json"
+            content = entry.get_input_stream.read
+          end
         end
       end
+      return content
     end
-    return content
   end
 
   def upload_zip
