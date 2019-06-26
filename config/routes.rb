@@ -47,6 +47,7 @@ Rails.application.routes.draw do
   get '/assessment/get_book_assessments_attempted/:book_id/:user_id', to: 'quizzes#get_book_assessments_attempted'
 
   get '/assessment/get_quiz_attempt_data', to: 'quizzes#get_quiz_attempt_data'
+  get '/assessment/challenge_test_attempt_data', to: 'quizzes#challenge_test_attempt_data'
   get '/assessment/get_multi_chapter_quiz_attempt_data', to: 'quizzes#get_multi_chapter_quiz_attempt_data'
 
 #teacher web api's
@@ -65,5 +66,15 @@ Rails.application.routes.draw do
 
   post '/assessment/get_child_tags', to: 'tags#get_child_tags'
   get '/assessment/update_question_tags', to: 'tags#update_question_tags'
+
+  scope '/assessment' do
+    scope '/apis' do
+      scope '/v1' do
+        get '/student/assessments' => 'api/v1/students#assessments'
+        get '/assessment_details' => 'api/v1/students#assessment_details'
+        post '/search_assessments' => 'api/v1/students#search_assessments'
+      end
+    end
+  end
 
 end

@@ -31,7 +31,7 @@ class Quiz
 
   before_create :create_guid
 
-  after_save :upload_zip
+  # after_save :upload_zip
 
   # has_and_belongs_to_many :tags, index: true, autosave: true, inverse_of: nil # one side relation
   # has_and_belongs_to_many :questions, index: true, autosave: true, inverse_of: nil # one side relation
@@ -104,17 +104,22 @@ class Quiz
   end
 
   def self.get_json_from_s3(guid)
-    require 'zip'
-    tempfile = S3Server.download_quiz_zip(guid)
-    content = {}
-    Zip::File.open(tempfile) do |zip_file|
-      zip_file.each do |entry|
-        if entry.name == "assessment.json"
-          content = entry.get_input_stream.read
+    quiz = Quiz.where(guid:guid)[0]
+    if quiz.quiz_json.present?
+      return quiz.quiz_json
+    else
+      require 'zip'
+      tempfile = S3Server.download_quiz_zip(guid)
+      content = {}
+      Zip::File.open(tempfile) do |zip_file|
+        zip_file.each do |entry|
+          if entry.name == "assessment.json"
+            content = entry.get_input_stream.read
+          end
         end
       end
+      return content
     end
-    return content
   end
 
   def upload_zip
