@@ -322,7 +322,7 @@ class QuizzesController < ApplicationController
   end
 
   def all_quizzes
-    @quiz = Quiz.all.order("created_at DESC")
+    @quiz = Kaminari.paginate_array(Quiz.all.order("created_at DESC")).page(params[:page]).per(50)
   end
 
   def quiz_questions
