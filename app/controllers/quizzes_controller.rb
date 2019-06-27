@@ -322,7 +322,7 @@ class QuizzesController < ApplicationController
   end
 
   def all_quizzes
-    @quiz = Kaminari.paginate_array(Quiz.all.desc('_id')).page(params[:page]).per(50)
+    @quiz = Kaminari.paginate_array(Quiz.all.desc('_id')).page(params[:page]).per(5000)
   end
 
   def quiz_questions
