@@ -16,8 +16,10 @@ class QuestionsController < ApplicationController
     @current_tags = {}
     (@question.tag_ids-[nil]).each do |guid|
       d = TagsServer.get_tag_data(guid)
-      @current_tags[d['name']] = [d['value'],d['guid']]
-      @tags[d['name']] = (TagsServer.get_sibling_tags(d['guid']) - [nil]) if !(d['name'] == 'course' || d['name'] == 'difficulty_level' || d['name'] == 'blooms_taxonomy')
+      if d.present?
+        @current_tags[d['name']] = [d['value'],d['guid']]
+        @tags[d['name']] = (TagsServer.get_sibling_tags(d['guid']) - [nil]) if !(d['name'] == 'course' || d['name'] == 'difficulty_level' || d['name'] == 'blooms_taxonomy')
+      end
     end
   end
 

@@ -680,13 +680,21 @@ class QuizzesController < ApplicationController
     data['qtype'] = 'PassageQuestion'
     data['created_by'] = user_id
     data['tag_ids'] = []
+
+    tag_keys = get_question_tag_keys(group_ques)
+    tag_keys.each do |key|
+      data['tag_ids'] << TagsServer.get_tag_guid_by_key(key)
+    end
+
     group_ques.xpath("itags/itag").each do |tag|
       name = tag.attr("name").to_s
       value = tag.attr("value").to_s
-      if ["course", "grade", "subject", "chapter", "concept","difficulty_level", "blooms_taxonomy"].include? name
+
+      if ["difficulty_level", "blooms_taxonomy"].include? name
         data['tag_ids'] << TagsServer.get_tag_guid(name, value)
       end
     end
+
     data['question_guids'] = []
     group_ques.xpath("question_set").each do |ques|
       child_question = create_simple_question(user_id, ques,publisher_question_bank_id, s3_path,master_dir,images_dir)
@@ -730,17 +738,18 @@ class QuizzesController < ApplicationController
     end
 
     data['tag_ids'] = []
+
+    tag_keys = get_question_tag_keys(ques)
+    tag_keys.each do |key|
+      data['tag_ids'] << TagsServer.get_tag_guid_by_key(key)
+    end
+
     ques.xpath("itags/itag").each do |tag|
       name = tag.attr("name").to_s
       value = tag.attr("value").to_s
-      if ["course", "grade", "subject", "chapter", "concept","difficulty_level", "blooms_taxonomy"].include? name
+
+      if ["difficulty_level", "blooms_taxonomy"].include? name
         data['tag_ids'] << TagsServer.get_tag_guid(name, value)
-      else
-        if name == "subjective_lines" && (['SubjectiveQuestion'].include? data['qtype'])
-          data['answer_lines'] = value
-        else
-          data['tag_ids'] << TagsServer.get_tag_guid(name, value)
-        end
       end
     end
     return data
