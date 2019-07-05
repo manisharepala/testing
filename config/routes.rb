@@ -73,6 +73,15 @@ Rails.application.routes.draw do
         get '/student/assessments' => 'api/v1/students#assessments'
         get '/assessment_details' => 'api/v1/students#assessment_details'
         post '/search_assessments' => 'api/v1/students#search_assessments'
+
+        get '/get_gradewise_subject_tags' => 'api/v1/api#get_gradewise_subject_tags'
+        get '/marks_tags' => 'api/v1/api#marks_tags'
+        get '/difficulty_tags' => 'api/v1/api#difficulty_tags'
+        post '/get_recommended_questions_count_by_tags' => 'api/v1/api#get_recommended_questions_count_by_tags'
+        post '/get_questions_by_tags' => 'api/v1/api#get_questions_by_tags'
+        get '/get_question_json' => 'api/v1/api#get_question_json'
+        post '/generate_quiz' => 'api/v1/api#generate_quiz'
+        get '/teacher/assessments' => 'api/v1/api#assessments'
       end
     end
   end
