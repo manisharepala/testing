@@ -162,7 +162,7 @@ class Api::V1::ApiController < ApplicationController
 
   def assessments
     data = []
-    qtgs = QuizTargetedGroup.where(:group_ids.in=>[params[:group_id]],published_by:current_user.id, is_cancelled:false)
+    qtgs = QuizTargetedGroup.where(:group_ids.in=>[params[:section_id]],published_by:current_user.id, is_cancelled:false)
     qtgs.uniq.each do |qtg|
       quiz = Quiz.find(qtg.quiz_id)
 
@@ -190,7 +190,6 @@ class Api::V1::ApiController < ApplicationController
         d['no_of_questions'] = quiz.question_ids.count
         d['duration'] = quiz.total_time
         d['type'] = quiz.type
-        d['no_of_times_attempted'] = QuizAttemptData.where("data.asset_download_id"=>quiz.guid,user_id:current_user.id.to_s).count
 
         data << d
       end
