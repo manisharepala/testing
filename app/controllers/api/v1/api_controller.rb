@@ -162,7 +162,7 @@ class Api::V1::ApiController < ApplicationController
 
   def assessments
     data = []
-    qtgs = QuizTargetedGroup.where(:group_ids.in=>[params[:section_id]],published_by:current_user.id, is_cancelled:false)
+    qtgs = QuizTargetedGroup.where(:group_ids.in=>[params[:section_id].to_i],published_by:current_user.id, is_cancelled:false)
     qtgs.uniq.each do |qtg|
       quiz = Quiz.find(qtg.quiz_id)
 
