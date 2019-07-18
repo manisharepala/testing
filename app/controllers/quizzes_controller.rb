@@ -222,6 +222,28 @@ class QuizzesController < ApplicationController
     render json: data
   end
 
+  def get_all_quiz_attempt_datas
+    data = []
+    qads = QuizAttemptData.where("data.asset_download_id"=>params[:guid],user_id:params[:user_id].to_s)
+    if qads.present?
+      qads.each do |qad|
+        data << qad.data.merge(id:qad.id.to_s)
+      end
+    end
+
+    render json: data
+  end
+
+  def get_quiz_attempt_data_by_id
+    data = {}
+    qad = QuizAttemptData.find(params[:id])
+    if qad.present?
+      data = qad.data
+    end
+
+    render json: data
+  end
+
   def get_assessments_attempt_data
     data = {}
     params[:assessment_ids].each do |assessment_id|

@@ -50,6 +50,9 @@ Rails.application.routes.draw do
   get '/assessment/challenge_test_attempt_data', to: 'quizzes#challenge_test_attempt_data'
   get '/assessment/get_multi_chapter_quiz_attempt_data', to: 'quizzes#get_multi_chapter_quiz_attempt_data'
 
+  get '/assessment/get_all_quiz_attempt_datas', to: 'quizzes#get_all_quiz_attempt_datas'
+  get '/assessment/get_quiz_attempt_data_by_id', to: 'quizzes#get_quiz_attempt_data_by_id'
+
 #teacher web api's
   get '/assessment/user_assessments_by_category', to: 'api#user_assessments_by_category'
   post '/assessment/edit_due_time', to: 'api#edit_due_time'
