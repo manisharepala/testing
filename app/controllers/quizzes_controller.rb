@@ -224,7 +224,7 @@ class QuizzesController < ApplicationController
 
   def get_all_quiz_attempt_datas
     data = []
-    qads = QuizAttemptData.where("data.asset_download_id"=>params[:guid],user_id:params[:user_id].to_s)
+    qads = QuizAttemptData.where("data.asset_download_id"=>params[:guid],user_id:current_user.id)
     if qads.present?
       qads.each do |qad|
         data << qad.data.merge(id:qad.id.to_s)
