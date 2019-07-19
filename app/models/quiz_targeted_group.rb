@@ -19,7 +19,6 @@ class QuizTargetedGroup
   field :published_on, type: DateTime
   field :group_ids, type: Array, default: []
   field :user_ids, type: Array, default: []
-  field :user_id, type: Integer
   field :guid, type: String
 
   field :message_subject, type: String

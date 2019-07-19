@@ -15,4 +15,9 @@ class UserManagementServer
     res.success? ? JSON.parse(res.body) : false
   end
 
+  def self.get_group_ids(user_id,token)
+    res = get("/user_management/apis/v1/get_user_group_ids?user_id=#{user_id}&token=#{token}")
+    res.success? ? JSON.parse(res.body) : false
+  end
+
 end

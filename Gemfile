@@ -27,7 +27,6 @@ gem 'redis', '~> 4.0'
 gem 'hiredis'
 # Use ActiveModel has_secure_password
 # gem 'bcrypt', '~> 3.1.7'
-
 # Use ActiveStorage variant
 # gem 'mini_magick', '~> 4.8'
 
@@ -86,3 +85,9 @@ gem 'simple_form', '~> 4.1'
 gem 'httparty'
 
 gem 'rack-cors', require: 'rack/cors'
+gem 'kaminari', '~> 1.1', '>= 1.1.1'
+
+gem 'wicked_pdf'
+
+#link_to_add_association
+gem 'cocoon', '~> 1.2', '>= 1.2.13'

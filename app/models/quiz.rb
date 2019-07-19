@@ -20,6 +20,7 @@ class Quiz
   field :file_path, type: String
   field :final, type: Boolean, default: false
   field :uploaded, type: Boolean, default: false
+  field :tags_verified, type: Boolean, default: false
   field :focus_area, type: BSON::Binary
   field :quiz_json, type: BSON::Binary
 
@@ -30,7 +31,7 @@ class Quiz
 
   before_create :create_guid
 
-  after_save :upload_zip
+  # after_save :upload_zip
 
   # has_and_belongs_to_many :tags, index: true, autosave: true, inverse_of: nil # one side relation
   # has_and_belongs_to_many :questions, index: true, autosave: true, inverse_of: nil # one side relation
@@ -103,21 +104,26 @@ class Quiz
   end
 
   def self.get_json_from_s3(guid)
-    require 'zip'
-    tempfile = S3Server.download_quiz_zip(guid)
-    content = {}
-    Zip::File.open(tempfile) do |zip_file|
-      zip_file.each do |entry|
-        if entry.name == "assessment.json"
-          content = entry.get_input_stream.read
+    quiz = Quiz.where(guid:guid)[0]
+    if quiz.quiz_json.present?
+      return quiz.quiz_json
+    else
+      require 'zip'
+      tempfile = S3Server.download_quiz_zip(guid)
+      content = {}
+      Zip::File.open(tempfile) do |zip_file|
+        zip_file.each do |entry|
+          if entry.name == "assessment.json"
+            content = entry.get_input_stream.read
+          end
         end
       end
+      return content
     end
-    return content
   end
 
   def upload_zip
-    if final
+    if final && tags_verified
       create_zip
       tags = {}
       #  tag_ids.each do |guid|
@@ -134,6 +140,21 @@ class Quiz
         File.delete(file_path) if File.exist?(file_path)
       end
     end
+  end
+
+  def Quiz.are_all_compulsory_tags_present(id)
+    quiz = Quiz.find(id)
+    response = true
+
+    quiz.question_ids.each do |question_id|
+      if Question.find(question_id).tag_ids.count >= 5
+      else
+        response = false
+        break
+      end
+    end
+
+    return response
   end
 
   def self.create_quiz(attrs)
@@ -193,7 +214,6 @@ class Quiz
   end
 
   def self.migrate_quizzes(guid)
-    # guid = '0aca3033-6752-4641-976d-4996632a80b1'
     require 'zip'
     zip_path = File.join(Rails.root.to_s,"public/quiz_zips/#{guid}") #"/home/inayath/edutor/assessment_app/public/quiz_zips/472508b1-6f7d-4f80-a1f0-b4ca4202be7b"
     tempfile = S3Server.download_quiz_zip(guid)
@@ -205,7 +225,6 @@ class Quiz
     images_dir = zip_path + "/" #zip_path + "/#{data['name']}_files"
     user_id = 1
     publisher_question_bank_id = PublisherQuestionBank.first._id
-    publisher_question_bank = PublisherQuestionBank.find(publisher_question_bank_id)
     s3_path = 'question_images/'
 
     data.keys #[:name, :description, :instructions, :total_marks, :total_time, :player, :time_open, :time_close, :questions]
@@ -221,33 +240,31 @@ class Quiz
     quiz_section_ids = []
 
     if (tags_not_present.count == 0) && (question_wise_tags_not_present.count == 0)
-      data['questions'].each do |ques_data|
-        question = Question.create_question(Quiz.get_simple_question_hash(ques_data,user_id,publisher_question_bank_id))
-        Quiz.update_image_path(question._id,s3_path)
-        Quiz.copy_question_images(question._id,images_dir)
-        question_ids << question._id.to_s
-      end
-
-      # data['quiz_sections'].each do |quiz_section|
-      #   quiz_section = QuizSection.create(question_ids:question_ids_1, quiz_id: quiz.id.to_s,quiz_section_language_specific_datas_attributes: [{name:'Quiz Section 1 name in english',instructions:'quiz section 1 instructions in english', language: 'english'}, {name:'Quiz section 1 name in hindi',instructions:'quiz section 1 instructions in hindi', language: 'hindi'}])
-      # end
-
-      # publisher_question_bank.attributes = {question_ids:(publisher_question_bank.question_ids + question_ids)}
-      # publisher_question_bank.save!
-
-
-      quiz = Quiz.create(quiz_language_specific_datas_attributes: [{name:data['name'],description: data['description'],instructions:data['instructions'], language: 'english'}],question_ids:question_ids,quiz_section_ids:quiz_section_ids, type:data['player'], player:data['player'], total_marks:data['total_marks'], total_time:data['total_time'],guid:guid)
-      quiz.guid = guid
-      quiz.save!
-      quiz.key = "/quiz_zips/#{quiz.guid}.zip"
-      quiz.file_path = Rails.root.to_s + "/public/quiz_zips/#{quiz.guid}.zip"
-      quiz.quiz_json = data
-      quiz.final = true
-      quiz.save!
-      return 'Assessment was successfully migrated'
+      skip_tags = false
     else
-      return "Following tags are not present #{tags_not_present} and Following questions do not have the compulsory 5 tags -> #{question_wise_tags_not_present} "
+      skip_tags = true
     end
+
+    data['questions'].each do |ques_data|
+      question = Question.create_question(Quiz.get_simple_question_hash(ques_data,user_id,publisher_question_bank_id,skip_tags))
+      Quiz.update_image_path(question._id,s3_path)
+      Quiz.copy_question_images(question._id,images_dir)
+      question_ids << question._id.to_s
+    end
+
+    # data['quiz_sections'].each do |quiz_section|
+    #   quiz_section = QuizSection.create(question_ids:question_ids_1, quiz_id: quiz.id.to_s,quiz_section_language_specific_datas_attributes: [{name:'Quiz Section 1 name in english',instructions:'quiz section 1 instructions in english', language: 'english'}, {name:'Quiz section 1 name in hindi',instructions:'quiz section 1 instructions in hindi', language: 'hindi'}])
+    # end
+
+    quiz = Quiz.create(quiz_language_specific_datas_attributes: [{name:data['name'],description: data['description'],instructions:data['instructions'], language: 'english'}],question_ids:question_ids,quiz_section_ids:quiz_section_ids, type:data['player'], player:data['player'], total_marks:data['total_marks'], total_time:data['total_time'],guid:guid)
+    quiz.guid = guid
+    quiz.save!
+    quiz.key = "/quiz_zips/#{quiz.guid}.zip"
+    quiz.file_path = Rails.root.to_s + "/public/quiz_zips/#{quiz.guid}.zip"
+    quiz.quiz_json = data
+    quiz.final = false
+    quiz.tags_verified = true if skip_tags == false
+    quiz.save!
   end
 
   def Quiz.update_image_path(ques_id,s3_path)
@@ -368,7 +385,6 @@ class Quiz
 
   def Quiz.get_question_tag_keys(ques)
     must_present_tag_names_for_each_question = ["course", "grade", "subject", "chapter", "concept"]
-    #tags_hash = {"academic_class"=>"grade", "concept_names"=>"concept", "course"=>"course", "chapter"=>"chapter", "subject"=>"subject"}
     tags_hash = {"academic_class"=>"grade","concept_names"=>"concept","grade"=>"grade", "concept"=>"concept", "course"=>"course", "chapter"=>"chapter", "subject"=>"subject"}
     five_compulsory_tags_data = {}
     ques['tags'].each do |tag|
@@ -404,7 +420,7 @@ class Quiz
     end
   end
 
-  def Quiz.get_simple_question_hash(ques_data,user_id,publisher_question_bank_id)
+  def Quiz.get_simple_question_hash(ques_data,user_id,publisher_question_bank_id,skip_tags)
     #[:id, :question_text, :marks, :penalty, :question_type, :tags, :explanation, :hint, :options, :answers, :blanks]
     data = {}
     data['publisher_question_bank_ids'] = [publisher_question_bank_id]
@@ -443,14 +459,16 @@ class Quiz
 
     data['tag_ids'] = []
 
-    tag_keys = Quiz.get_question_tag_keys(ques_data)
-    tag_keys.each do |key|
-      data['tag_ids'] << TagsServer.get_tag_guid_by_key(key)
-    end
-    ques_data['tags'].each do |hash|
-      if (hash.keys[0] == "difficulty_level") || (hash.keys[0] == "blooms_taxonomy")
-        guid = TagsServer.get_tag_guid(hash.keys[0], hash.values[0])
-        data['tag_ids'] << guid if guid.present?
+    if !skip_tags
+      tag_keys = Quiz.get_question_tag_keys(ques_data)
+      tag_keys.each do |key|
+        data['tag_ids'] << TagsServer.get_tag_guid_by_key(key)
+      end
+      ques_data['tags'].each do |hash|
+        if (hash.keys[0] == "difficulty_level") || (hash.keys[0] == "blooms_taxonomy")
+          guid = TagsServer.get_tag_guid(hash.keys[0], hash.values[0])
+          data['tag_ids'] << guid if guid.present?
+        end
       end
     end
 

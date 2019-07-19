@@ -1,6 +1,6 @@
 class QuizzesController < ApplicationController
 
-  skip_before_action :authenticate_user!     #, only: [:show, :index]
+  skip_before_action :authenticate_user!, except:[:challenge_test_attempt_data, :get_all_quiz_attempt_datas, :get_quiz_attempt_data_by_id]
 
   def get_quizzes_analytics_data
     assessment_ids = params[:assessment_ids]
@@ -22,15 +22,15 @@ class QuizzesController < ApplicationController
           d[fa['guid']] ||= {}
           d[fa['guid']]['name'] = fa['name']
           d[fa['guid']]['total_questions'] ||= []
-          d[fa['guid']]['total_questions'] << fa['questionIds'].uniq.map!{|e| e.to_i}
+          d[fa['guid']]['total_questions'] << fa['questionIds'].uniq.map!{|e| e.to_s}
         end
       end
 
       if qad.present?
-        correct_ids << qad.data['correct']
-        in_correct_ids << qad.data['incorrect']
-        skipped_ids << qad.data['skipped_questions']
-        skipped_ids << qad.data['unattempted'] #logic changed here (skipped + un_attempted)
+        correct_ids << qad.data['correct'].map{|id| id.to_s}
+        in_correct_ids << qad.data['incorrect'].map{|id| id.to_s}
+        skipped_ids << qad.data['skipped_questions'].map{|id| id.to_s}
+        skipped_ids << qad.data['unattempted'].map{|id| id.to_s} #logic changed here (skipped + un_attempted)
       end
     end
 
@@ -54,6 +54,42 @@ class QuizzesController < ApplicationController
 
       data << cd if ((concept_guids.include? guid) && (total_count > 0))
     end
+
+    render json: data
+  end
+
+  def challenge_test_attempt_data
+    sort_stage = {
+        "$sort" => { "created_at" => 1 }
+    }
+
+    match_stage = {
+        "$match" => {
+            "$and"=> [{ "data.book_id" => params[:book_guid]},
+                      {"user_id" => current_user.id.to_s},
+                      {"data.player_subtype" => "challenge test"}
+            ]
+        }
+    }
+
+    group_stage = {
+        "$group" => {
+            "_id" => {
+                "asset_guid" => "$data.asset_guid"
+            },
+            "data"=>{ "$last"=> "$data"}
+        }
+    }
+    disk_stage = {
+        "allow_disk_use"=> true
+    }
+
+    project_stage = {
+        "$project" => { "data"=> 1}
+    }
+
+    result = QuizAttemptData.collection.aggregate([sort_stage,match_stage,project_stage,group_stage],disk_stage)
+    data = result.map{|d| {d['_id']['asset_guid']=>d['data']}}.reduce(:merge)
 
     render json: data
   end
@@ -186,6 +222,28 @@ class QuizzesController < ApplicationController
     render json: data
   end
 
+  def get_all_quiz_attempt_datas
+    data = []
+    qads = QuizAttemptData.where("data.asset_download_id"=>params[:guid],user_id:current_user.id)
+    if qads.present?
+      qads.each do |qad|
+        data << qad.data.merge(id:qad.id.to_s)
+      end
+    end
+
+    render json: data
+  end
+
+  def get_quiz_attempt_data_by_id
+    data = {}
+    qad = QuizAttemptData.find(params[:id])
+    if qad.present?
+      data = qad.data
+    end
+
+    render json: data
+  end
+
   def get_assessments_attempt_data
     data = {}
     params[:assessment_ids].each do |assessment_id|
@@ -213,11 +271,33 @@ class QuizzesController < ApplicationController
   def quiz_update
     @quiz = Quiz.find(params[:id])
     q_params = quiz_params['quiz_language_specific_datas_attributes'].to_h
-    if @quiz.update_attributes(quiz_language_specific_datas: [name: q_params.values[0]['name']], final: quiz_params[:final])
-      redirect_to assessment_all_quizzes_path
+
+    if @quiz.tags_verified
+      if @quiz.update_attributes(quiz_language_specific_datas: [name: q_params.values[0]['name']], final: quiz_params[:final])
+        redirect_to assessment_all_quizzes_path, notice:'Successful'
+      else
+        redirect_to assessment_quiz_edit_path(id:@quiz.id), notice:'Something went wrong'
+      end
     else
-      render 'edit'
+      if quiz_params[:final] == '1'
+        if Quiz.are_all_compulsory_tags_present(params[:id])
+          if @quiz.update_attributes(quiz_language_specific_datas: [name: q_params.values[0]['name']], final: quiz_params[:final], tags_verified:true)
+            redirect_to assessment_all_quizzes_path, notice:'Successful'
+          else
+            redirect_to assessment_quiz_edit_path(id:@quiz.id), notice:'Something went wrong'
+          end
+        else
+          redirect_to assessment_quiz_edit_path(id:@quiz.id), notice:'Update Failed -> Not all questions have proper tags'
+        end
+      else
+        if @quiz.update_attributes(quiz_language_specific_datas: [name: q_params.values[0]['name']], final: quiz_params[:final])
+          redirect_to assessment_all_quizzes_path, notice:'Successful'
+        else
+          redirect_to assessment_quiz_edit_path(id:@quiz.id), notice:'Something went wrong'
+        end
+      end
     end
+    @quiz.upload_zip
   end
 
   def quiz_delete
@@ -264,7 +344,7 @@ class QuizzesController < ApplicationController
   end
 
   def all_quizzes
-    @quiz = Quiz.all.order("created_at DESC")
+    @quiz = Kaminari.paginate_array(Quiz.all.desc('_id')).page(params[:page]).per(5000)
   end
 
   def quiz_questions
@@ -320,10 +400,7 @@ class QuizzesController < ApplicationController
     csv = CSV.parse(params[:file].read, :headers => true)
     csv.each do |row|
       begin
-        response = Quiz.migrate_quizzes(row[0])
-        if response.include? 'Following'
-          errors << row
-        end
+        Quiz.migrate_quizzes(row[0])
       rescue
         errors << row
       end
@@ -345,7 +422,7 @@ class QuizzesController < ApplicationController
 
   def zip_upload_question
     @publisher_question_banks = PublisherQuestionBank.all
-    @quiz_types = [['All Types', 'all_types'],['Concept Practice Objective' ,'concept_practice_objective'],['Concept Test Objective' ,'concept_test_objective'],['Concept Practice Subjective' ,'concept_practice_subjective'],['Concept Test Subjective' ,'concept_test_subjective'],['Challenge Test Objective' ,'challenge_test_objective'],['Challenge Test Subjective' ,'challenge_test_subjective'],['Chapter Practice Objective' ,'chapter_practice_objective'],['Chapter Test Objective' ,'chapter_test_objective'],['Chapter Practice Subjective' ,'chapter_practice_subjective'],['Chapter Test Subjective' ,'chapter_test_subjective'],['Challenge Test' ,'challenge test'], ['Subjective', 'subjective'], ['Try Out', 'tryout'], ['Concept Practice', 'concept_practice']]
+    @quiz_types = [['All Types', 'all_types'],['Concept Practice Objective' ,'concept_practice_objective'],['Concept Test Objective' ,'concept_test_objective'],['Concept Practice Subjective' ,'concept_practice_subjective'],['Concept Test Subjective' ,'concept_test_subjective'],['Challenge Test Objective' ,'challenge_test_objective'],['Challenge Test Subjective' ,'challenge_test_subjective'],['Chapter Practice Objective' ,'chapter_practice_objective'],['Chapter Test Objective' ,'chapter_test_objective'],['Chapter Practice Subjective' ,'chapter_practice_subjective'],['Chapter Test Subjective' ,'chapter_test_subjective'],['Challenge Test' ,'challenge test'], ['Subjective', 'subjective'], ['Try Out', 'tryout'], ['Concept Practice', 'concept_practice'],['Subjective Practice','subjective_practice']]
   end
 
   def post_zip_upload_question
@@ -398,64 +475,66 @@ class QuizzesController < ApplicationController
 
     respond_to do |format|
       format.html { redirect_to assessment_zip_upload_question_path, notice: 'Quiz was successfully created.'}
-      # format.json { render json: @zip_upload.errors, status: :unprocessable_entity }
     end
   end
 
   def verify_tags(test_paper)
-    all_tags = []
     tag_not_present = []
-    must_present_tag_names_for_each_question = ["course", "grade", "subject", "chapter", "concept"]
     question_wise_tags_not_present = []
-    test_paper.xpath("group_questions").each_with_index do |group_ques,i|
-      tag_names = []
-      group_ques.xpath("itags/itag").each do |tag|
-        name = tag.attr("name").to_s
-        value = tag.attr("value").to_s
-        d = {}
-        d['name'] = name
-        d['value'] = value
-        tag_names << name
-        all_tags << d
-        if !TagsServer.get_tag_guid(name, value).present?
-          tag_not_present << d
+
+    (test_paper.xpath("group_questions") + test_paper.xpath("question_set")).each_with_index do |ques,i|
+      tag_keys = get_question_tag_keys(ques)
+
+      if tag_keys.count == 5
+        tag_keys.each do |key|
+          if !TagsServer.get_tag_guid_by_key(key).present?
+            tag_not_present << key
+          end
         end
+      else
+        tag_not_present = ["course", "grade", "subject", "chapter", "concept"] - tag_keys
       end
-      absent_tags = must_present_tag_names_for_each_question - tag_names
-      if absent_tags.count > 0
+
+      if tag_keys.count != 5
         question_tag_not_present = {}
         question_tag_not_present['id'] = i+1
-        question_tag_not_present['type'] = 'group_questions'
-        question_tag_not_present['tags_not_present'] = absent_tags
+        question_tag_not_present['type'] = ques.xpath("qtype").attr("value").to_s rescue ''
+        question_tag_not_present['tags_not_present'] = ["course", "grade", "subject", "chapter", "concept"] - tag_keys
         question_wise_tags_not_present << question_tag_not_present
       end
+    end
+    return [tag_not_present.uniq,question_wise_tags_not_present]
+  end
+
+  def get_question_tag_keys(ques)
+    must_present_tag_names_for_each_question = ["course", "grade", "subject", "chapter", "concept"]
+    five_compulsory_tags_data = {}
+    ques.xpath("itags/itag").each do |tag|
+      name = tag.attr("name").to_s
+      value = tag.attr("value").to_s
+      five_compulsory_tags_data[name] = value if must_present_tag_names_for_each_question.include? name
     end
 
-    test_paper.xpath("question_set").each_with_index do |ques,i|
-      tag_names = []
-      ques.xpath("itags/itag").each do |tag|
-        name = tag.attr("name").to_s
-        value = tag.attr("value").to_s
-        d = {}
-        d['name'] = name
-        d['value'] = value
-        tag_names << name
-        all_tags << d
-        if !TagsServer.get_tag_guid(name, value).present?
-          tag_not_present << d
+    if five_compulsory_tags_data.keys.count == 5
+      five_compulsory_tags_data_1 = {}
+      five_compulsory_tags_data.keys.each_with_index do |k,i|
+        five_compulsory_tags_data_1[must_present_tag_names_for_each_question[i]] = five_compulsory_tags_data[must_present_tag_names_for_each_question[i]]
+      end
+      key = ''
+      five_compulsory_tags_data = {}
+      five_compulsory_tags_data_1.keys.each_with_index do |k,i|
+        if i!= 0
+          key = key + '_' +five_compulsory_tags_data_1[k]
+          five_compulsory_tags_data[k] = key
+        else
+          key = five_compulsory_tags_data_1[k]
+          five_compulsory_tags_data[k] = key
         end
       end
-      absent_tags = must_present_tag_names_for_each_question - tag_names
-      if absent_tags.count > 0
-        question_tag_not_present = {}
-        question_tag_not_present['id'] = i+1
-        question_tag_not_present['type'] = 'question_set'
-        question_tag_not_present['tags_not_present'] = absent_tags
-        question_wise_tags_not_present << question_tag_not_present
-      end
+      return five_compulsory_tags_data.values
+    else
+      return five_compulsory_tags_data.keys
     end
-    logger.info "All tags - #{all_tags.count} - #{all_tags}"
-    return [tag_not_present,question_wise_tags_not_present]
   end
 
   def process_etx(etx_file, user_id, publisher_question_bank_id,quiz_name, hidden=false, type)
@@ -466,6 +545,7 @@ class QuizzesController < ApplicationController
     file = File.open(etx_file)
     etx = Nokogiri::XML(file)
     test_paper = etx.xpath("/assessment")
+    quiz_name = test_paper.xpath("name").inner_text
     duration = test_paper.xpath("time").inner_text
     instructions = test_paper.xpath("instructions").inner_text
     question_ids = []
@@ -622,13 +702,21 @@ class QuizzesController < ApplicationController
     data['qtype'] = 'PassageQuestion'
     data['created_by'] = user_id
     data['tag_ids'] = []
+
+    tag_keys = get_question_tag_keys(group_ques)
+    tag_keys.each do |key|
+      data['tag_ids'] << TagsServer.get_tag_guid_by_key(key)
+    end
+
     group_ques.xpath("itags/itag").each do |tag|
       name = tag.attr("name").to_s
       value = tag.attr("value").to_s
-      if ["course", "grade", "subject", "chapter", "concept"].include? name
+
+      if ["difficulty_level", "blooms_taxonomy"].include? name
         data['tag_ids'] << TagsServer.get_tag_guid(name, value)
       end
     end
+
     data['question_guids'] = []
     group_ques.xpath("question_set").each do |ques|
       child_question = create_simple_question(user_id, ques,publisher_question_bank_id, s3_path,master_dir,images_dir)
@@ -648,7 +736,7 @@ class QuizzesController < ApplicationController
     d['general_feedback'] = ques.xpath("question/solution")[0].inner_text rescue ''
     d['actual_answer'] = ques.xpath("question/actual_answer").inner_text rescue ''
     d['hint'] = ques.xpath("question/hint").inner_text rescue ''
-    d['language'] = 'english'
+    d['language'] = Language::ENGLISH
 
     data['question_language_specific_datas_attributes'] << d
 
@@ -672,17 +760,18 @@ class QuizzesController < ApplicationController
     end
 
     data['tag_ids'] = []
+
+    tag_keys = get_question_tag_keys(ques)
+    tag_keys.each do |key|
+      data['tag_ids'] << TagsServer.get_tag_guid_by_key(key)
+    end
+
     ques.xpath("itags/itag").each do |tag|
       name = tag.attr("name").to_s
       value = tag.attr("value").to_s
-      if ["course", "grade", "subject", "chapter", "concept"].include? name
+
+      if ["difficulty_level", "blooms_taxonomy"].include? name
         data['tag_ids'] << TagsServer.get_tag_guid(name, value)
-      else
-        if name == "subjective_lines" && (['SubjectiveQuestion'].include? data['qtype'])
-          data['answer_lines'] = value
-        else
-          data['tag_ids'] << TagsServer.get_tag_guid(name, value)
-        end
       end
     end
     return data

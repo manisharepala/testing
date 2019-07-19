@@ -1,7 +1,7 @@
 class ContentServer
   include HTTParty
   base_uri '13.234.165.191'
-  # base_uri '13.233.76.145'
+  # base_uri 'localhost:6000'
   CREATION_URL = '/content_assets.json'
   attr_reader :guid, :type, :user_id
 
@@ -57,6 +57,11 @@ class ContentServer
 
   def self.get_quiz_zip
 
+  end
+
+  def self.get_concept_chapters(concept_guids,token)
+    res = get("/get_concept_chapters",headers:{token:token}, body: {concept_guids:concept_guids})
+    res.success? ? JSON.parse(res.body) : false
   end
 
   def headers

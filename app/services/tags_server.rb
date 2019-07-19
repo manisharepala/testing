@@ -59,6 +59,15 @@ class TagsServer
     end
   end
 
+  def self.get_tags_data(guids)
+    res = get('/tags/find_tags', {query: {guids: guids}})
+    if res.code == 200
+      JSON.parse(res.body)
+    else
+      []
+    end
+  end
+
   def self.get_uniq_tag_values_with_guids
     res = get('/tags/get_uniq_tag_values_with_guids')
     if res.code == 200
