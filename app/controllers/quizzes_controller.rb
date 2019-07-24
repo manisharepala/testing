@@ -837,6 +837,27 @@ class QuizzesController < ApplicationController
     end
   end
 
+  def get_all_assessment_attempts
+    result = []
+    data = QuizAttemptData.where("data.book_id"=>params[:book_id],:user_id=>current_user.id)
+    if data.present?
+      s = {}
+      data.each do |d|
+        s["attemptId"] = d._id.to_s
+        s["attemptedAt"] = d.data["start_time"]
+        result << s
+      end
+    end
+    render json: result
+  end
+
+
+  def get_assessment_attempt_by_attempt_id
+    data = QuizAttemptData.where("_id"=>params[:attemptId]).last
+    render json: result
+  end
+
+
   private
   def quiz_params
     params.require(:quiz).permit(:final,quiz_language_specific_datas_attributes: [:name])
