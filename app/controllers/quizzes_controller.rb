@@ -843,8 +843,13 @@ class QuizzesController < ApplicationController
     if data.present?
       s = {}
       data.each do |d|
+        quiz = Quiz.where(:guid=>d.data["asset_download_id"]).last
         s["attemptId"] = d._id.to_s
         s["attemptedAt"] = d.data["start_time"]
+        s["assessmentType"] = d.data["player_subtype"]
+        s["assessmentName"] = quiz.name rescue ""
+        s["assessmentGuid"] = d.data["asset_download_id"]
+        s["tags"] = {}
         result << s
       end
     end
@@ -853,7 +858,11 @@ class QuizzesController < ApplicationController
 
 
   def get_assessment_attempt_by_attempt_id
-    data = QuizAttemptData.where("_id"=>params[:attemptId]).last
+    result = {}
+    attempt_data  = QuizAttemptData.where("_id"=>params[:attemptId]).last
+    quiz_data = Quiz.where(:guid=>d.data["asset_download_id"]).last.quiz_json
+    result["attemptData"] = attempt_data
+    result["quizData"] = quiz_data
     render json: result
   end
 
