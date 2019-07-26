@@ -2,6 +2,11 @@ Rails.application.routes.draw do
   root 'quizzes#all_quizzes'
 
   mount Ckeditor::Engine => '/ckeditor'
+
+  get '/assessment/get_assessment_attempts/:book_id', to: 'quizzes#get_all_assessment_attempts'
+
+  get '/assessment/get_assessment_attempt/:attempt_id', to: 'quizzes#get_assessment_attempt_by_attempt_id'
+
   get '/assessment/ckeditor/pictures', to: 'ckeditor/pictures#index'
   post '/assessment/ckeditor/pictures', to: 'ckeditor/pictures#create'
 

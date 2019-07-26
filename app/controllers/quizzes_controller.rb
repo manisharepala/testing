@@ -1,6 +1,6 @@
 class QuizzesController < ApplicationController
 
-  skip_before_action :authenticate_user!, except:[:challenge_test_attempt_data, :get_all_quiz_attempt_datas, :get_quiz_attempt_data_by_id]
+  skip_before_action :authenticate_user!, except:[:challenge_test_attempt_data, :get_all_quiz_attempt_datas, :get_quiz_attempt_data_by_id,:get_all_assessment_attempts]
 
   def get_quizzes_analytics_data
     assessment_ids = params[:assessment_ids]
@@ -836,6 +836,36 @@ class QuizzesController < ApplicationController
       "SubjectiveQuestion"
     end
   end
+
+  def get_all_assessment_attempts
+    result = []
+    data = QuizAttemptData.where("data.book_id"=>params[:book_id],:user_id=>current_user.id)
+    if data.present?
+      s = {}
+      data.each do |d|
+        quiz = Quiz.where(:guid=>d.data["asset_download_id"]).last
+        s["attemptId"] = d._id.to_s
+        s["attemptedAt"] = d.data["start_time"]
+        s["assessmentType"] = d.data["player_subtype"]
+        s["assessmentName"] = quiz.name rescue ""
+        s["assessmentGuid"] = d.data["asset_download_id"]
+        s["tags"] = {}
+        result << s
+      end
+    end
+    render json: result
+  end
+
+
+  def get_assessment_attempt_by_attempt_id
+    result = {}
+    attempt_data  = QuizAttemptData.where("_id"=>params[:attemptId]).last
+    quiz_data = Quiz.where(:guid=>d.data["asset_download_id"]).last.quiz_json
+    result["attemptData"] = attempt_data
+    result["quizData"] = quiz_data
+    render json: result
+  end
+
 
   def get_image_download_url
     render html: ((Image.where(key: "question_images/#{params['question_id']}/#{params['image_name']}.jpg")[0].get_download_url).to_s.html_safe rescue "http://13.234.165.191/icons/broken_image.jpg".html_safe)

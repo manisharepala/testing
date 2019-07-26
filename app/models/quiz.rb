@@ -208,7 +208,7 @@ class Quiz
       questions_data << q.as_json(with_key:with_key,with_language_support:with_language_support)
     end
     data = data.merge(questions:questions_data)
-    #data = data.merge(quiz_sections:quiz_sections_data)
+    data = data.merge(quiz_sections:quiz_sections_data)
 
     data
   end
