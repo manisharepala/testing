@@ -856,7 +856,6 @@ class QuizzesController < ApplicationController
     render json: result
   end
 
-
   def get_assessment_attempt_by_attempt_id
     result = {}
     attempt_data  = QuizAttemptData.where("_id"=>params[:attemptId]).last
