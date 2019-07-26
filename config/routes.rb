@@ -89,4 +89,6 @@ Rails.application.routes.draw do
     end
   end
 
+  get '/assessment/question_images/:question_id/:image_name' => 'quizzes#get_image_download_url'
+
 end
