@@ -867,7 +867,7 @@ class QuizzesController < ApplicationController
 
 
   def get_image_download_url
-    render html: ((Image.where(key: "question_images/#{params['question_id']}/#{params['image_name']}.jpg")[0].get_download_url).to_s.html_safe rescue "http://13.234.165.191/icons/broken_image.jpg".html_safe)
+    redirect_to ((Image.where(key: "question_images/#{params['question_id']}/#{params['image_name']}.jpg")[0].get_download_url) rescue "http://13.234.165.191/icons/broken_image.jpg")
   end
 
   private
