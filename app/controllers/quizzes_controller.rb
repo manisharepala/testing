@@ -870,6 +870,11 @@ class QuizzesController < ApplicationController
     redirect_to ((Image.where(key: "question_images/#{params['question_id']}/#{params['image_name']}.jpg")[0].get_download_url) rescue "http://13.234.165.191/icons/broken_image.jpg")
   end
 
+  def get_user_attempt_analytics
+    data = QuizAttemptData.get_user_attempt_analytics(params[:guid],current_user)
+    render json: data
+  end
+
   private
   def quiz_params
     params.require(:quiz).permit(:final,quiz_language_specific_datas_attributes: [:name])
