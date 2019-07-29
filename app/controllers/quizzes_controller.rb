@@ -848,8 +848,8 @@ class QuizzesController < ApplicationController
       data.each do |d|
         quiz = Quiz.where(:guid=>d.data["asset_download_id"]).last
         s = {}
-        d = {}
-        s["attemptId"] = d.id.to_s
+        ad = {}
+        s["attemptId"] = d._id.to_s
         s["attemptedAt"] = d.data["start_time"]
         s["assessmentType"] = d.data["player_subtype"]
         s["assessmentName"] = quiz.name rescue ""
@@ -858,9 +858,9 @@ class QuizzesController < ApplicationController
         attempts << s
         if !a.keys.include? d.data["asset_download_id"]
           a[d.data["asset_download_id"]] = d.data["asset_download_id"]
-          d["assessmentGuid"] = d.data["asset_download_id"]
-          d["uri_path"] = s["uri_path"]
-          assessments  <<  d
+          ad["assessmentGuid"] = d.data["asset_download_id"]
+          ad["uri_path"] = s["uri_path"]
+          assessments  <<  ad
         end
       end
     end
