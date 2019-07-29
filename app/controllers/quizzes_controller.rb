@@ -842,7 +842,7 @@ class QuizzesController < ApplicationController
     attempts = []
     assessments = []
     a = {}
-    data = QuizAttemptData.where("data.book_id"=>params[:book_id],:user_id=>15664.id)
+    data = QuizAttemptData.where("data.book_id"=>params[:book_id],:user_id=>current_user.id)
     # data = QuizAttemptData.where(:user_id=>current_user.id)
     if data.present?
       data.each do |d|
