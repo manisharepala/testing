@@ -839,7 +839,8 @@ class QuizzesController < ApplicationController
 
   def get_all_assessment_attempts
     result = []
-    data = QuizAttemptData.where("data.book_id"=>params[:book_id],:user_id=>current_user.id)
+    # data = QuizAttemptData.where("data.book_id"=>params[:book_id],:user_id=>current_user.id)
+     data = QuizAttemptData.where(:user_id=>current_user.id)
     if data.present?
       s = {}
       data.each do |d|
@@ -849,7 +850,7 @@ class QuizzesController < ApplicationController
         s["assessmentType"] = d.data["player_subtype"]
         s["assessmentName"] = quiz.name rescue ""
         s["assessmentGuid"] = d.data["asset_download_id"]
-        s["tags"] =
+        s["uri_path"] = TocData.where(:downloadId=>d.data["asset_download_id"]).last.path rescue ""
         result << s
       end
     end
