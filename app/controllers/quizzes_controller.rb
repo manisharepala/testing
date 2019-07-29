@@ -839,8 +839,8 @@ class QuizzesController < ApplicationController
 
   def get_all_assessment_attempts
     result = []
-    # data = QuizAttemptData.where("data.book_id"=>params[:book_id],:user_id=>current_user.id)
-     data = QuizAttemptData.where(:user_id=>current_user.id)
+     data = QuizAttemptData.where("data.book_id"=>params[:book_id],:user_id=>current_user.id)
+    # data = QuizAttemptData.where(:user_id=>current_user.id)
     if data.present?
       s = {}
       data.each do |d|
