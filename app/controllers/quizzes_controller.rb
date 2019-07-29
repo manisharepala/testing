@@ -849,7 +849,7 @@ class QuizzesController < ApplicationController
         s["assessmentType"] = d.data["player_subtype"]
         s["assessmentName"] = quiz.name rescue ""
         s["assessmentGuid"] = d.data["asset_download_id"]
-        s["tags"] = {}
+        s["tags"] =
         result << s
       end
     end
