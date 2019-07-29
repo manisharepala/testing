@@ -849,7 +849,7 @@ class QuizzesController < ApplicationController
         quiz = Quiz.where(:guid=>d.data["asset_download_id"]).last
         s = {}
         d = {}
-        s["attemptId"] = d._id.to_s
+        s["attemptId"] = d.id.to_s
         s["attemptedAt"] = d.data["start_time"]
         s["assessmentType"] = d.data["player_subtype"]
         s["assessmentName"] = quiz.name rescue ""
