@@ -870,7 +870,7 @@ class QuizzesController < ApplicationController
 
   def get_assessment_attempt_by_attempt_id
     result = {}
-    attempt_data  = QuizAttemptData.where("_id"=>params[:attemptId]).last
+    attempt_data  = QuizAttemptData.where("_id"=>params[:attempt_id]).last
     quiz_data = Quiz.where(:guid=>attempt_data.data["asset_download_id"]).last.quiz_json
     result["attemptData"] = attempt_data
     result["quizData"] = quiz_data
