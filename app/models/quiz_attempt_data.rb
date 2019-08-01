@@ -15,7 +15,7 @@ class QuizAttemptData
     qad = QuizAttemptData.find(qad_id)
     data = qad.data
     quiz = Quiz.where(guid:data['asset_download_id'])[0]
-    quiz_json = quiz.quiz_json
+    quiz_json = JSON.parse(quiz.quiz_json)
     quiz_json_questions = quiz_json['questions']
     question_attempts_attributes = []
 
@@ -50,7 +50,9 @@ class QuizAttemptData
       question_attempts_attributes << d
     end
 
-    quiz_attempt_data = {publish_id:data['publish_id'], user_id:qad.user_id,book_guid:data['book_id'],quiz_id:data['asset_download_id'],attempt_no:data['attempt_no'],marks_scored:data['score'], total_marks:quiz.total_marks,start_time:data['start_time'],end_time:data['end_time'],active_duration:data['active_duration'],question_attempts_attributes:question_attempts_attributes}
+    attempt_no = QuizAttempt.where(user_id:qad.user_id,quiz_guid:data['asset_download_id']).count + 1
+
+    quiz_attempt_data = {publish_id:data['publish_id'], user_id:qad.user_id,book_guid:data['book_id'],quiz_guid:data['asset_download_id'],attempt_no:attempt_no,marks_scored:data['score'], total_marks:quiz.total_marks,start_time:data['start_time'],end_time:data['end_time'],active_duration:data['active_duration'],question_attempts_attributes:question_attempts_attributes}
     QuizAttempt.create(quiz_attempt_data)
   end
 

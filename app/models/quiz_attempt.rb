@@ -3,7 +3,7 @@ class QuizAttempt
   field :publish_id, type: Integer
   field :user_id, type: Integer
   field :book_guid, type: String
-  field :quiz_id, type: String
+  field :quiz_guid, type: String
   field :attempt_no, type: Integer
   field :marks_scored, type: Float
   field :total_marks, type: Float
