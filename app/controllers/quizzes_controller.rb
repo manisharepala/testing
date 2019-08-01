@@ -838,28 +838,40 @@ class QuizzesController < ApplicationController
   end
 
   def get_all_assessment_attempts
-    result = []
+    result_data = {}
+    attempts = []
+    assessments = []
+    a = {}
     data = QuizAttemptData.where("data.book_id"=>params[:book_id],:user_id=>current_user.id)
+    # data = QuizAttemptData.where(:user_id=>current_user.id)
     if data.present?
-      s = {}
       data.each do |d|
         quiz = Quiz.where(:guid=>d.data["asset_download_id"]).last
+        s = {}
+        ad = {}
         s["attemptId"] = d._id.to_s
         s["attemptedAt"] = d.data["start_time"]
         s["assessmentType"] = d.data["player_subtype"]
         s["assessmentName"] = quiz.name rescue ""
         s["assessmentGuid"] = d.data["asset_download_id"]
-        s["tags"] = {}
-        result << s
+        s["uri_path"] = TocData.where(:downloadId=>d.data["asset_download_id"]).last.path rescue ""
+        attempts << s
+        if !a.keys.include? d.data["asset_download_id"]
+          a[d.data["asset_download_id"]] = d.data["asset_download_id"]
+          ad["assessmentGuid"] = d.data["asset_download_id"]
+          ad["uri_path"] = s["uri_path"]
+          assessments  <<  ad
+        end
       end
     end
+    result = {:assessments=>assessments,:attempts=>attempts}
     render json: result
   end
 
   def get_assessment_attempt_by_attempt_id
     result = {}
-    attempt_data  = QuizAttemptData.where("_id"=>params[:attemptId]).last
-    quiz_data = Quiz.where(:guid=>d.data["asset_download_id"]).last.quiz_json
+    attempt_data  = QuizAttemptData.where("_id"=>params[:attempt_id]).last
+    quiz_data = Quiz.where(:guid=>attempt_data.data["asset_download_id"]).last.quiz_json
     result["attemptData"] = attempt_data
     result["quizData"] = quiz_data
     render json: result
@@ -868,6 +880,11 @@ class QuizzesController < ApplicationController
 
   def get_image_download_url
     redirect_to ((Image.where(key: "question_images/#{params['question_id']}/#{params['image_name']}.jpg")[0].get_download_url) rescue "http://13.234.165.191/icons/broken_image.jpg")
+  end
+
+  def get_user_attempt_analytics
+    data = QuizAttemptData.get_user_attempt_analytics(params[:guid],current_user)
+    render json: data
   end
 
   private

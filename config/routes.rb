@@ -3,6 +3,8 @@ Rails.application.routes.draw do
 
   mount Ckeditor::Engine => '/ckeditor'
 
+  get '/assessment/get_user_attempt_analytics/:guid', to: 'quizzes#get_user_attempt_analytics'
+
   get '/assessment/get_assessment_attempts/:book_id', to: 'quizzes#get_all_assessment_attempts'
 
   get '/assessment/get_assessment_attempt/:attempt_id', to: 'quizzes#get_assessment_attempt_by_attempt_id'
