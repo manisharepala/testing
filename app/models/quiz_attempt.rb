@@ -12,4 +12,5 @@ class QuizAttempt
   field :active_duration, type: Integer
 
   embeds_many :question_attempts
+  accepts_nested_attributes_for :question_attempts
 end

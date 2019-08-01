@@ -42,17 +42,21 @@ class QuizAttemptData
 
           question_answer_attempts_attributes << d1
         end
-
+        d['question_answer_attempts_attributes'] = question_answer_attempts_attributes
       elsif ['FibQuestion'].include? d['question_json']['question_type']
         question_fill_blank_attempts_attributes = []
+        ##########Write code here
 
+
+        ###########
+        d['question_fill_blank_attempts_attributes'] = question_fill_blank_attempts_attributes
       end
       question_attempts_attributes << d
     end
 
     attempt_no = QuizAttempt.where(user_id:qad.user_id,quiz_guid:data['asset_download_id']).count + 1
 
-    quiz_attempt_data = {publish_id:data['publish_id'], user_id:qad.user_id,book_guid:data['book_id'],quiz_guid:data['asset_download_id'],attempt_no:attempt_no,marks_scored:data['score'], total_marks:quiz.total_marks,start_time:data['start_time'],end_time:data['end_time'],active_duration:data['active_duration'],question_attempts_attributes:question_attempts_attributes}
+    quiz_attempt_data = {publish_id:data['publish_id'], user_id:qad.user_id,book_guid:data['book_id'],quiz_guid:data['asset_download_id'],attempt_no:attempt_no,marks_scored:data['score'], total_marks:quiz.total_marks,start_time:data['start_time'].to_time.to_i,end_time:data['end_time'].to_time.to_i,active_duration:data['active_duration'],question_attempts_attributes:question_attempts_attributes}
     QuizAttempt.create(quiz_attempt_data)
   end
 
