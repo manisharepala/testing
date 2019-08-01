@@ -344,7 +344,26 @@ class QuizzesController < ApplicationController
   end
 
   def all_quizzes
-    @quiz = Kaminari.paginate_array(Quiz.all.desc('_id')).page(params[:page]).per(5000)
+    quizzes = Quiz.all
+    if params[:search]
+      @item = params[:search]["item"]
+      logger.info @item
+      case params[:radios]
+        when 'name'
+          quiz = []
+          quizzes.each do |q|
+            if q.quiz_language_specific_datas[0].name == @item
+              quiz << q
+            end
+          end
+          @quiz = Kaminari.paginate_array(quiz).page(params[:page]).per(50)
+        when 'guid'
+          @quiz = Kaminari.paginate_array(Quiz.where(:guid => @item)).page(params[:page]).per(50)
+      end
+    else
+      @quiz = Kaminari.paginate_array(Quiz.all).page(params[:page]).per(50)
+    end
+    # @quiz = Kaminari.paginate_array(Quiz.all.desc('_id')).page(params[:page]).per(5000)
   end
 
   def quiz_questions
