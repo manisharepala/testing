@@ -352,7 +352,7 @@ class QuizzesController < ApplicationController
         when 'name'
           quiz = []
           quizzes.each do |q|
-            if q.quiz_language_specific_datas[0].name == @item
+            if q.quiz_language_specific_datas[0]['name'] == @item
               quiz << q
             end
           end
