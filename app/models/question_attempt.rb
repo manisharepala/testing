@@ -6,6 +6,8 @@ class QuestionAttempt
   field :end_time, type: Integer
   field :time_taken, type: Integer
   field :marks_scored, type: Float
+  field :question_id, type: String
+  field :attempt_type, type: String #attempted,skipped,un_attempted
 
   embeds_many :question_answer_attempts, cascade_callbacks: true
   embeds_many :question_fill_blank_attempts, cascade_callbacks: true
