@@ -352,16 +352,16 @@ class QuizzesController < ApplicationController
         when 'name'
           quiz = []
           quizzes.each do |q|
-            if (q.quiz_language_specific_datas[0]['name'] == @item rescue false)
+            if (q.quiz_language_specific_datas[0]['name'].downcase == @item.downcase rescue false)
               quiz << q
             end
           end
-          @quiz = Kaminari.paginate_array(quiz).page(params[:page]).per(100)
+          @quiz = Kaminari.paginate_array(quiz).page(params[:page]).per(1000)
         when 'guid'
-          @quiz = Kaminari.paginate_array(Quiz.where(:guid => @item)).page(params[:page]).per(100)
+          @quiz = Kaminari.paginate_array(Quiz.where(:guid => @item)).page(params[:page]).per(1000)
       end
     else
-      @quiz = Kaminari.paginate_array(Quiz.all.desc('_id').select{|q| (q.question_ids.count > 0 || q.quiz_section_ids.count > 0)}).page(params[:page]).per(100)
+      @quiz = Kaminari.paginate_array(Quiz.all.desc('_id').select{|q| (q.question_ids.count > 0 || q.quiz_section_ids.count > 0)}).page(params[:page]).per(1000)
     end
     # @quiz = Kaminari.paginate_array(Quiz.all.desc('_id')).page(params[:page]).per(5000)
   end
