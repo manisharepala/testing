@@ -1,5 +1,6 @@
 class QuizAttempt
   include Mongoid::Document
+  field :quiz_attempt_data_id, type: String
   field :publish_id, type: Integer
   field :user_id, type: Integer
   field :book_guid, type: String
