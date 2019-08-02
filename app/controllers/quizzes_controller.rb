@@ -356,12 +356,12 @@ class QuizzesController < ApplicationController
               quiz << q
             end
           end
-          @quiz = Kaminari.paginate_array(quiz).page(params[:page]).per(50)
+          @quiz = Kaminari.paginate_array(quiz).page(params[:page]).per(5000)
         when 'guid'
-          @quiz = Kaminari.paginate_array(Quiz.where(:guid => @item)).page(params[:page]).per(50)
+          @quiz = Kaminari.paginate_array(Quiz.where(:guid => @item)).page(params[:page]).per(5000)
       end
     else
-      @quiz = Kaminari.paginate_array(Quiz.all.desc('_id')).page(params[:page]).per(50)
+      @quiz = Kaminari.paginate_array(Quiz.all.desc('_id')).page(params[:page]).per(5000)
     end
     # @quiz = Kaminari.paginate_array(Quiz.all.desc('_id')).page(params[:page]).per(5000)
   end
