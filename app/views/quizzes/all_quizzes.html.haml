@@ -11,6 +11,7 @@
         %th Final
         %th Tags
         %th Uploaded on
+        %th Moved to S3
     %tbody
       .form
         = form_for :search, method: :get do |f|
@@ -48,6 +49,11 @@
             - else
               %i.fa.fa-times{style:'color:red; font-size:1.5em;'} False
           %td= quiz.created_at.strftime("%B %d, %Y")
+          %td
+            - if quiz.uploaded
+              %i.fa.fa-check{style:'color:green; font-size:1.5em;'} True
+            - else
+              %i.fa.fa-times{style:'color:red; font-size:1.5em;'} False
           %td= link_to "Edit",assessment_quiz_edit_path(id:quiz.id)
           %td= link_to "Delete",assessment_quiz_delete_path(id:quiz.id),data: { confirm: 'Are you sure?' }
           -if quiz.final

@@ -143,6 +143,10 @@ class Quiz
     end
   end
 
+  def perform_later
+    CommonJob.set(wait: 2.minutes).perform_later(self.id)
+  end
+
   def Quiz.are_all_compulsory_tags_present(id)
     quiz = Quiz.find(id)
     response = true

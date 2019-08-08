@@ -297,7 +297,7 @@ class QuizzesController < ApplicationController
         end
       end
     end
-    @quiz.upload_zip
+    @quiz.perform_later
   end
 
   def quiz_delete
