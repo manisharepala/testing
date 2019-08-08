@@ -1,0 +1,11 @@
+:concurrency: 10
+:logfile: ./log/sidekiq.log
+staging:
+  :concurrency: 10
+production:
+  :concurrency: 20
+:queues:
+  - assets
+  - critical
+  - default
+  - low

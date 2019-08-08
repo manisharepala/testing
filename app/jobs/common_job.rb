@@ -1,5 +1,5 @@
 class CommonJob < ApplicationJob
-  queue_as :assets
+  queue_as :default
 
   def perform(id)
     # Do something later
