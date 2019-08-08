@@ -93,3 +93,4 @@ gem 'wicked_pdf'
 gem 'cocoon', '~> 1.2', '>= 1.2.13'
 
 gem 'sidekiq'
+gem 'redis-namespace'
