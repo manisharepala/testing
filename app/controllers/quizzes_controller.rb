@@ -361,7 +361,7 @@ class QuizzesController < ApplicationController
           @quiz = Kaminari.paginate_array(Quiz.where(:guid => @item)).page(params[:page]).per(1000)
       end
     else
-      @quiz = Kaminari.paginate_array(Quiz.all.desc('_id').select{|q| (q.question_ids.count > 0 || q.quiz_section_ids.count > 0)}).page(params[:page]).per(1000)
+      @quiz = Kaminari.paginate_array(Quiz.all.desc('_id').select{|q| (q.question_ids.count > 0 || q.quiz_section_ids.map{|qs_id| QuizSection.find(qs_id).question_ids}.flatten.count > 0)}).page(params[:page]).per(1000)
     end
     # @quiz = Kaminari.paginate_array(Quiz.all.desc('_id')).page(params[:page]).per(5000)
   end
