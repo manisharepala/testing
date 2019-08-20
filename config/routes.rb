@@ -1,5 +1,4 @@
 Rails.application.routes.draw do
-  root 'quizzes#all_quizzes'
 
   mount Ckeditor::Engine => '/ckeditor'
 

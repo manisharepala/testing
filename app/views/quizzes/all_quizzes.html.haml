@@ -11,36 +11,100 @@
         %th Final
         %th Tags
         %th Uploaded on
-        %tbody
-        - @quiz.each_with_index do |quiz,i|
-          %tr
-            -if quiz.question_ids.present? || quiz.quiz_section_ids.present?
-              %td= i+1
-              %td= quiz.guid
-              - if quiz.quiz_section_ids.present?
-                %td= link_to (quiz.quiz_language_specific_datas.where(language: Language::ENGLISH)[0].name rescue 'quiz name'),assessment_quiz_sections_path(id:quiz.id), target:'_blank'
-              - else
-                %td= link_to (quiz.quiz_language_specific_datas.where(language: Language::ENGLISH)[0].name rescue 'quiz name'),assessment_quiz_questions_path(id:quiz.id), target:'_blank'
-              %td= quiz.quiz_section_ids.count rescue 0
-              - if quiz.quiz_section_ids.present?
-                %td= quiz.quiz_section_ids.map{|qs_id| QuizSection.find(qs_id).question_ids}.flatten.count
-              -else
-                %td= quiz.question_ids.count rescue 0
-              %td
-                - if quiz.final?
-                  %i.fa.fa-check{style:'color:green; font-size:1.5em;'} True
-                - else
-                  %i.fa.fa-times{style:'color:red; font-size:1.5em;'} False
-              %td
-                - if quiz.tags_verified
-                  %i.fa.fa-check{style:'color:green; font-size:1.5em;'} True
-                - else
-                  %i.fa.fa-times{style:'color:red; font-size:1.5em;'} False
-              %td= quiz.created_at.strftime("%B %d, %Y")
-              %td= link_to "Edit",assessment_quiz_edit_path(id:quiz.id)
-              %td= link_to "Delete",assessment_quiz_delete_path(id:quiz.id),data: { confirm: 'Are you sure?' }
-              -if quiz.final
-                %td= link_to "Download", "http://13.234.165.191/content_assets/#{quiz.guid}/original_attachment?token=eyJhbGciOiJIUzI1NiJ9.eyJ1c2VybmFtZSI6InN0cmluZyIsImVtYWlsIjoidXNlckBleGFtcGxlLmNvbSIsInJvbGxfbm8iOiJzdHJpbmciLCJ1c2VyX2lkIjoxLCJzdWIiOiIxIiwic2NwIjoidXNlciIsImF1ZCI6bnVsbCwiaWF0IjoxNTQ4MDY0Njg1LCJleHAiOjE1NDgxNTEwODUsImp0aSI6IjlmYWEzYTM1LTBmMjYtNDM4YS05ZWUyLTBlZDA0NTI2ZjVlNCJ9.x9C769SkwTGPDLEdrkXx2KlY4UoA7WA47RQXTaKscnk", target:'_blank'
-              -else
-                %td= link_to "Download", "#", style:'pointer-events:none;'
-=paginate @quiz, :params => {:controller => :quizzes, :action => :all_quizzes}
+        %th Moved to S3
+    %tbody
+      .form
+        = form_for :search, method: :get do |f|
+          .dropdown
+            = f.text_field :item,placeholder: "Search item1",:class=>"dropdown-toggle dropdown-toggle-split","data-toggle" => "dropdown","aria-haspopup"=>"true","aria-expanded"=>"false"
+            %ul.dropdown-menu
+              %li
+                %input{:name => "radios", :type => "radio", value:"name", checked: true,id:"name"}
+                %label{:for=>"el-1"}Name
+              %li
+                %input{:name => "radios", :type => "radio", value:"guid", checked: false,id:"guid"}
+                %label{:for=>"el-3"}Id
+            = f.submit 'Search',:class =>"btn btn-default",:style => "font-size:1.2vw"
+      - @quiz.each_with_index do |quiz,i|
+        %tr
+          %td= i+1
+          %td= quiz.guid
+          - if quiz.quiz_section_ids.present?
+            %td= link_to (quiz.quiz_language_specific_datas.where(language: Language::ENGLISH)[0].name rescue 'quiz name'),assessment_quiz_sections_path(id:quiz.id), target:'_blank'
+          - else
+            %td= link_to (quiz.quiz_language_specific_datas.where(language: Language::ENGLISH)[0].name rescue 'quiz name'),assessment_quiz_questions_path(id:quiz.id), target:'_blank'
+          %td= quiz.quiz_section_ids.count rescue 0
+          - if quiz.quiz_section_ids.present?
+            %td= quiz.quiz_section_ids.map{|qs_id| QuizSection.find(qs_id).question_ids}.flatten.count
+          -else
+            %td= quiz.question_ids.count rescue 0
+          %td
+            - if quiz.final?
+              %i.fa.fa-check{style:'color:green; font-size:1.5em;'} True
+            - else
+              %i.fa.fa-times{style:'color:red; font-size:1.5em;'} False
+          %td
+            - if quiz.tags_verified
+              %i.fa.fa-check{style:'color:green; font-size:1.5em;'} True
+            - else
+              %i.fa.fa-times{style:'color:red; font-size:1.5em;'} False
+          %td= quiz.created_at.strftime("%B %d, %Y")
+          %td
+            - if quiz.uploaded
+              %i.fa.fa-check{style:'color:green; font-size:1.5em;'} True
+            - else
+              %i.fa.fa-times{style:'color:red; font-size:1.5em;'} False
+          %td= link_to "Edit",assessment_quiz_edit_path(id:quiz.id)
+          %td= link_to "Delete",assessment_quiz_delete_path(id:quiz.id),data: { confirm: 'Are you sure?' }
+          -if quiz.final
+            %td= link_to "Download", "http://13.234.165.191/content_assets/#{quiz.guid}/original_attachment?token=eyJhbGciOiJIUzI1NiJ9.eyJ1c2VybmFtZSI6InN0cmluZyIsImVtYWlsIjoidXNlckBleGFtcGxlLmNvbSIsInJvbGxfbm8iOiJzdHJpbmciLCJ1c2VyX2lkIjoxLCJzdWIiOiIxIiwic2NwIjoidXNlciIsImF1ZCI6bnVsbCwiaWF0IjoxNTQ4MDY0Njg1LCJleHAiOjE1NDgxNTEwODUsImp0aSI6IjlmYWEzYTM1LTBmMjYtNDM4YS05ZWUyLTBlZDA0NTI2ZjVlNCJ9.x9C769SkwTGPDLEdrkXx2KlY4UoA7WA47RQXTaKscnk", target:'_blank'
+          -else
+            %td= link_to "Download", "#", style:'pointer-events:none;'
+  =paginate @quiz
+
+:css
+  .form{
+    font-size:1.2vw;
+    width: 45%;
+    float: right;
+  }
+
+  .pagination a, .pagination span.current, .pagination span.gap {
+    float: left;
+    padding: 0 14px;
+    line-height: 38px;
+    text-decoration: none;
+    background-color: white;
+    border: 1px solid #DDD;
+    border-left-width: 0;
+  }
+
+  .pagination {
+    float: right;
+    border-left: 1px solid #ddd;
+    .first{
+        padding : 0;
+        float: none;
+        border: none;
+    }
+    .prev {
+        padding : 0;
+        float: none;
+        border: none;
+    }
+    .page{
+        padding : 0;
+        float: none;
+        border: none;
+    }
+    .next{
+        padding : 0;
+        float: none;
+        border: none;
+    }
+    .last{
+        padding : 0;
+        float: none;
+        border: none;
+    }
+  }

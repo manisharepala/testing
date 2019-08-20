@@ -297,7 +297,7 @@ class QuizzesController < ApplicationController
         end
       end
     end
-    @quiz.upload_zip
+    @quiz.perform_later
   end
 
   def quiz_delete
@@ -344,7 +344,26 @@ class QuizzesController < ApplicationController
   end
 
   def all_quizzes
-    @quiz = Kaminari.paginate_array(Quiz.all.desc('_id')).page(params[:page]).per(5000)
+    quizzes = Quiz.all.select{|q| (q.question_ids.count > 0 || q.quiz_section_ids.count > 0)}
+    if params[:search]
+      @item = params[:search]["item"]
+      logger.info @item
+      case params[:radios]
+        when 'name'
+          quiz = []
+          quizzes.each do |q|
+            if (q.quiz_language_specific_datas[0]['name'].downcase == @item.downcase rescue false)
+              quiz << q
+            end
+          end
+          @quiz = Kaminari.paginate_array(quiz).page(params[:page]).per(1000)
+        when 'guid'
+          @quiz = Kaminari.paginate_array(Quiz.where(:guid => @item)).page(params[:page]).per(1000)
+      end
+    else
+      @quiz = Kaminari.paginate_array(Quiz.all.desc('_id').select{|q| (q.question_ids.count > 0 || q.quiz_section_ids.map{|qs_id| QuizSection.find(qs_id).question_ids}.flatten.count > 0)}).page(params[:page]).per(1000)
+    end
+    # @quiz = Kaminari.paginate_array(Quiz.all.desc('_id')).page(params[:page]).per(5000)
   end
 
   def quiz_questions

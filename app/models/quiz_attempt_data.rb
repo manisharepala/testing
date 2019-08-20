@@ -11,49 +11,122 @@ class QuizAttemptData
   index({'data.book_id' =>1, :user_id=>1})
   index({'data.book_id' => 1,:user_id=>1,'data.player_subtype'=>1})
 
-  def self.process_quiz_attempt_data(qad_id)
-    qad = QuizAttemptData.find(qad_id)
-    data = qad.data
-    quiz = Quiz.where(guid:data['asset_download_id'])[0]
-    quiz_json = quiz.quiz_json
-    quiz_json_questions = quiz_json['questions']
-    question_attempts_attributes = []
+  after_create :process_quiz_attempt_data
 
+  def process_quiz_attempt_data
+    if [15664,19040].include? self.user_id
+      data = self.data
+      quiz = Quiz.where(guid:data['asset_download_id'])[0]
+      quiz_json = quiz.quiz_json
+      quiz_json_questions = quiz_json['questions']
+      question_attempts_attributes = []
+      quiz_section_attempts_attributes = []
 
-    data['timeline'].each do |q_data|
-      d = {}
-      d['question_json'] = quiz_json_questions.select {|q| q["id"] == q_data['question_id']}[0]
-      d['start_time'] = q_data['sessions'].first['start_time'].to_time.to_i
-      d['end_time'] = q_data['sessions'].last['end_time'].to_time.to_i
-      d['time_taken'] = q_data['sessions'].map{|s| (s['end_time'].to_time.to_i - s['start_time'].to_time.to_i)}.sum
-      d['correct'] = data['correct'].include? q_data['question_id']
-      d['marks_scored'] = (d['correct'] == true)? d['question_json']['marks']: d['question_json']['penalty']
-
-      if ['SmcqQuestion', 'MmcqQuestion'].include? d['question_json']['question_type']
-        options = d['question_json']['options']
-        attempted_answer_ids = q_data['sessions'].last['attempted_answer']
-        question_answer_attempts_attributes = []
-
-        options.each do |option|
-          d1 = {}
-          d1['question_answer_json'] = option
-          d1['is_selected'] = (attempted_answer_ids.include? option['id']) ? true : false
-          d1['is_correct'] = (option['fraction'] == true && d1['is_selected'] == true)? true : false
-
-          question_answer_attempts_attributes << d1
+      data['timeline'].each do |q_data|
+        d = {}
+        d['question_id'] = q_data['question_id']
+        d['question_json'] = quiz_json_questions.select {|q| q["id"] == q_data['question_id']}[0]
+        d['start_time'] = q_data['sessions'].first['start_time'].to_time.to_i
+        d['end_time'] = q_data['sessions'].last['end_time'].to_time.to_i
+        d['time_taken'] = q_data['sessions'].map{|s| (s['end_time'].to_time.to_i - s['start_time'].to_time.to_i)}.sum
+        d['correct'] = data['correct'].include? q_data['question_id']
+        d['marks_scored'] = (d['correct'] == true)? d['question_json']['marks']: d['question_json']['penalty']
+        if data['attempted'].include? q_data['question_id']
+          d['attempt_type'] = 'attempted'
+        elsif data['unattempted'].include? q_data['question_id']
+          d['attempt_type'] = 'un_attempted'
+        elsif data['skipped_questions'].include? q_data['question_id']
+          d['attempt_type'] = 'skipped'
         end
 
-      elsif ['FibQuestion'].include? d['question_json']['question_type']
-        question_fill_blank_attempts_attributes = []
+        if ['SmcqQuestion', 'MmcqQuestion'].include? d['question_json']['question_type']
+          options = d['question_json']['options']
+          attempted_answer_ids = q_data['sessions'].last['attempted_answer']
+          question_answer_attempts_attributes = []
 
+          options.each do |option|
+            d1 = {}
+            d1['question_answer_json'] = option
+            d1['is_selected'] = (attempted_answer_ids.include? option['id']) ? true : false
+            d1['is_correct'] = (option['fraction'] == true && d1['is_selected'] == true)? true : false
+
+            question_answer_attempts_attributes << d1
+          end
+          d['question_answer_attempts_attributes'] = question_answer_attempts_attributes
+        elsif ['FibQuestion'].include? d['question_json']['question_type']
+          question_fill_blank_attempts_attributes = []
+          ##########Write code here
+
+
+          ###########
+          d['question_fill_blank_attempts_attributes'] = question_fill_blank_attempts_attributes
+        end
+        question_attempts_attributes << d
       end
-      question_attempts_attributes << d
+
+      #data for non attempted questions
+      (quiz_json['questions'].map{|d| d['id']} - question_attempts_attributes.map{|d| d['question_id']}).each do |question_id|
+        d = {}
+        d['question_id'] = question_id
+        d['question_json'] = quiz_json_questions.select {|q| q["id"] == question_id}[0]
+        d['start_time'] = 0
+        d['end_time'] = 0
+        d['time_taken'] = 0
+        d['correct'] = false
+        d['marks_scored'] = 0
+        if data['attempted'].include? question_id
+          d['attempt_type'] = 'attempted'
+        elsif data['unattempted'].include? question_id
+          d['attempt_type'] = 'un_attempted'
+        elsif data['skipped_questions'].include? question_id
+          d['attempt_type'] = 'skipped'
+        end
+
+        if ['SmcqQuestion', 'MmcqQuestion'].include? d['question_json']['question_type']
+          options = d['question_json']['options']
+          attempted_answer_ids = []
+          question_answer_attempts_attributes = []
+
+          options.each do |option|
+            d1 = {}
+            d1['question_answer_json'] = option
+            d1['is_selected'] = (attempted_answer_ids.include? option['id']) ? true : false
+            d1['is_correct'] = (option['fraction'] == true && d1['is_selected'] == true)? true : false
+
+            question_answer_attempts_attributes << d1
+          end
+          d['question_answer_attempts_attributes'] = question_answer_attempts_attributes
+        elsif ['FibQuestion'].include? d['question_json']['question_type']
+          question_fill_blank_attempts_attributes = []
+          ##########Write code here
+
+
+          ###########
+          d['question_fill_blank_attempts_attributes'] = question_fill_blank_attempts_attributes
+        end
+        question_attempts_attributes << d
+      end
+
+      #quiz_sections_data
+      quiz_json['quiz_sections'].each do |quiz_section_data|
+        quiz_section_questions_data = question_attempts_attributes.select{|d| quiz_section_data['question_ids'].include? d['question_json']['id']}
+
+        d1 = {}
+        d1['quiz_section_id'] = quiz_section_data['id']
+        d1['question_ids'] = quiz_section_data['question_ids']
+        d1['marks_scored'] = quiz_section_questions_data.map{|d| d['marks_scored']}.sum
+        d1['total_marks'] = quiz_section_questions_data.map{|d| d['question_json']['marks']}.sum
+        d1['active_duration'] = quiz_section_questions_data.map{|d| d['time_taken']}.sum
+
+        quiz_section_attempts_attributes << d1
+      end
+
+      attempt_no = QuizAttempt.where(user_id:self.user_id,quiz_guid:data['asset_download_id']).count + 1
+
+      quiz_attempt_data = {quiz_attempt_data_id:self.id.to_s,publish_id:data['publish_id'], user_id:self.user_id,book_guid:data['book_id'],quiz_guid:data['asset_download_id'],attempt_no:attempt_no,marks_scored:data['score'], total_marks:quiz.total_marks,start_time:data['start_time'].to_time.to_i,end_time:data['end_time'].to_time.to_i,active_duration:data['active_duration'],question_attempts_attributes:question_attempts_attributes,quiz_section_attempts_attributes:quiz_section_attempts_attributes}
+      QuizAttempt.create(quiz_attempt_data)
     end
-
-    quiz_attempt_data = {publish_id:data['publish_id'], user_id:qad.user_id,book_guid:data['book_id'],quiz_id:data['asset_download_id'],attempt_no:data['attempt_no'],marks_scored:data['score'], total_marks:quiz.total_marks,start_time:data['start_time'],end_time:data['end_time'],active_duration:data['active_duration'],question_attempts_attributes:question_attempts_attributes}
-    QuizAttempt.create(quiz_attempt_data)
   end
-
 
   def get_assessment_leader_board(user_id,assessment)
 
@@ -164,26 +237,26 @@ class QuizAttemptData
     }
 
     result = {}
-   begin
-    user_result = QuizAttemptData.collection.aggregate([user_match_stage,group_stage,project_stage,sort_stage,limit_stage],disk_stage)
-
-    user_data = JSON.load(user_result.to_json)
-   rescue
-    user_result = []
-   end
 
     begin
-    topper_result = QuizAttemptData.collection.aggregate([topper_match_stage,group_stage,project_stage,sort_stage,limit_stage],disk_stage)
+      user_result = QuizAttemptData.collection.aggregate([user_match_stage,group_stage,project_stage,sort_stage],disk_stage)
 
-   topper_data =  JSON.load(topper_result.to_json)
+      user_data = JSON.load(user_result.to_json)
     rescue
-     topper_data = []
-   end
+      user_result = []
+    end
 
     begin
-    avg_result = QuizAttemptData.collection.aggregate([topper_match_stage,avg_group_stage,project_stage,sort_stage],disk_stage)
+      topper_result = QuizAttemptData.collection.aggregate([topper_match_stage,group_stage,project_stage,sort_stage,limit_stage],disk_stage)
+      topper_data =  JSON.load(topper_result.to_json)
+    rescue
+      topper_data = []
+    end
 
-    avg_data =  JSON.load(avg_result.to_json)
+    begin
+      avg_result = QuizAttemptData.collection.aggregate([topper_match_stage,avg_group_stage,project_stage,sort_stage],disk_stage)
+
+      avg_data =  JSON.load(avg_result.to_json)
 
     rescue
       avg_data = []

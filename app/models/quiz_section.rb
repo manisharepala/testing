@@ -26,11 +26,10 @@ class QuizSection
       quiz_section_instructions_data[d.language] = d.instructions
     end
     if with_language_support
-      return {name:quiz_section_name_data, instructions:quiz_section_instructions_data, question_ids:question_ids, quiz_sub_sections:[]}
+      return {id:_id.to_s,name:quiz_section_name_data, instructions:quiz_section_instructions_data, question_ids:question_ids.map{|id| id.to_s}, quiz_sub_sections:[]}
     else
-      return {name:quiz_section_name_data['english'], instructions:quiz_section_instructions_data['english'], question_ids:question_ids, quiz_sub_sections:[]}
+      return {id:_id.to_s,name:quiz_section_name_data['english'], instructions:quiz_section_instructions_data['english'], question_ids:question_ids.map{|id| id.to_s}, quiz_sub_sections:[]}
     end
-
   end
 
 

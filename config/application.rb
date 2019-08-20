@@ -60,6 +60,7 @@ module AssessmentApp
         expires_in: ENV['DEFAULT_CACHE_EXPIRY']
     }
     config.cache_store = :redis_cache_store, options
+    config.active_job.queue_adapter = :sidekiq
 
   end
 end
