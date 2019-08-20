@@ -239,11 +239,11 @@ class QuizAttemptData
     result = {}
 
     begin
-      user_result = QuizAttemptData.collection.aggregate([user_match_stage,group_stage,project_stage,sort_stage],disk_stage)
+      user_result = QuizAttemptData.collection.aggregate([user_match_stage,group_stage,project_stage,sort_stage,limit_stage],disk_stage)
 
       user_data = JSON.load(user_result.to_json)
     rescue
-      user_result = []
+      user_data = []
     end
 
     begin
