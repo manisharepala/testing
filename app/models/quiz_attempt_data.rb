@@ -121,6 +121,7 @@ class QuizAttemptData
         quiz_section_attempts_attributes << d1
       end
 
+      data['active_duration'] = question_attempts_attributes.map{|d| d['time_taken']}.sum
       attempt_no = QuizAttempt.where(user_id:self.user_id.to_i,quiz_guid:data['asset_download_id']).count + 1
 
       quiz_attempt_data = {quiz_attempt_data_id:self.id.to_s,publish_id:data['publish_id'], user_id:self.user_id.to_i,book_guid:data['book_id'],quiz_guid:data['asset_download_id'],attempt_no:attempt_no,marks_scored:data['score'], total_marks:quiz.total_marks,start_time:data['start_time'].to_time.to_i,end_time:data['end_time'].to_time.to_i,active_duration:data['active_duration'],question_attempts_attributes:question_attempts_attributes,quiz_section_attempts_attributes:quiz_section_attempts_attributes}
