@@ -5,6 +5,7 @@ class QuizSectionAttempt
   field :total_marks, type: Float
   field :active_duration, type: Integer
   field :quiz_section_id, type: String
+  field :quiz_section_name, type: String
 
   embedded_in :quiz_attempt, :inverse_of => :quiz_section_attempts
 
