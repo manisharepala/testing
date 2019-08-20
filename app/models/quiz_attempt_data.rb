@@ -165,7 +165,7 @@ class QuizAttemptData
 
     result = {}
    begin
-    user_result = QuizAttemptData.collection.aggregate([user_match_stage,group_stage,project_stage,sort_stage],disk_stage)
+    user_result = QuizAttemptData.collection.aggregate([user_match_stage,group_stage,project_stage,sort_stage,limit_stage],disk_stage)
 
     user_data = JSON.load(user_result.to_json)
    rescue
@@ -173,7 +173,7 @@ class QuizAttemptData
    end
 
     begin
-    topper_result = QuizAttemptData.collection.aggregate([topper_match_stage,group_stage,project_stage,sort_stage],disk_stage)
+    topper_result = QuizAttemptData.collection.aggregate([topper_match_stage,group_stage,project_stage,sort_stage,limit_stage],disk_stage)
 
    topper_data =  JSON.load(topper_result.to_json)
     rescue
