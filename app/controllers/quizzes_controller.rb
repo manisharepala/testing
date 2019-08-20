@@ -1,6 +1,6 @@
 class QuizzesController < ApplicationController
 
-  skip_before_action :authenticate_user!, except:[:challenge_test_attempt_data, :get_all_quiz_attempt_datas, :get_quiz_attempt_data_by_id,:get_all_assessment_attempts]
+  skip_before_action :authenticate_user!, except:[:challenge_test_attempt_data, :get_all_quiz_attempt_datas, :get_quiz_attempt_data_by_id,:get_all_assessment_attempts,:get_user_attempt_analytics]
 
   def get_quizzes_analytics_data
     assessment_ids = params[:assessment_ids]
@@ -902,7 +902,7 @@ class QuizzesController < ApplicationController
   end
 
   def get_user_attempt_analytics
-    data = QuizAttemptData.get_user_attempt_analytics(params[:guid],current_user)
+    data = QuizAttemptData.get_user_attempt_analytics(params[:guid],current_user.id)
     render json: data
   end
 
