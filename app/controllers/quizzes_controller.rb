@@ -902,7 +902,7 @@ class QuizzesController < ApplicationController
   end
 
   def get_user_attempt_analytics
-    data = QuizAttemptData.get_user_attempt_analytics(params[:guid],current_user)
+    data = QuizAttemptData.get_user_attempt_analytics(params[:guid],current_user.id)
     render json: data
   end
 
