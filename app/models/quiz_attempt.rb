@@ -12,6 +12,14 @@ class QuizAttempt
   field :end_time, type: Integer
   field :active_duration, type: Integer
 
+  field :total, type: Integer
+  field :attempted, type: Integer
+  field :un_attempted, type: Integer
+  field :correct, type: Integer
+  field :in_correct, type: Integer
+  field :skipped, type: Integer
+
+
   embeds_many :question_attempts
   embeds_many :quiz_section_attempts
   accepts_nested_attributes_for :question_attempts
