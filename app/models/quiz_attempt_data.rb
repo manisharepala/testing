@@ -126,7 +126,7 @@ class QuizAttemptData
           d1['attempted'] = quiz_section_questions_data.select{|d| d['attempt_type'] == 'attempted'}.count
           d1['un_attempted'] = quiz_section_questions_data.select{|d| d['attempt_type'] == 'un_attempted'}.count
           d1['correct'] = quiz_section_questions_data.select{|d| d['correct'] == true}.count
-          d1['in_correct'] = quiz_section_questions_data.select{|d| d['correct'] == false}.count
+          d1['in_correct'] = d1['attempted'] - d1['correct']
           d1['skipped'] = quiz_section_questions_data.select{|d| d['attempt_type'] == 'skipped'}.count
 
           quiz_section_attempts_attributes << d1
@@ -146,10 +146,10 @@ class QuizAttemptData
       attempted_count = question_attempts_attributes_with_sections_data.select{|d| d['attempt_type'] == 'attempted'}.count
       un_attempted_count = question_attempts_attributes_with_sections_data.select{|d| d['attempt_type'] == 'un_attempted'}.count
       correct_count = question_attempts_attributes_with_sections_data.select{|d| d['correct'] == true}.count
-      in_correct_count = question_attempts_attributes_with_sections_data.select{|d| d['correct'] == false}.count
+      in_correct_count = attempted_count - correct_count
       skipped_count = question_attempts_attributes_with_sections_data.select{|d| d['attempt_type'] == 'skipped'}.count
 
-      quiz_attempt_data = {quiz_attempt_data_id:self.id.to_s,publish_id:data['publish_id'], user_id:self.user_id.to_i,book_guid:data['book_id'],quiz_guid:data['asset_download_id'],attempt_no:attempt_no,marks_scored:data['score'], total_marks:quiz.total_marks,start_time:data['start_time'].to_time.to_i,end_time:data['end_time'].to_time.to_i,active_duration:data['active_duration'],question_attempts_attributes:question_attempts_attributes_with_sections_data,quiz_section_attempts_attributes:quiz_section_attempts_attributes, total:total_count,attemped:attempted_count,un_attempted:un_attempted_count,correct:correct_count,in_correct:in_correct_count,skipped:skipped_count}
+      quiz_attempt_data = {quiz_attempt_data_id:self.id.to_s,publish_id:data['publish_id'], user_id:self.user_id.to_i,book_guid:data['book_id'],quiz_guid:data['asset_download_id'],attempt_no:attempt_no,marks_scored:data['score'], total_marks:quiz.total_marks,start_time:data['start_time'].to_time.to_i,end_time:data['end_time'].to_time.to_i,active_duration:data['active_duration'],question_attempts_attributes:question_attempts_attributes_with_sections_data,quiz_section_attempts_attributes:quiz_section_attempts_attributes, total:total_count,attempted:attempted_count,un_attempted:un_attempted_count,correct:correct_count,in_correct:in_correct_count,skipped:skipped_count}
       QuizAttempt.create(quiz_attempt_data)
     end
   end
