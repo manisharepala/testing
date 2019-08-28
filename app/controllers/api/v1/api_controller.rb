@@ -31,6 +31,8 @@ class Api::V1::ApiController < ApplicationController
     concept_questions_map = {}
     tag_questions_map = {}
 
+    tags = params[:difficulty_tags].present?? params[:difficulty_tags] : params[:mark_tags]
+
     params[:chapters].each do |chapter_data|
       d = {}
       d['guid'] = chapter_data['guid']
@@ -46,9 +48,9 @@ class Api::V1::ApiController < ApplicationController
           concept_questions_map[concept_data['guid']] ||= []
           d1['tags'] = []
 
-          params[:difficulty_tags].each do |difficulty_tag_data|
+          tags.each do |difficulty_tag_data|
             tag_questions_map[difficulty_tag_data['guid']] ||= []
-            questions = Question.where(:tag_ids.in=>[tag_guid,difficulty_tag_data['guid']])
+            questions = Question.all_in(:tag_ids.in=>[tag_guid,difficulty_tag_data['guid']])
             d1['tags'] << {'guid'=>difficulty_tag_data['guid'],'name'=>difficulty_tag_data['name'],'recommended_questions'=>0,'no_of_questions_available'=>questions.count}
 
             concept_questions_map[concept_data['guid']] << questions.map(&:guid)
@@ -62,7 +64,7 @@ class Api::V1::ApiController < ApplicationController
     end
 
     balanced_questions = {}
-    params[:difficulty_tags].each do |difficulty_tag_data|
+    tags.each do |difficulty_tag_data|
       balanced_questions[difficulty_tag_data['guid']] = difficulty_tag_data['required_questions']
     end
 
@@ -117,7 +119,7 @@ class Api::V1::ApiController < ApplicationController
         tag_guid = 'abc'#TagsServer.get_tag_guid_by_key(tag_key)
         if tag_guid.present?
           concept_data['tags'].each do |difficulty_tag_data|
-            question_ids = Question.where(:tag_ids.in=>[tag_guid,difficulty_tag_data['guid']]).map(&:id)
+            question_ids = Question.all_in(:tag_ids.in=>[tag_guid,difficulty_tag_data['guid']]).map(&:id)
             q_ids = question_ids.sample(difficulty_tag_data['final_questions'])
             final_question_ids << q_ids
 
@@ -135,7 +137,7 @@ class Api::V1::ApiController < ApplicationController
       questions_data << q.as_json(with_key:true,with_language_support:false)
     end
 
-    data['question_data'] = questions_data
+    data['questions_data'] = questions_data
     data['question_replacement_map'] = question_replacement_map
 
     render json: data
@@ -158,6 +160,8 @@ class Api::V1::ApiController < ApplicationController
     quiz.final = true
     quiz.tags_verified = true
     quiz.save!
+
+    render json: {'success'=>true}
   end
 
   def assessments
