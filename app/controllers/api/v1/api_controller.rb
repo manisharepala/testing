@@ -40,7 +40,7 @@ class Api::V1::ApiController < ApplicationController
       d['concepts'] = []
       chapter_data['concepts'].each do |concept_data|
         tag_key = "cbse_#{params[:grade]['name']}_#{params[:subject]['name']}_#{chapter_data['name']}_#{concept_data['name']}"
-        tag_guid = 'abc'#TagsServer.get_tag_guid_by_key(tag_key)
+        tag_guid = TagsServer.get_tag_guid_by_key(tag_key)
         if tag_guid.present?
           d1 = {}
           d1['guid'] = concept_data['guid']
@@ -116,7 +116,7 @@ class Api::V1::ApiController < ApplicationController
     params[:chapters].each do |chapter_data|
       chapter_data['concepts'].each do |concept_data|
         tag_key = "cbse_#{params[:grade]['name']}_#{params[:subject]['name']}_#{chapter_data['name']}_#{concept_data['name']}"
-        tag_guid = 'abc'#TagsServer.get_tag_guid_by_key(tag_key)
+        tag_guid = TagsServer.get_tag_guid_by_key(tag_key)
         if tag_guid.present?
           concept_data['tags'].each do |difficulty_tag_data|
             question_ids = Question.all_in(:tag_ids.in=>[tag_guid,difficulty_tag_data['guid']]).map(&:id)
