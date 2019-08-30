@@ -1,0 +1,80 @@
+.container{style:'margin-top:6%;'}
+  %ul.nav.nav-tabs
+    %li.ui-state-default.ui-corner-top
+      =link_to "My Assessments"
+    %li.ui-state-default.ui-corner-top
+      =link_to "All Assessments",assessment_all_quizzes_path
+    %li.ui-state-default.ui-state-active.ui-corner-top
+      %a{href: " "} Create Assessment
+  .container{style:'margin-top:2%;'}
+  #createAssessmentTabs
+  %ul.nav.nav-tabs
+    %li=link_to "Create Template","#create_template", "data-toggle" => "tab"
+    %li.active=link_to "Add Questions","#add_questions", "data-toggle" => "tab"
+    %li.disabled=link_to "Preview","#preview"
+    %li.disabled=link_to "Upload", "#upload"
+  .container{style:'margin-top:2%;'}
+  .tab-content
+    .tab-pane.fade{:id => "create_template"}
+      = render :partial => 'create_assessment'
+    .tab-pane.fade.in.active{:id => "add_questions"}
+      %div#test_details.ui-widget-content{style: "padding-left: 16px;"}
+        = render :partial => 'test_details', locals:{quiz: @quiz}
+      %br
+      %div{style: "padding-left: 16px;"}
+        %label{for: "subjectAddQuestionsButton"} You are adding questions to
+        - if @quiz.quiz_section_ids.count.present?
+          = select_tag(:section_id,options_for_select(@quiz.quiz_section_ids),:id => "section_selector",class:"drop_down",style:"padding:7px")
+        -else
+          =select_tag(:section_id,options_for_select(@quiz.quiz_language_specific_datas.where(language: Language::ENGLISH).name),id:"section_selector",class:"drop_down",style:"padding:7px")
+        .container{style:'margin-top:2%;'}
+          #addQuestionTabs{style: "border-bottom: 0px solid #CCC;"}
+            %ul.nav.nav-tabs#addQuestionTabsul
+              %li{style: "width: 4px;"}   
+              %li.active=link_to "Import from Question Bank", "#addQuestionTabs-1","data-toggle" => "tab"
+              %li=link_to "Create New Question", "#addQuestionTabs-2","data-toggle" => "tab"
+              %li=link_to "Preview Section", "#addQuestionTabs-3","data-toggle" => "tab"
+              %li=link_to "Edit Question","#addQuestionTabs-4","data-toggle" => "tab"
+            .container{style:'margin-top:2%;'}
+              .tab-content
+                .tab-pane.active.in.fade{:id => "addQuestionTabs-1"}
+                  %h7 import_questions
+                .tab-pane.fade{:id => "addQuestionTabs-2"}
+                  %ul.nav.nav-tabs#questionMode
+                    %li=link_to "Group Question", "#group_question","data-toggle" => "tab"
+                    %li.active=link_to "Individual Question", "#individualQuestion","data-toggle" => "tab"
+                  .tab-content
+                    .tab-pane{:id => "group_question"}
+                      %h4 Group Question
+                    .tab-pane.fade.in.active{:id => "individualQuestion"}
+                      #individualQuestion
+                        = simple_form_for @question, :url => assessment_quiz_create_individual_question_path(id:@quiz), :method => :post do |qf|
+                          = render :partial => 'question_builder' , locals:{f:qf}# the below partial also acts takes question object as input this can be used as question_fields in cocoon gem to create nested questions for passage based questions
+                          .section{style:"display:none"}
+                            =qf.text_field :section_id ,:id=>"email_field"
+                          %br
+                          %hr
+                          %br
+                          .right
+                            = qf.submit "Save & Add",class: "btn btn-default"
+                .tab-pane.fade{:id => "addQuestionTabs-3"}
+                  =render :partial => 'preview_section'
+                .tab-pane.fade{:id => "addQuestionTabs-4"}
+                  %div{style:"height:400px; padding-top: 100px; text-align: center"}
+                    Please choose a question to edit from "Preview Section" tab
+                  =# render :partial => 'shared/under_construction'
+  .container{style:'margin-bottom:4%;'}
+.styled-select{style:"float:right"}
+  =link_to "Preview Assessment",assessment_quiz_preview_assessment_path(quiz_id:@quiz.id),class: 'btn btn-default'
+:javascript
+  $(function () {
+          section = $("#section_selector option:selected").html();
+          alert("Selected section" + section);
+          $("#email_field").val(section);
+          $("#section_selector").change(function () {
+              section = $(this).val();
+              alert("Selected section" + section);
+              $("#email_field").val(section);
+          });
+      });
+  

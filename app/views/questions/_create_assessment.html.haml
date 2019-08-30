@@ -1,0 +1,21 @@
+//- f.quiz_section_ids.build
+//= f.fields_for :quiz_section_ids do |quiz_section|
+//=quiz_section.label "Section Name"
+//=quiz_section.text_field :name,:class=>"text required text_area"
+//%td{:id=>"additional_main_section",style: "margin: 0px; min-width:300px; padding: 4px; border: 1px solid #CCC; vertical-align: top;"}
+//= link_to_add_association "+ Add Section", f , :quiz_sections, "data-association-insertion-method"=>"before","data-association-insertion-node"=>"#additional_main_section"
+
+
+= simple_form_for @quiz, :url => assessment_quiz_create_path(id:@quiz.id), :method => :post do |f|
+  = f.label "Assessment Type:"
+  =f.select "type", options_for_select(@quiz_types), class:'btn btn-default'
+  - @quiz.quiz_language_specific_datas.each_with_index do |quiz_language_specific_data, i|
+    = f.simple_fields_for :quiz_language_specific_datas, quiz_language_specific_data do |qd|
+      - if(quiz_language_specific_data.language == Language::ENGLISH)
+        =f.label "Name:"
+        =qd.input_field :name
+        %br
+        = f.label "Instructions:"
+        =qd.cktext_area :instructions, :class => "form-control", required:true, :class => "form-control", required:true, :ckeditor => {:toolbar =>    'Full'}, :ckeditor => { :height => 200 }
+  %br
+  = f.submit "Add Questions",value:"Add Questions" ,id:"addQuestionsToAssessment",confirm:"Template once saved cannot be changed. Do you want to continue?	"

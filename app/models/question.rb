@@ -16,6 +16,7 @@ class Question
   field :guid, type: String
   field :tag_ids, type: Array
   field :image_ids, type: Array
+  field :section_id, type: String
 
   # embeds_many :images, :cascade_callbacks => true
   # has_and_belongs_to_many :tags, index: true, autosave: true, inverse_of: nil # one side relation
@@ -45,7 +46,7 @@ class Question
 
   ABSTRACT_CLASSES = %w(Question SubjectiveQuestion ObjectiveQuestion)
 
-  private_class_method :new, :create
+  # private_class_method :new, :create
 
   def upload_images
     image_ids.each do |guid|

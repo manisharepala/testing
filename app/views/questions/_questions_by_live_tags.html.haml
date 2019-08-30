@@ -1,0 +1,186 @@
+%div{style: "float: left;"}
+  -unless @quiz.quiz_section_ids.empty?
+    = link_to "Add Questions &nbsp; ".html_safe,"#", id:"addQuestionsSimpleTest_dup"
+  -else
+    = link_to "Add Questions &nbsp; ".html_safe,"#", id:"addQuestionsSimpleTest_dup"
+  to
+  %span.selected_section_cue
+    = @quiz.quiz_language_specific_datas.where(language:Language::ENGLISH)[0].name
+= simple_form_for :question_id_list, :url => assessment_questions_import_questions_path(id:@quiz.id),:html => {:id => 'question_ids_list'}, :method => :post do |f|
+  %table{class:"questions_loaded",cellpadding: "0", cellspacing: "0", width: "100%"}
+    .ids{style:"display:none"}
+      =f.text_field :question_id,id:"question_ids_array"
+      =f.text_field :sec_id,id:"s_id"
+    %tr
+      %td{colspan:3}
+        Displaying
+        = @que.length
+        questions out of
+        = @que.total_count
+        - current_page_no =  @que.current_page
+      %td
+        = check_box_tag "select_all",1,false, :id => "select_all", style:" margin-left:1em;margin-top:1em;width: 20px; height: 20px; padding: 20px;"
+        Select all
+        %br
+    -@que.each_with_index do |question,i|
+      %tr
+        %td.question_style{style: "width: 30px; margin: 0px; padding: 4px; border: 1px solid #CCC; text-align: center;"}
+          = question.id
+          =# link_to question.id, question_path(question.id), target:true
+        %td{style: "width: 80%; margin: 0px; padding: 8px; border: 1px solid #CCC; vertical-align: top; text-align: left;"}
+          %table.question_style{cellpadding: "0", cellspacing: "0", width: "100%"}
+            %tr
+              %td{style: "width: 70%; padding: 8px; border: 1px solid #CCC;overflow:hidden;max-width:12em; vertical-align: top; text-align: left;"}
+                = question.question_language_specific_datas.where(language: Language::ENGLISH)[0].question_text.html_safe
+              %td{style: "width: 20px; padding: 8px; border: 1px solid #CCC; vertical-align: top; text-align: center;"}
+                %center
+                  Marks
+                  %br
+                  %input{disabled: "true", size: "2", style: "margin-top:1em;", value: question.defaultmark}
+                  %br
+                  %br
+                    = question.qtype
+              %td{style: "width: 20px; margin: 0px; padding: 4px; border: 1px solid #CCC; text-align: center;"}
+                %center
+                - if @preference.nil?
+                  = check_box_tag "question_select",question.id, false, style: "margin-left:1em;margin-top:1em;width: 20px; height: 20px;"
+                - elsif @preference.include? question.id
+                  = check_box_tag "question_select", question.id, true, disabled: true, style: "margin-left:1em;margin-top:1em;width: 20px; height: 20px;"
+                - else
+                  = check_box_tag "question_select",question.id, false, style: "margin-left:1em;margin-top:1em;width: 20px; height: 20px;"
+= paginate @que, :params => {:controller => :questions, :action => :get_questions_by_live_tags}, :remote => true
+:javascript
+  $(document).ready(function(){
+    question_array=[]
+    $('#addQuestionsSimpleTest_dup').click(function(){
+      q_array=$("#question_ids_array").val();
+      console.log(question_array);
+      console.log(question_array.length);
+      if(question_array.length>0){
+        $("#question_ids_list").submit();
+        sections1 = $("#section_selector option:selected").val();
+        console.log("section id"+sections1);
+        var linkHref=$(this).parents('.tab-pane').attr('id');
+        console.log(linkHref);
+        $('#myTabs li')
+            .find('a[href="#addQuestionTabs-3"]').tab('show')
+            .attr('data-toggle','tab');
+        document.location.reload(true);
+      }
+      else{
+        alert("Please select the questions");
+      }
+    });
+  });
+  $('#select_all').on("click", function(){
+    if(this.checked) {
+       $(':checkbox').each(function() {
+           this.checked = true;
+       });
+       $('input#question_select').each(function(){
+         if($(this).is(":checked")){
+           item = $(this).val();
+           question_array.push(item);
+           $("#question_ids_array").val(question_array);
+         }
+       });
+   }
+   else {
+    $(':checkbox').each(function() {
+      this.checked = false;
+    });
+   }
+  });
+  $('input#question_select').each(function(){
+    question_array=[]
+    $(this).on("click",function(){
+     if($(this).is(":checked")){
+       item = $(this).val();
+       question_array.push(item);
+       $("#question_ids_array").val(question_array);
+     }
+    });
+  });
+  section = $("#section_selector option:selected").val();
+  $("#s_id").val(section);
+  $("#section_selector").change(function () {
+    section = $(this).val();
+    $("#s_id").val(section);
+  });
+  if (question_array.length == 0){
+    $( "#addQuestionsSimpleTest_dup" ).preventDefault();
+    $( "#addQuestionsSimpleTest_dup" ).button( "disable" );
+    try{
+        $( "#addQuestions" ).button( "disable" );
+        $( "#addQuestions_dup" ).button( "disable" );
+    }
+    catch(err) {
+        //nothing here
+    }
+    try{
+        $( "#addQuestionsSimpleTest" ).button( "disable" );
+        $( "#addQuestionsSimpleTest_dup" ).button( "disable" );
+    }
+    catch(err) {
+        //nothing here
+    }
+
+  }
+  else {
+    try{
+      $( "#addQuestions" ).button( "enable" );
+      $( "#addQuestions_dup" ).button( "enable" );
+    }
+    catch(err) {
+      //nothing here
+    }
+    try{
+      $( "#addQuestionsSimpleTest" ).button( "enable" );
+      $( "#addQuestionsSimpleTest_dup" ).button( "enable" );
+    }
+    catch(err) {
+      //nothing here
+    }
+  }
+:css
+  .pagination {
+    float: right;
+  }
+  .pagination a, .pagination span.current, .pagination span.gap {
+  	float: left;
+  	padding: 0 14px;
+  	line-height: 38px;
+  	text-decoration: none;
+  	background-color: white;
+  	border: 1px solid #DDD;
+  	border-left-width: 0;
+  }
+
+  .pagination {
+  	border-left: 1px solid #ddd;
+  	.first{
+  		padding : 0;
+  		float: none;
+  		border: none;
+  	}
+  	.prev {
+  		padding : 0;
+  		float: none;
+  		border: none;
+  	}
+  	.page{
+  		padding : 0;
+  		float: none;
+  		border: none;
+  	}
+  	.next{
+  		padding : 0;
+  		float: none;
+  		border: none;
+  	}
+  	.last{
+  		padding : 0;
+  		float: none;
+  		border: none;
+  	}
+  }

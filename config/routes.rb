@@ -1,6 +1,8 @@
+require 'sidekiq/web'
 Rails.application.routes.draw do
 
   mount Ckeditor::Engine => '/ckeditor'
+  mount Sidekiq::Web, at: '/sidekiq'
 
   get '/assessment/get_user_attempt_analytics/:guid', to: 'quizzes#get_user_attempt_analytics'
 
@@ -18,6 +20,10 @@ Rails.application.routes.draw do
   post "/assessment/post_zip_upload_question" => "quizzes#post_zip_upload_question"
 
   get "/assessment/migrate_quiz" => "quizzes#migrate_quiz"
+
+  get '/assessment/quizzes/download_pdf', to: 'quizzes#show'
+
+
   post "/assessment/process_migrate_quiz" => "quizzes#process_migrate_quiz"
   post '/assessment/bulk_migrate_quizzes', to: 'quizzes#bulk_migrate_quizzes'
 
@@ -36,12 +42,29 @@ Rails.application.routes.draw do
   get '/assessment/get_quizzes', to: 'quizzes#get_quizzes'
   get '/assessment/get_quiz_json', to: 'quizzes#get_quiz_json'
 
+  get '/assessment/quiz/new', to: 'quizzes#new'
+  post '/assessment/quiz/create', to: 'quizzes#create'
+
   get '/assessment/get_focus_area', to: 'quizzes#get_focus_area'
   post '/assessment/update_focus_area', to: 'quizzes#update_focus_area'
 
+  get '/assessment/quiz/add_questions', to: 'questions#add_questions'
+  post '/assessment/quiz/add_questions', to: 'questions#add_questions'
   get '/assessment/quiz/edit', to: 'quizzes#quiz_edit'
   post '/assessment/quiz/update', to: 'quizzes#quiz_update'
   get '/assessment/quiz/delete', to: 'quizzes#quiz_delete'
+  get "/assessment/quiz/publish"=>"quizzes#publish_to"
+  post "/assessment/quiz/publish"=>"quizzes#publish"
+
+  post "/assessment/quiz/create_individual_question", to: 'questions#create_individual_question'
+  get "/assessment/quiz/create_individual_question", to: 'questions#create_individual_question'
+  get '/assessment/quiz/preview_assessment', to: 'quizzes#preview_assessment'
+
+  post '/assessment/questions/get_questions_by_live_tags', to: 'questions#get_questions_by_live_tags'
+  get '/assessment/questions/get_questions_by_live_tags', to: 'questions#get_questions_by_live_tags'
+  get '/assessment/questions/import_questions', to: 'questions#import_questions'
+  post '/assessment/questions/import_questions', to: 'questions#import_questions'
+  get '/assessment/quiz/add_questions_from_import', to: 'questions#add_questions_from_import'
 
   post '/assessment/get_quizzes_analytics_data', to: 'quizzes#get_quizzes_analytics_data'
   post '/assessment/get_chapter_level_quizzes_analytics_data', to: 'quizzes#get_chapter_level_quizzes_analytics_data'
@@ -76,6 +99,8 @@ Rails.application.routes.draw do
   post '/assessment/get_child_tags', to: 'tags#get_child_tags'
   get '/assessment/update_question_tags', to: 'tags#update_question_tags'
 
+  post '/assessment/questions/preview_section', to: 'questions#preview_section'
+  
   scope '/assessment' do
     scope '/apis' do
       scope '/v1' do

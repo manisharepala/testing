@@ -1,0 +1,56 @@
+-if @quiz.quiz_section_ids.empty?
+  %table{class:"questions_loaded",cellpadding: "0", cellspacing: "0", width: "100%"}
+    %tr.ui-widget-content
+      %th{cellpadding:"0", cellspacing:"0",  style:"padding-left: 8px; width:inherit;"}
+        Questions
+      -if !@quiz.question_ids.nil?
+        -@quiz.question_ids.each_with_index do |question,i|
+          -que=Question.find(question)
+          %tr.ui-widget-content
+            %td{style: "width: 100%; margin: 0px; padding: 8px; border: 1px solid #CCC; vertical-align: top; text-align: left;"}
+              %table{cellpadding: "0", cellspacing: "0", width: "100%"}
+                %tr.ui-widget-content
+                  %td{style: "width: 10%; padding: 8px; border: 1px solid #CCC;overflow:hidden;max-width:12em; vertical-align: top; text-align: left;"}
+                    =i+1
+                  %td{style: "width: 70%; padding: 8px; border: 1px solid #CCC;overflow:hidden;max-width:12em; vertical-align: top; text-align: left;"}
+                    =que.question_language_specific_datas.where(language: Language::ENGLISH)[0].question_text.html_safe
+                  %td{style: "width: 70%; padding: 8px; border: 1px solid #CCC;  overflow:hidden;max-width:12em; vertical-align: center; text-align: left;"}
+                    Marks
+                    =que.default_mark
+                %td{style: "width: 10%; padding: 8px; overflow:hidden;max-width:12em; vertical-align: top; text-align: left;"}
+                  Negative Marks
+                  =que.penalty
+                %td{style: "width: 70%; padding: 8px; overflow:hidden;max-width:12em; vertical-align: top; text-align: center;"}
+                  =link_to "Edit this question",assessment_question_edit_path(id:question)
+                %td{style: "width: 70%; padding: 8px; overflow:hidden;max-width:12em; vertical-align: top; text-align: center;"}
+                  =que.qtype
+-else
+  .preview_sections{:id => "preview_section"}
+:javascript
+  section = $("#section_selector option:selected").val();
+  $("#section_selector").change(function () {
+    section = $(this).val();
+    console.log(section);
+    $.ajax({
+      url: '/assessment/questions/preview_section.json',
+      method: 'post',
+      data: {section: section},
+      success: function(){
+        console.log('success')
+      },
+      error: function() {
+
+      }
+    });
+  });
+  $.ajax({
+    url: '/assessment/questions/preview_section.json',
+    method: 'post',
+    data: {section: section},
+    success: function(){
+      console.log('success')
+    },
+    error: function() {
+
+    }
+  });

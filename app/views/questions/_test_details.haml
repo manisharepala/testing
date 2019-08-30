@@ -1,0 +1,28 @@
+%table{cellpadding: "0", cellspacing: "0", width: "90%",height:"100px"}
+  %tr
+    %td{style: "border-left: 0px; padding: 2px 8px 0px 0px;"}
+      Assessment Name:
+      =quiz.quiz_language_specific_datas.where(language: Language::ENGLISH)[0].name
+    %td{style: "border-left: 0px; padding: 2px 8px 2px 8px;"}
+      Total Questions:
+      %font{color: "grey"}
+      - if quiz.quiz_section_ids.present?
+        = quiz.quiz_section_ids.map{|qs_id| QuizSection.find(qs_id).question_ids}.flatten.count
+      -else
+        = quiz.question_ids.count rescue 0
+    %td{style: "border-left: 0px; padding: 2px 8px 0px 0px;"}
+      Total Sections:
+      =quiz.quiz_section_ids.count
+
+  %tr
+    %td{style: "border-left: 0px; padding: 2px 8px 2px 8px;"}
+      Total Marks:
+      -if quiz.quiz_section_ids.present?
+        -q_ids = @quiz.quiz_section_ids.map{|qs_id| QuizSection.find(qs_id).question_ids}.flatten
+        =q_ids.map{|id| Question.find(id).default_mark}.sum
+      -else
+        =quiz.question_ids.map{|id| Question.find(id).default_mark}.sum
+    %td{style: "border-left: 0px; padding: 2px 8px 0px 0px;"}
+      Duration:
+      = quiz.total_time
+      (Mins)

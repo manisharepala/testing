@@ -1,0 +1,13 @@
+-@fib = FibQuestion.new
+-@fib.question_fill_blanks.build
+-@fib.question_fill_blanks.each_with_index do |question_fill_blank,i|
+  = f.fields_for :question_fill_blanks,question_fill_blank, index: i do |f|
+    %tr.nested-fields.fib_option_set
+      %td.answer_number{style: "border: 1px solid #CCC;text-align: center;"}
+        Ans.
+      %td{colspan: "2", style: "position: relative; height:40px; padding-right: 8px; border: 1px solid #CCC; text-align: left;"}
+        = f.text_field :answer,as: :array, class:"full_text_camouflage"
+        //= link_to_remove_association image_tag("del_option.png") , f, style:"position:absolute; top: 1px; right: 0px"
+      %td
+        =f.check_box :case_sensitive, value:"1"
+      %td Case Sensitive

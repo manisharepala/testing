@@ -1,0 +1,4 @@
+%td.text-center{style:"width:10%;"}
+  //=f.check_box :fraction, :checked => (question_answer.fraction == true) ? true : false
+%td
+  =f.cktext_area :answer_english, :class => "form-control", required:true, :ckeditor => { :height => 100 }

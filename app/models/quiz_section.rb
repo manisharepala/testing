@@ -4,7 +4,7 @@ class QuizSection
   # field :name, type: String
   # field :instructions, type: BSON::Binary
   embeds_many :quiz_section_language_specific_datas, cascade_callbacks: true
-  accepts_nested_attributes_for :quiz_section_language_specific_datas
+  accepts_nested_attributes_for :quiz_section_language_specific_datas, :reject_if => :all_blank, :allow_destroy => true
   field :question_ids, type: Array
 
   field :parent_id, type: String

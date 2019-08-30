@@ -94,3 +94,4 @@ gem 'cocoon', '~> 1.2', '>= 1.2.13'
 
 gem 'sidekiq'
 gem 'redis-namespace'
+gem 'datetime_picker_input' 

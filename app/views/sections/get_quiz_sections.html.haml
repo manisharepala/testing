@@ -12,5 +12,5 @@
           %tr
             %td= i+1
             %td= link_to s.quiz_section_language_specific_datas.where(language: Language::ENGLISH)[0].name,assessment_section_questions_path(id:s.id), target:'_blank'
-            %td= s.question_ids.count
+            %td= s.question_ids.count rescue 0
             %td= link_to "Edit",assessment_section_edit_path(id:s.id), target:'_blank'

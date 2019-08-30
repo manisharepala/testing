@@ -1,0 +1,161 @@
+= simple_form_for :tag_list,:url=> assessment_questions_get_questions_by_live_tags_path(id:@quiz.id),:html => {:id => 'live_tags_selector'}, remote: true do  |f|
+  %table.table.table-bordered{cellpadding: "0", cellspacing: "0", width: "100%"}
+    %tr
+      %td{style: "border: 0px; padding: 2px;"}
+        %label{for: "subjectAddQuestionsButton"}
+          %b
+            Questions Data Base
+    %tr
+      %td{ style: "width:20%;border: 0px; padding: 2px 5px 2px 5px; vertical-align: top;"}
+        -q=[]
+        -PublisherQuestionBank.all.each do |qdps|
+          -q << qdps.name
+        .styled-select
+          = f.select :search_db,options_for_select(q),{style:"width: 220px; padding:7px"},id:"database", class: 'form-control form-control-lg'
+        #searchOptions
+          %h5 Search by Filters
+        .searchFilterContainer
+          %table.filter{:class => "filter",cellpadding: "0", cellspacing: "0", width: "100%"}
+            %tr
+              %td{style: "border: 0px; padding: 3px 0px 0px 5px;"}
+                %b= "course".humanize.titleize
+            %tr
+              %td{style: "border: 0px; padding: 2px 5px 2px 5px;"}
+                .styled-select
+                  = f.select 'course',@tags['course'].map{|t| [t['value'],t['guid']]},{style:"padding:7px;"}, id:"tag_list_course", class: 'form-control form-control-lg'
+            %tr
+              %td{style: "border: 0px; padding: 3px 0px 0px 5px;"}
+                %b= "grade".humanize.titleize   #C should be caps
+            %tr
+              %td{style: "border: 0px; padding: 2px 5px 2px 5px;"}
+                .styled-select
+                  = f.select 'grade',@tags['grade'].map{|t| [t['value'],t['guid']]},{:prompt=>'Select', :selected=> {},style:"padding: 7px;"},id:"tag_list_grade",class:'form-control form-control-lg'
+            %tr
+              %td{style: "border: 0px; padding: 3px 0px 0px 5px;"}
+                %b= "subject".humanize
+            %tr
+              %td{style: "border: 0px; padding: 2px 5px 2px 5px;"}
+                .styled-select
+                  = f.select 'subject',@tags['subject'].map{|t| [t['value'],t['guid']]},{:prompt=>'Select', :selected=> {},style:"padding: 7px;"},id:"tag_list_subject",class:'form-control form-control-lg'
+            %tr
+              %td{style: "border: 0px; padding: 3px 0px 0px 5px;"}
+                %b= "chapter".humanize
+            %tr
+              %td{style: "border: 0px; padding: 2px 5px 2px 5px;"}
+                .styled-select
+                  = f.select 'chapter',@tags['chapter'].map{|t| [t['value'],t['guid']]},{:prompt=>'Select', :selected=> {},style:"padding: 7px;"},id:"tag_list_chapter",class:'form-control form-control-lg'
+            %tr
+              %td{style: "border: 0px; padding: 3px 0px 0px 5px;"}
+                %b= "concept names".humanize.titleize
+            %tr
+              %td{style: "border: 0px; padding: 2px 5px 2px 5px;"}
+                .styled-select
+                  = f.select 'concept',@tags['concept'].map{|t| [t['value'],t['guid']]},{:prompt=>'Select', :selected=> {},style:"padding: 7px;"},id:"tag_list_concept",class:'form-control form-control-lg'
+            %tr
+              %td{style: "border: 0px; padding: 3px 0px 0px 5px;"}
+                %b= "question type".humanize.titleize
+            %tr
+              %td{style: "border: 0px; padding: 2px 5px 2px 5px;"}
+                .styled-select
+                  = f.select 'qtype',[['Single Multiple Choice',"SmcqQuestion"],['Multi Multiple Choice',"MmcqQuestion"],['True False',"TrueFalseQuestion"],['Fill in the Blanks',"FibQuestion"], ['AssertionReasonQuestion',"AssertionReasonQuestion"],['PassageQuestion',"PassageQuestion"],['Match the Following',"McqMatrixQuestion"]],{:prompt=>'All formats', :selected=> {}},class:'form-control form-control-lg',style:"padding:7px;"
+  %table
+    %tr
+      %td{style: "height: 10px;"}
+        %br
+        /%button#questionBankSearch{style: "background-color:#60c8cd; color: white;"}
+        = f.submit 'Search' ,id: "search_for_questions",class: "btn btn-default"
+        =# image_tag "small_loading.gif",class:"loading",style:"vertical-align: middle"
+:css
+  .styled-select {
+    border: 1px solid #ccc;
+    border-radius: 3px;
+    overflow: hidden;
+    background: #fafafa;
+  }
+
+  .styled-select select:focus {
+      outline: #98FB98 solid 1px;
+  }
+
+  .styled-select:hover {
+    outline: #3CB371 solid 1px;
+  }
+  h5{
+    color: #20B2AA;
+  }
+:javascript
+  $("#search_for_questions").button();
+  $(function(){
+    get_tags_for_course();
+    get_tags_for_grade();
+    get_tags_for_chapter();
+    get_tags_for_subject();
+
+  });
+  function get_tags_for_course() {
+    let guid = $('#tag_list_course').val();
+    console.log("course from function");
+    console.log(guid);
+    $.post('/assessment/get_child_tags', {guid: guid}, function(data, status){
+      if(status=='success'){
+        let grades = data['grade'];
+        let subjects = data['subject'];
+        let chapters = data['chapter'];
+        let concepts = data['concept']
+        update_tags('tag_list_grade', grades)
+        update_tags('tag_list_subject', subjects)
+        update_tags('tag_list_chapter', chapters)
+        update_tags('tag_list_concept', concepts)
+      }
+    });
+  }
+
+  function get_tags_for_grade() {
+    let guid = $('#tag_list_grade').val();
+    console.log(guid);
+    $.post('/assessment/get_child_tags', {guid: guid}, function(data, status){
+      if(status=='success'){
+        let subjects = data['subject'];
+        let chapters = data['chapter'];
+        let concepts = data['concept']
+        update_tags('tag_list_subject', subjects)
+        update_tags('tag_list_chapter', chapters)
+        update_tags('tag_list_concept', concepts)
+      }
+    });
+  }
+
+  function get_tags_for_subject() {
+    let guid = $('#tag_list_subject').val();
+    $.post('/assessment/get_child_tags', {guid: guid}, function(data, status){
+      if(status=='success'){
+        let chapters = data['chapter'];
+        let concepts = data['concept']
+        update_tags('tag_list_chapter', chapters)
+        update_tags('tag_list_concept', concepts)
+      }
+    });
+  }
+
+  function get_tags_for_chapter() {
+    let guid = $('#tag_list_chapter').val();
+    $.post('/assessment/get_child_tags', {guid: guid}, function(data, status){
+      if(status=='success'){
+        let concepts = data['concept']
+        update_tags('tag_list_concept', concepts)
+      }
+    });
+  }
+
+  function update_tags(id, tags){
+    var $el = $("#"+id);
+    $el.empty();
+    $el.append('<option value="">Select</option>');
+    for( i=0;i<tags.length;i++){
+      $el.append($("<option></option>").attr("value",tags[i]['guid']).text(tags[i]['value']));
+    }
+  }
+  $('#tag_list_course').change(get_tags_for_course);
+  $('#tag_list_grade').change(get_tags_for_grade);
+  $('#tag_list_subject').change(get_tags_for_subject);
+  $('#tag_list_chapter').change(get_tags_for_chapter);

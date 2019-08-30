@@ -1,0 +1,148 @@
+%div{style:"color: #636363"}
+  Important:
+  %ul
+    %li Each tag has its own rules in order to be valid.
+    %li Hover over the specific field for the corresponding rules.
+    %li Tags which contain spaces should be surrounded by Double Quotes.
+  %label.select.required.label Question Bank
+  %br
+  -q=[]
+  -PublisherQuestionBank.all.each do |qdps|
+    -q << qdps.name
+  .styled-select{style: "width: 100px;"}
+    = f.select :created_by,options_for_select(q),{style:"width: 50px; padding:7px"},class: 'form-control form-control-lg'
+%table.tagsTable
+  = form_for :tag,:url=> '/assessment_quiz_create_individual_question_path(id:@quiz)',:html => {:id => 'live_tags_selector'} do  |f|
+    %tr
+      %td{title:"Enter an existing course, you can add at most one course. ",style: "border: 0px; padding: 5px 0px 0px 10px;"}
+        %label
+          Course
+        .styled-select
+          = f.select 'course',@tags['course'].map{|t| [t['value'],t['guid']]},{style:"padding:7px"}, class: 'form-control form-control-lg'
+      %td{title:"You can add at most one chapter.",style: "border: 0px; padding: 5px 0px 0px 10px;"}
+        %label
+          Chapter
+        .styled-select
+          = f.select 'chapter',@tags['chapter'].map{|t| [t['value'],t['guid']]},{style:"padding:7px"},class:"form-control form-control-lg"
+      %td{title:"Enter an existing difficulty level, you can add at most one difficulty level. ",style: "border: 0px; padding: 5px 0px 0px 10px;"}
+        %label
+          Difficulty Level
+        .styled-select
+          = f.select 'difficulty_level',@tags['difficulty_level'].map{|t| [t['value'],t['guid']]},{style:"padding:7px"},class:"form-control form-control-lg"
+    %tr
+      %td{title:"You can add at most one class.",style: "border: 0px; padding: 5px 0px 0px 10px;"}
+        %label
+          Class
+        .styled-select
+          = f.select 'grade',@tags['grade'].map{|t| [t['value'],t['guid']]},{style:"padding:7px"},class:"form-control form-control-lg"
+      %td{title:"You can add more than one concept names.",style: "border: 0px; padding: 5px 0px 0px 10px;"}
+        %label
+          Concept Names
+        .styled-select
+          = f.select 'concept',@tags['concept'].map{|t| [t['value'],t['guid']]},{style:"padding:7px"},class:"form-control form-control-lg"
+      %td{title:"Enter an existing blooms taxonomy, you can add more than one blooms taxonomy tags. ",style: "border: 0px; padding: 5px 0px 0px 10px;"}
+        %label
+          Blooms Taxonomy
+        .styled-select
+          = f.select 'blooms_taxonomy',@tags['blooms_taxonomy'].map{|t| [t['value'],t['guid']]},{style:"padding:7px"},class:"form-control form-control-lg"
+    %tr
+      %td{title:"You can add at most one subject.",style: "border: 0px; padding: 5px 0px 0px 10px;"}
+        %label
+          Subject
+        .styled-select
+          = f.select 'subject',@tags['subject'].map{|t| [t['value'],t['guid']]},{style:"padding:7px"},class:"form-control form-control-lg"
+
+      %td{title:"Tags added here are used for recommendations",style: "border: 0px; padding: 5px 0px 0px 10px;"}
+
+      - unless @question_tags.nil?
+        - unless @question_tags["qsubtype"].blank?
+          %td{title:"Question subtype. Can't be edited here."}
+            %label
+              Question Subtype
+            %ul.qsubtype
+              - if @question_tags.nil?
+              - elsif @question_tags["qsubtype"].blank?
+              - else
+                - @question_tags["qsubtype"].each do |tag|
+                  %li
+                    = tag
+
+
+%hr
+:javascript
+  // for schand, course name is listed as schand
+  // Todo tooltip not working with tagit
+  $(".course").tagit({
+  requireAutocomplete: true,
+  fieldName:"course",
+  maxTags: 1
+  });
+
+  $(".academic_class").tagit({
+  fieldName:"academic_class",
+  maxTags: 1
+  });
+
+  $(".subject").tagit({
+  fieldName:"subject",
+  maxTags: 1
+  });
+
+  $(".chapter").tagit({
+  fieldName:"chapter",
+  maxTags: 1
+  });
+
+  $(".specialCategory").tagit({
+  requireAutocomplete: true,
+  fieldName:"specialCategory",
+  });
+
+  $(".difficulty_level").tagit({
+  requireAutocomplete: true,
+  fieldName:"difficulty_level",
+  maxTags: 1
+  });
+
+  $(".blooms_taxonomy").tagit({
+  requireAutocomplete: true,
+  fieldName:"blooms_taxonomy",
+  });
+
+  $(".concept_names").tagit({
+  fieldName:"concept_names",
+  allowSpaces: tru
+  });
+
+  $(".qsubtype").tagit({
+  fieldName:"qsubtype",
+  readOnly: true,
+  maxTags: 1
+  });
+  $('.qsubtype .tagit-new').hide();
+  $('.qsubtype .tagit-close').remove();
+
+:css
+  .recommendationTags{
+    -webkit-border-radius: 5px;
+    -moz-border-radius: 5px;
+    border-radius: 5px;
+    border: 1px solid #C6C6C6;
+    outline:0;
+    height:25px;
+    width: 225px;
+  }
+  #quiz1_question_recommendation_tag{
+      background: rgba(0, 0, 0, 0);
+    border: none;
+    outline: none;
+    position: relative;
+    right:40px;
+  }
+  #question_question_recommendation_tag{
+      background: rgba(0, 0, 0, 0);
+    border: none;
+    outline: none;
+    position: relative;
+    right:40px;
+  }

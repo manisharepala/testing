@@ -1,0 +1,85 @@
+<div class="key_holder">
+  <% if @key == true %>
+      <div class="page-break"></div>
+      <h1>Key</h1>
+      <table border="1.5px solid">
+        <thead>
+        <th>
+          Question No
+        </th>
+        <th>
+          Answer
+        </th>
+        </thead>
+        <% if @quiz.quiz_section_ids.count != 0 %>
+            <% @html_key.each do |sec| %>
+                <tr>
+                  <td align="center" colspan="100%">Section:<%= sec.first %> </td>
+                </tr>
+                <% sec.last.each do |key| %>
+                    <tr>
+                      <td align="center"><%= key[:no] %></td>
+                      <% if key[:subjective_question] %>
+                        <td align="left"><%= key[:answers].first.to_s.html_safe %></td>
+                      <% else %>
+                        <td align="left"><%= key[:answers].to_s.gsub('"', '').gsub('[', '').gsub(']', '').html_safe %></td>
+                      <% end %>
+                    </tr>
+                <% end %>
+            <% end %>
+
+        <% else %>
+            <% @html_key.each do |key| %>
+
+                <tr>
+                  <td align="center"><%= key[:no] %></td>
+                  <% if key[:subjective_question] %>
+                    <td align="left"><%= key[:answers].first.to_s.html_safe %></td>
+                  <% else %>
+                    <td align="left"><%= key[:answers].to_s.gsub('"', '').gsub('[', '').gsub(']', '').html_safe %></td>
+                  <% end %>
+                </tr>
+            <% end %>
+        <% end %>
+
+      </table>
+      <div class="page-break"></div>
+      <h1>Explanation</h1>
+      <table border="1px solid">
+        <thead>
+        <th>
+          Question No
+        </th>
+        <th>
+          Explanation
+        </th>
+        </thead>
+        <% if @quiz.quiz_section_ids.count != 0 %>
+            <% @html_key.each do |sec| %>
+                <tr>
+                  <td align="center" colspan="100%">Section:<%= sec.first %> </td>
+                </tr>
+                <% sec.last.each do |key| %>
+                    <tr>
+                      <td align="center"><%= key[:no] %></td>
+                      <td><%= key[:gf] %></td>
+                    </tr>
+                <% end %>
+            <% end %>
+        <% else %>
+            <% @html_key.each do |key| %>
+
+                <tr>
+                  <td align="center"><%= key[:no] %></td>
+                  <td align="left"><%= key[:gf] %></td>
+                </tr>
+            <% end %>
+        <% end %>
+
+
+      </table>
+  <% end %>
+
+
+
+</div>
