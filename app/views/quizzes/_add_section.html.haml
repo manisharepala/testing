@@ -1,0 +1,11 @@
+.ui-widget-contentid{style: "width: 100%;overflow-x: auto;"}
+  %table{style:"border: 1px solid #CCC; width: 100%;" }
+    %tr
+      -section = QuizSection.new
+      -if section.quiz_section_language_specific_datas.blank?
+        -section.quiz_section_language_specific_datas.build
+      = simple_form_for section, :url => assessment_quiz_create_path(id:@quiz.id), :method => :post do |f|
+        -section.quiz_section_language_specific_datas.each_with_index do |quiz_section_language_specific_data, i|
+          = f.simple_fields_for :quiz_section_language_specific_datas_attributes, quiz_section_language_specific_data, index: i do |qs|
+            = link_to_add_association "+ Add Section", f , :quiz_section_language_specific_datas, "data-association-insertion-method"=>"after"
+          %br

@@ -13,6 +13,8 @@
 //= require jquery
 //= require bootstrap-sprockets
 //= require jquery_ujs
-
+//= require quizzes.js
+//= require cocoon
 //= require ckeditor/init
+//= require datetime_picker_input
 //= require_tree .

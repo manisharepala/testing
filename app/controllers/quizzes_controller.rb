@@ -338,6 +338,52 @@ class QuizzesController < ApplicationController
   def home
 
   end
+  def preview_assessment
+    logger.info "-------------------------------------------------------------------------preview assessment---------------------------------------------------------------------------"
+    logger.info params
+    @quiz = Quiz.find(params[:quiz_id])
+    @quiz_types = [['All Types', 'all_types'],['Concept Practice Objective' ,'concept_practice_objective'],['Concept Test Objective' ,'concept_test_objective'],['Concept Practice Subjective' ,'concept_practice_subjective'],['Concept Test Subjective' ,'concept_test_subjective'],['Challenge Test Objective' ,'challenge_test_objective'],['Challenge Test Subjective' ,'challenge_test_subjective'],['Chapter Practice Objective' ,'chapter_practice_objective'],['Chapter Test Objective' ,'chapter_test_objective'],['Chapter Practice Subjective' ,'chapter_practice_subjective'],['Chapter Test Subjective' ,'chapter_test_subjective'],['Challenge Test' ,'challenge test'], ['Subjective', 'subjective'], ['Try Out', 'tryout'], ['Concept Practice', 'concept_practice']]
+  end
+
+  def new
+    @quiz = Quiz.new
+    @quiz_types = [['All Types', 'all_types'],['Concept Practice Objective' ,'concept_practice_objective'],['Concept Test Objective' ,'concept_test_objective'],['Concept Practice Subjective' ,'concept_practice_subjective'],['Concept Test Subjective' ,'concept_test_subjective'],['Challenge Test Objective' ,'challenge_test_objective'],['Challenge Test Subjective' ,'challenge_test_subjective'],['Chapter Practice Objective' ,'chapter_practice_objective'],['Chapter Test Objective' ,'chapter_test_objective'],['Chapter Practice Subjective' ,'chapter_practice_subjective'],['Chapter Test Subjective' ,'chapter_test_subjective'],['Challenge Test' ,'challenge test'], ['Subjective', 'subjective'], ['Try Out', 'tryout'], ['Concept Practice', 'concept_practice']]
+  end
+
+  def create
+    @quiz = Quiz.new(quiz_params)
+    if params['quiz_section_ids'] == "yes"
+      quiz_section_params['quiz_section_language_specific_datas_attributes'].each do |qa|
+        @quiz_section = QuizSection.create(quiz_section_language_specific_datas_attributes:[{name:qa[1]['name'],instructions:qa[1]['instructions']}])
+        @quiz.quiz_section_ids << @quiz_section.id
+        @quiz_section.quiz_id = @quiz.id
+        @quiz_section.question_ids=[]
+        @quiz_section.save
+      end
+    end
+    if @quiz.save
+      if params['quiz_section_ids'] == "yes"
+        @quiz_section.save
+      end
+      redirect_to assessment_quiz_add_questions_path(id:@quiz.id)
+    else
+      render 'new'
+    end
+  end
+  def publish_to
+    logger.info "-------------------------------------"
+    logger.info params
+    @quiz = Quiz.find(params[:id])
+    @target = QuizTargetedGroup.new
+  end
+
+  def publish
+    logger.info "----------------------------------"
+    logger.info params
+    logger.info "000000000000000000000000000000000"
+    @target = QuizTargetedGroup.create(publish_params)
+    redirect_to assessment_all_quizzes_path
+  end
 
   def show
 
@@ -908,6 +954,21 @@ class QuizzesController < ApplicationController
 
   private
   def quiz_params
-    params.require(:quiz).permit(:final,quiz_language_specific_datas_attributes: [:name])
+    params.require(:quiz).permit(:type,:_id,:quiz_section_ids,:final,quiz_language_specific_datas_attributes: [:name, :instructions, :description,:language])
+  end
+  # {:question_answers => [:answer_hindi, :answer_english, :fraction]},
+
+
+  def quiz_section_params
+    params.require(:quiz_section).permit(
+        quiz_section_language_specific_datas_attributes: [
+            :id, :name, :instructions, :_destroy
+        ]
+    )
+  end
+
+  def publish_params
+    params.require(:publish).permit(:quiz_type,:password,:shuffle_options,:shuffle_questions,:pause,:evaluate_server_side,:key_update,:time_open,:time_close,:show_score_after,:show_answers_after,:max_no_of_attempts,:published_by,:published_on,:group_ids,:user_ids,:guid,:message_subject,:message_body,:qui_id,:is_cancelled)
+
   end
 end

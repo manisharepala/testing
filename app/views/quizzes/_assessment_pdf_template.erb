@@ -1,0 +1,87 @@
+<style>
+#row, #column {
+  border: 1px solid black;
+}
+#assessment-table,#row{
+  border: 1px solid black;
+  width: 100%;
+  border-collapse: collapse;
+}
+.page-break-top{
+  display:block;
+  clear:both;
+  page-break-before:always;
+}
+.page-break {
+  display:block;
+  clear:both;
+  page-break-after:always;
+}
+</style>
+</hr>
+<div>
+  <table  align="center" class="quiz-head" id="assessment-table">
+    <tr id="row">
+      <td colspan="2" id="column"><b>Test Name:</b></td>
+      <td colspan="1" id="column">&nbsp;<%= @quiz.quiz_language_specific_datas.where(language:Language::ENGLISH)[0].name %></td>
+    </tr>
+    <tr id="row" >
+      <td colspan="2" id="column"><b>Total Questions:</b></td>
+      <% if @quiz.quiz_section_ids.present? %>
+        <td colspan="1" id="column">&nbsp;<%= @quiz.quiz_section_ids.map{|qs_id| QuizSection.find(qs_id).question_ids}.flatten.count%></td>
+      <% else %>
+        <td colspan="1" id="column">&nbsp;<%= @quiz.question_ids.count %></td>
+      <%end%>
+    </tr>
+    <tr id="row">
+      <td colspan="2" id="column"><b>Marks:</b></td>
+      <td colspan="1" id="column">&nbsp;<%= @quiz.total_marks %></td>
+    </tr>
+    <tr id="row">
+      <td colspan="2" id="column"><b>Student Name:</b></td>
+      <td colspan="1" id="column"></td>
+    </tr>
+  </table>
+  <p><b>Instructions for Assessment:</b></p>
+
+  <p style="margin-left: 20px"><%= (@quiz.quiz_language_specific_datas.where(language:Language::ENGLISH)[0].instructions).to_s.html_safe %></p>
+</div>
+<div class="page">
+  <% if !@quiz.question_ids.empty?  %>
+    <% @quiz.question_ids.each_with_index do |question,i| %>
+      <% que=Question.find(question) %>
+      <% if que.qtype != 'PassageQuestion'%>
+        <%= render partial: 'quizzes/pdf_regular_question', locals: {question: que,i:i+1} %>
+      <% end %>
+    <% end %>
+  <% else %>
+    <% @quiz.quiz_section_ids.each_with_index do |section,i| %>
+      <%- @section = QuizSection.find(section) %>
+      <div class="page-break-top">
+        <table align="center" border="1.5px solid" class="questions_loaded" cellpadding= "0" cellspacing= "0" width= "100%">
+          <tr class="sec-head">
+            <td colspan="2" align='center'>
+              <b>Section:</b>&nbsp;<%= @section.quiz_section_language_specific_datas.where(language: Language::ENGLISH)[0].name %>
+            </td>
+          </tr>
+          <tr class="sec-head" style="width: 100%">
+            <td align='center'><b>Questions:</b>&nbsp;<%= @section.question_ids.count %></td>
+            <td align='center'><b>Marks:</b>&nbsp;<%= @section.question_ids.map{|id| Question.find(id).default_mark}.sum.to_i %></td>
+          </tr>
+        </table>
+        <br>
+        <p style="margin-left: 10px"><b>Instructions for this section:</b> &nbsp;&nbsp;
+          <%= @section.quiz_section_language_specific_datas.where(language:Language::ENGLISH)[0].instructions.to_s.html_safe %>
+        </p>
+      </div>
+      <br/>
+      <% @section.question_ids.each_with_index do |question,j| %>
+        <%-@question = Question.find(question) %>
+        <%= render partial: 'quizzes/pdf_regular_question', locals: {question:@question,i:j+1} %>
+      <% end %>
+      <br/>
+    <% end %>
+  <% end %>
+</div>
+
+<%= render partial: 'quizzes/pdf_key' %>

@@ -37,7 +37,7 @@
               %th.text-center{style: "height: 3.5em"} Options
             %tr
               %td
-                - if @question.qtype == 'SmcqQuestion' || @question.qtype == 'MmcqQuestion' || @question.qtype == 'TrueFalseQuestion'
+                - if @question.qtype == 'SmcqQuestion' || @question.qtype == 'MmcqQuestion' || @question.qtype == 'TrueFalseQuestion' || @question.qtype == 'McqMatrixQuestion' || @question.qtype == 'AssertionReasonQuestion'
                   - @question.question_answers.each_with_index do |question_answer, i|
                     = f.simple_fields_for :question_answers, question_answer do |qa|
                       %tr

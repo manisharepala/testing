@@ -1,0 +1,15 @@
+%div
+  %table{cellpadding: "0", cellspacing: "0", width: "100%"}
+    %tr
+      %td{style: "width:20%; border: 0px; padding: 15px 8px; vertical-align: top;position: relative;"}
+        %b{style: "font-size: 16px;"} Question Bank
+      %td.selected_questions_control_buttons{style: "width: 80%; border: 0px; padding: 0px; padding-top: 20px; vertical-align: top;"}
+        %div{style: "float: right;"}
+        =# link_to "Go to Preview Section","#",style:" color: #60c8cd;text-decoration: none",id:"goToEditSection"
+
+    %tr
+      %td{style: "width:20%; border: 0px; padding: 0px 5px 0px 0px; vertical-align: top;"}
+        -#= render :partial => 'search_questions', locals:{publisher_question_bank:@publisher_question_bank}
+        =render :partial => "live_tag_filters"
+      %td{id:'select_questions',style: "width: 100%; border: 0px; padding: 0px; vertical-align: top;"}
+        .questions{:id => "questions"}

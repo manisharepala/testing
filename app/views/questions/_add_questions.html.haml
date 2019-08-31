@@ -1,0 +1,70 @@
+%div#test_details.ui-widget-content{style: "padding-left: 16px;"}
+  = render :partial => 'test_details', locals:{quiz: @quiz}
+%br
+%div{style: "padding-left: 16px;width: 220px;"}
+  .options{:id => "options"}
+  %label{for: "subjectAddQuestionsButton"} You are adding questions to
+  - if @quiz.quiz_section_ids.present?
+    .styled-select
+      = select_tag(:section_id,options_for_select(@quiz_sections.map{|qs| [qs.quiz_section_language_specific_datas.where(language: Language::ENGLISH)[0].name,qs.id]}),:id => "section_selector",class:"form-control form-control-lg",style:"padding:1px")
+  - else
+    .styled-select
+      =select_tag(:section_id,options_for_select([[@quiz.quiz_language_specific_datas.where(language: Language::ENGLISH)[0].name,@quiz.id]]),id:"section_selector",class:"form-control form-control-lg",style:"padding:1px")
+  .container{style:'margin-top:5%;'}
+    #myTabs{style: "border-bottom: 0px solid #CCC;"}
+      %ul.nav.nav-tabs#addQuestionTabsul
+        %li{style: "width: 4px;"}
+        %li.active=link_to "Import from Question Bank", "#addQuestionTabs-1","data-toggle" => "tab"
+        %li
+          %a{ href: "#addQuestionTabs-2", id:"create_assessment", "data-toggle": "tab" }Create Question
+        %li
+          %a{ href: "#addQuestionTabs-3", id:"#addQuestionTabs-3", "data-toggle": "tab" }Preview Section
+        %li=link_to "Edit Question","#addQuestionTabs-4","data-toggle" => "tab"
+      .container{style:'margin-top:2%;'}
+        .tab-content
+          .tab-pane.active.in.fade{:id => "addQuestionTabs-1"}
+            =render :partial => "questions/import_questions"
+          .tab-pane.fade{:id => "addQuestionTabs-2"}
+            %ul.nav.nav-tabs#questionMode
+              %li=link_to "Group Question", "#group_question","data-toggle" => "tab"
+              %li.active=link_to "Individual Question", "#individualQuestion","data-toggle" => "tab"
+            .tab-content
+              .tab-pane{:id => "group_question"}
+                %h4 Group Question
+              .tab-pane.fade.in.active{:id => "individualQuestion"}
+                #individualQuestion
+                  = simple_form_for @question, :url => assessment_quiz_create_individual_question_path(id:@quiz), :method => :post do |qf|
+                    = render :partial => 'tags_builder', locals: {f:qf}
+                    = render :partial => 'question_builder' , locals:{f:qf}# the below partial also acts takes question object as input this can be used as question_fields in cocoon gem to create nested questions for passage based questions
+                    .section{style:"display:none"}
+                      =qf.text_field :section_id ,:id=>"email_field"
+                    %br
+                    %hr
+                    %br
+                    .right
+                      = qf.submit "Save & Add", id: 'save_and_add',class: "btn btn-default"
+          .tab-pane.fade{:id => "addQuestionTabs-3"}
+            =render :partial => 'preview_section'
+          .tab-pane.fade{:id => "addQuestionTabs-4"}
+            %div{style:"height:400px; padding-top: 100px; text-align: center"}
+              Please choose a question to edit from "Preview Section" tab
+            =# render :partial => 'shared/under_construction'
+=#$('#options').html('#{escape_javascript( render :partial => 'import', :locals => {que_id:section})}');
+:javascript
+  $(function () {
+        opt = $("#section_selector option:selected").html();
+        $("#email_field").val(opt);
+        $("#section_selector").change(function () {
+            opt = $(this).val();
+            $("#email_field").val(opt);
+        });
+        $('#save_and_add').click(function(){
+          var linkHref=$(this).parents('.tab-pane').attr('id');
+          console.log(linkHref);
+          $('#myTabs ul li')
+              .find('a[href="#addQuestionTabs-2"]').tab('show')
+              .attr('data-toggle','tab');
+          });
+  });
+  // Add theme colors to buttons
+  stylizeButtons();

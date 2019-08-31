@@ -1,0 +1,23 @@
+.container{style:'margin-top:6%;'}
+  %ul.nav.nav-tabs
+    %li.ui-state-default.ui-corner-top
+      =link_to "All Assessments",assessment_all_quizzes_path
+    %li.ui-state-default.ui-state-active.ui-corner-top
+      %a{href: " "} Create Assessment
+  .container{style:'margin-top:2%;'}
+  #createAssessmentTabs
+  %ul.nav.nav-tabs#addQuestionTabs
+    %li.disabled=link_to "Create Template",""
+    %li.active=link_to "Add Questions","#add_questions", "data-toggle" => "tab"
+    %li.disabled=link_to "Preview", ""
+    %li.disabled=link_to "Upload", ""
+  .container{style:'margin-top:2%;'}
+    .tab-content
+      .tab-pane.fade.in.active{:id => "add_questions"}
+        =#.add_questions{:id => "preview_section"}
+        = render :partial => 'add_questions'
+    %br
+    .styled-select{style:"float:right"}
+      =link_to "Preview Assessment",assessment_quiz_preview_assessment_path(quiz_id:@quiz.id),class: 'btn btn-default'
+:javascript
+  attachLiveEventsForDynamicEntities();
