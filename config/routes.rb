@@ -97,4 +97,12 @@ Rails.application.routes.draw do
 
   get '/assessment/question_images/:question_id/:image_name' => 'quizzes#get_image_download_url'
 
+  scope '/assessment' do
+    scope '/apis' do
+        get '/assessment_types' => 'api/v1/cengage#assessment_types'
+        get '/list_of_assessments' => 'api/v1/cengage#list_of_assessments'
+        get '/subjects' => 'api/v1/cengage#subjects'
+    end
+  end
+
 end
