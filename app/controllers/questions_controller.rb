@@ -63,9 +63,9 @@ class QuestionsController < ApplicationController
     q=PublisherQuestionBank.where(name:questions_by_live_tags_params['search_db'])
     qtype=questions_by_live_tags_params['qtype']
     if qtype.empty?
-      @que = Kaminari.paginate_array(Question.where(created_by:q[0].publisher_id,tag_ids: { '$all' => @tag_id }).order("timemodified desc")).page(params[:page]).per(10)
+      @que = Kaminari.paginate_array(Question.where(created_by:q[0].publisher_id,tag_ids: { '$all' => @tag_id }).limit(8000).order("timemodified desc")).page(params[:page]).per(10)
     else
-      @que = Kaminari.paginate_array(Question.where(created_by:q[0].publisher_id,qtype:qtype,tag_ids: { '$all' => @tag_id }).order("timemodified desc")).page(params[:page]).per(10)
+      @que = Kaminari.paginate_array(Question.where(created_by:q[0].publisher_id,qtype:qtype,tag_ids: { '$all' => @tag_id }).limit(8000).order("timemodified desc")).page(params[:page]).per(10)
     end
     respond_to do |format|
       format.html { ajax_refresh }
