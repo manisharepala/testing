@@ -53,9 +53,6 @@ class QuestionsController < ApplicationController
   end
 
   def get_questions_by_live_tags
-    logger.info "--------------------------------------------------"
-    logger.info params
-    logger.info "---------------------------------------------------"
     @quiz= Quiz.find(params[:id])
     @tag_id = []
     @tag_id << questions_by_live_tags_params['course']
@@ -66,11 +63,11 @@ class QuestionsController < ApplicationController
     q=PublisherQuestionBank.where(name:questions_by_live_tags_params['search_db'])
     qtype=questions_by_live_tags_params['qtype']
     if qtype.empty?
-      # @que=Question.where(created_by:q[0].publisher_id,tag_ids: { '$all' => @tag_id }).order("timemodified desc")
-      @que = Kaminari.paginate_array(Question.where(created_by:q[0].publisher_id,tag_ids: { '$all' => @tag_id }).order("timemodified desc")).page(params[:page]).per(10)
+      @que=Question.where(created_by:q[0].publisher_id,tag_ids: { '$all' => @tag_id }).limit(8000).order("timemodified desc")
+      # @que = Kaminari.paginate_array(Question.where(created_by:q[0].publisher_id,tag_ids: { '$all' => @tag_id }).order("timemodified desc")).page(params[:page]).per(10)
     else
-      # @que=Question.where(created_by:q[0].publisher_id,qtype:qtype,tag_ids: { '$all' => @tag_id }).order("timemodified desc")
-      @que = Kaminari.paginate_array(Question.where(created_by:q[0].publisher_id,qtype:qtype,tag_ids: { '$all' => @tag_id }).order("timemodified desc")).page(params[:page]).per(10)
+      @que=Question.where(created_by:q[0].publisher_id,qtype:qtype,tag_ids: { '$all' => @tag_id }).limit(8000).order("timemodified desc")
+      # @que = Kaminari.paginate_array(Question.where(created_by:q[0].publisher_id,qtype:qtype,tag_ids: { '$all' => @tag_id }).order("timemodified desc")).page(params[:page]).per(10)
     end
     respond_to do |format|
       format.html { ajax_refresh }
