@@ -48,7 +48,7 @@
                   = check_box_tag "question_select", question.id, true, disabled: true, style: "margin-left:1em;margin-top:1em;width: 20px; height: 20px;"
                 - else
                   = check_box_tag "question_select",question.id, false, style: "margin-left:1em;margin-top:1em;width: 20px; height: 20px;"
-= paginate @que, :params => {:controller => :questions, :action => :get_questions_by_live_tags}, :remote => true
+=# paginate @que, :params => {:controller => :questions, :action => :get_questions_by_live_tags}, :remote => true
 :javascript
   $(document).ready(function(){
     question_array=[]

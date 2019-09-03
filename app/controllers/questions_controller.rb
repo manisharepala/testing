@@ -63,9 +63,11 @@ class QuestionsController < ApplicationController
     q=PublisherQuestionBank.where(name:questions_by_live_tags_params['search_db'])
     qtype=questions_by_live_tags_params['qtype']
     if qtype.empty?
-      @que = Kaminari.paginate_array(Question.where(created_by:q[0].publisher_id,tag_ids: { '$all' => @tag_id }).order("timemodified desc")).page(params[:page]).per(10)
+      Question.where(created_by:q[0].publisher_id,tag_ids: { '$all' => @tag_id }).order("timemodified desc")
+      # @que = Kaminari.paginate_array(Question.where(created_by:q[0].publisher_id,tag_ids: { '$all' => @tag_id }).order("timemodified desc")).page(params[:page]).per(10)
     else
-      @que = Kaminari.paginate_array(Question.where(created_by:q[0].publisher_id,qtype:qtype,tag_ids: { '$all' => @tag_id }).order("timemodified desc")).page(params[:page]).per(10)
+      Question.where(created_by:q[0].publisher_id,qtype:qtype,tag_ids: { '$all' => @tag_id }).order("timemodified desc")
+      # @que = Kaminari.paginate_array(Question.where(created_by:q[0].publisher_id,qtype:qtype,tag_ids: { '$all' => @tag_id }).order("timemodified desc")).page(params[:page]).per(10)
     end
     respond_to do |format|
       format.html { ajax_refresh }
@@ -272,7 +274,7 @@ class QuestionsController < ApplicationController
   def question_id_list_params
     params.require("question_id_list").permit(:question_id,:sec_id)
   end
-    
+
   def question_params
     if params[:qtype] == 'SmcqQuestion'
       params.require(:smcq_question).permit(:default_mark,question_language_specific_datas_attributes: [:question_text,:general_feedback,:actual_answer,:hint], question_answers_attributes: [:answer_english,:answer_hindi, :id, :fraction])
