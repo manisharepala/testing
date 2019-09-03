@@ -13,11 +13,11 @@
       =f.text_field :sec_id,id:"s_id"
     %tr
       %td{colspan:3}
-        Displaying
-        = @que.length
-        questions out of
-        = @que.total_count
-        - current_page_no =  @que.current_page
+        #Displaying
+        =# @que.length
+        =#questions out of
+        =# @que.total_count
+        -# current_page_no =  @que.current_page
       %td
         = check_box_tag "select_all",1,false, :id => "select_all", style:" margin-left:1em;margin-top:1em;width: 20px; height: 20px; padding: 20px;"
         Select all
