@@ -86,7 +86,6 @@ Rails.application.routes.draw do
   get '/assessment/user_assessments_by_category', to: 'api#user_assessments_by_category'
   post '/assessment/edit_due_time', to: 'api#edit_due_time'
   post '/assessment/cancel_published_assessment', to: 'api#cancel_published_assessment'
-  post '/assessment/publish_assessment', to: 'api#publish_assessment'
 
   get '/assessment/different_question_types_by_marks', to: 'api#different_question_types_by_marks'
   get '/assessment/different_question_types_by_difficulty', to: 'api#different_question_types_by_difficulty'
@@ -115,6 +114,8 @@ Rails.application.routes.draw do
         post '/get_questions_by_tags' => 'api/v1/api#get_questions_by_tags'
         get '/get_question_json' => 'api/v1/api#get_question_json'
         post '/generate_quiz' => 'api/v1/api#generate_quiz'
+        post '/publish_assessment' => 'api/v1/api#publish_assessment'
+
         get '/teacher/assessments' => 'api/v1/api#assessments'
       end
     end

@@ -148,20 +148,52 @@ class Api::V1::ApiController < ApplicationController
   end
 
   def generate_quiz
-    if params[:quiz_type].downcase == 'objective'
-      player = 'challenge test'
-    else
-      player = 'subjective'
+    data = {}
+    begin
+      if params[:quiz_type].downcase == 'objective'
+        player = 'challenge test'
+      else
+        player = 'subjective'
+      end
+      total_marks = params[:question_ids].map{|id| Question.find(id).default_mark}.sum
+
+      quiz = Quiz.create!(quiz_language_specific_datas_attributes: [{name:params[:name],language: 'english'}],question_ids:params[:question_ids],type:player, player:player, total_marks:total_marks, total_time:params[:duration],created_by:current_user.id)
+      quiz.quiz_json = quiz.as_json(with_key:true,with_language_support:false)
+      quiz.final = true
+      quiz.tags_verified = true
+      quiz.save!
+
+      if quiz.present?
+        data['quiz_id'] = quiz.id
+        data['success'] = true
+      else
+        data['success'] = false
+      end
+    rescue
+      data['success'] = false
     end
-    total_marks = params[:question_ids].map{|id| Question.find(id).default_mark}.sum
 
-    quiz = Quiz.create(quiz_language_specific_datas_attributes: [{name:params[:name],language: 'english'}],question_ids:params[:question_ids],type:player, player:player, total_marks:total_marks, total_time:params[:duration],created_by:current_user.id)
-    quiz.quiz_json = quiz.as_json(with_key:true,with_language_support:false)
-    quiz.final = true
-    quiz.tags_verified = true
-    quiz.save!
+    render data
+  end
 
-    render json: {'success'=>true}
+  def publish_assessment
+    data = {}
+    begin
+      quiz_targeted_group_data = {password:params[:password], time_open:params[:time_open].to_i, time_close:params[:time_close].to_i, show_score_after:params[:show_score_after], show_answers_after:params[:show_answers_after], published_by:current_user.id, group_ids:params[:group_ids], user_ids:params[:user_ids], message_subject:params[:message_subject], message_body:params[:message_body],quiz_id:params[:quiz_id],shuffle_questions:params[:shuffle_questions],shuffle_options:params[:shuffle_options],pause:params[:pause],max_no_of_attempts:params[:max_no_of_attempts]}
+
+      qtg = QuizTargetedGroup.create!(quiz_targeted_group_data)
+
+      if qtg.present?
+        data['publish_id'] = qtg.id
+        data['success'] = true
+      else
+        data['success'] = false
+      end
+    rescue
+      data['success'] = false
+    end
+
+    render json: data
   end
 
   def assessments
@@ -201,7 +233,5 @@ class Api::V1::ApiController < ApplicationController
 
     render json: data
   end
-
-
 
 end

@@ -26,7 +26,7 @@ class QuizTargetedGroup
 
   field :quiz_id, type: String
   field :is_cancelled, type: Boolean, default: false
-  belongs_to :quiz
+  # belongs_to :quiz
 
   before_create :set_defaults
 
