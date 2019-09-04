@@ -127,7 +127,7 @@ Rails.application.routes.draw do
     scope '/apis' do
         get '/assessment_types' => 'api/v1/cengage#assessment_types'
         get '/list_of_assessments' => 'api/v1/cengage#list_of_assessments'
-        get '/subjects' => 'api/v1/cengage#subjects'
+        get '/grade_subjects_chapters_concepts' => 'api/v1/cengage#grade_subjects_chapters_concepts'
     end
   end
 
