@@ -173,7 +173,7 @@ class Api::V1::ApiController < ApplicationController
       data['success'] = false
     end
 
-    render data
+    render json: data
   end
 
   def publish_assessment
