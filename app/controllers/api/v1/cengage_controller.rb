@@ -59,7 +59,10 @@ class Api::V1::CengageController < ApplicationController
 
   def generate_quiz_and_get_json
     quiz_type = 'concept_practice,challenge_test,jee_main,jee_advance'
-    data = Quiz.find('5d6f7f6cfdbd261ee67d4975').quiz_json
+
+    difficulty_tags = {"Hard"=>"00be0a27-126d-4aca-905a-323b5f54553a", "Medium"=>"a945bd15-5066-43d8-b8d1-604409cefaad", "Easy"=>"90620785-a35b-492e-a67e-f441afc329ae"}
+
+    data = Quiz.find("5d6f6b14fdbd2677dca48d92").quiz_json
 
     render json: data
   end
