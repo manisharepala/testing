@@ -1,0 +1,4 @@
+- que.question_language_specific_datas.each_with_index do |question_language_specific_data, i|
+  = f.simple_fields_for :question_language_specific_datas, question_language_specific_data do |qd|
+    - if(question_language_specific_data.language == Language::ENGLISH)
+      = qd.cktext_area :actual_answer, :class => "form-control", required:true, :class => "form-control", required:true, :ckeditor => {:toolbar =>    'Full'}, :ckeditor => { :height => 100 }

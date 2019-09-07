@@ -127,22 +127,6 @@ class ApiController < ApplicationController
     render json: data
   end
 
-  def publish_assessment
-    data = {}
-    quiz_targeted_group_data = {password:params[:password], time_open:params[:time_open].to_i, time_close:params[:time_close].to_i, show_score_after:params[:show_score_after], show_answers_after:params[:show_answers_after], published_by:current_user.id, group_ids:params[:group_ids], user_ids:params[:user_ids], message_subject:params[:message_subject], message_body:params[:message_body],quiz_id:params[:assessment_id]}
-
-    qtg = QuizTargetedGroup.create!(quiz_targeted_group_data)
-
-    if qtg.present?
-      data['publish_id'] = qtg.id
-      data['success'] = true
-    else
-      data['success'] = false
-    end
-
-    render json: data
-  end
-
   def different_question_types_by_marks
     data = []
 

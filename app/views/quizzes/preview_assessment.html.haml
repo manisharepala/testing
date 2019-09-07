@@ -1,0 +1,17 @@
+.container{style:'margin-top:6%;'}
+  %ul.nav.nav-tabs
+    %li.ui-state-default.ui-corner-top
+      =link_to "All Assessments",assessment_all_quizzes_path
+    %li.ui-state-default.ui-state-active.ui-corner-top
+      %a{href: " "} Create Assessment
+  .container{style:'margin-top:2%;'}
+  #createAssessmentTabs
+  %ul.nav.nav-tabs
+    %li.disabled=link_to "Create Template",""
+    %li.disabled=link_to "Add Questions",""
+    %li.active=link_to "Preview", "#preview_assessment", "data-toggle" => "tab"
+    %li.disabled=link_to "Upload", ""
+  .container{style:'margin-top:2%;'}
+  .tab-content
+    .tab-pane.fade.in.active{:id => 'preview_assessment'}
+      =render :partial => 'preview_assessment'

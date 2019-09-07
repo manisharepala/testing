@@ -2,6 +2,14 @@ class SectionsController < ApplicationController
   skip_before_action :authenticate_user!     #, only: [:show, :index]
   before_action :set_section, only: [:section_show, :section_edit, :section_update]
 
+  def new_section
+
+  end
+
+  def create
+
+  end
+
   def get_quiz_sections
     quiz = Quiz.find(params[:id])
     @sections = QuizSection.where(:id.in=>quiz.quiz_section_ids)

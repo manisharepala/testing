@@ -1,0 +1,7 @@
+%td
+  .nested-fields
+    = f.text_field :name,class:"form-first-name ",style: "width: 180px;",placeholder:"Type Section name ..."
+    %br
+    = f.text_field :instructions,class:"form-last-name ",style: "width: 180px;",placeholder:"Add instructions if any ..."
+    %br
+    = link_to_remove_association "remove task", f

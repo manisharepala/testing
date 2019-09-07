@@ -1,0 +1,36 @@
+.container{style:'margin-top:6%;'}
+  = simple_form_for :publish,:html => { :class => :form }, :url => {:controller=>"quizzes", :action => "publish",:id=>@quiz.id } do |f|
+    =f.label "Publish assessment as:"
+    =f.text_field :quiz_type,class:'form-control'
+    =f.label "Password"
+    =f.text_field :password,class:'form-control'
+    =f.label "Shuffle questions"
+    =f.select :shuffle_questions,options_for_select(["No","Yes"]),{style:"width: 220px; padding:7px"},id:"shuffle_questions", class: 'form-control form-control-lg'
+    =f.label "Shuffle options"
+    =f.select :shuffle_options,options_for_select(["No","Yes"]),{style:"width: 220px; padding:7px"},id:"shuffle_options", class: 'form-control form-control-lg'
+    =f.label "Pause"
+    =f.select :pause,options_for_select(["No","Yes"]),{style:"width: 220px; padding:7px"},id:"pause", class: 'form-control form-control-lg'
+    =f.label "Time open"
+    =f.text_field :time_open,class:'form-control',:id=>"time_open"
+    =f.label "Time close"
+    =f.text_field :time_close,class:'form-control',:id=>"time_close"
+    =f.label "Show score after"
+    =f.select :show_score_after,options_for_select(["No","Yes"]),{style:"width: 220px; padding:7px"},id:"show_score_after", class: 'form-control form-control-lg'
+    =f.label "Show answers after"
+    =f.select :show_answers_after,options_for_select(["No","Yes"]),{style:"width: 220px; padding:7px"},id:"show_answers_after", class: 'form-control form-control-lg'
+    =f.label "Max no of attempts"
+    =f.text_field :max_no_of_attempts,class: 'form-control'
+    =f.label "Message subject"
+    =f.text_field :message_subject,:placeholder=>"*Type message subject",:id=>"message_subject",class: 'form-control'
+    =f.label "Message"
+    =f.text_field :message_body,:placeholder=>"*Type message",:id=>"message_body",class: 'form-control'
+    %br
+    =f.text_field :quiz_id,value:@quiz.id,class: 'form-control'
+    =f.submit "Publish"
+:javascript
+  $( "#time_open" ).datetimepicker({
+        format:'DD/MM/YYYY hh:mm A'
+      });
+  $( "#time_close" ).datetimepicker({
+        format:'DD/MM/YYYY hh:mm A'
+      });

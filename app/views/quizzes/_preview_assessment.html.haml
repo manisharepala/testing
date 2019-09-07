@@ -1,0 +1,38 @@
+-if ((@quiz.quiz_section_ids.empty?) && (@quiz.question_ids.empty?)) || ((@quiz.quiz_section_ids.present?) && (@quiz.quiz_section_ids.map{|qs_id| QuizSection.find(qs_id).question_ids}.empty?))
+  #download_options
+    Add Questions By Importing Or Creating To The Assessment :
+    = @quiz.quiz_language_specific_datas.where(language:Language::ENGLISH)[0].name
+    %br
+    %br
+    .goto{style:"float:left;"}
+      = link_to "Edit Assessment", assessment_quiz_add_questions_path(id:@quiz), :class=>"utility_button previous-btn"
+- else
+  #download_options{style:"position:relative;"}
+    %center
+      %div
+        %i
+          Download as
+      %br
+      %br
+      = link_to "&nbsp;  Assessment PDF".html_safe, assessment_quizzes_download_pdf_path(id:@quiz.id,:format=>:pdf), :class=>"btn btn-default"
+      = link_to "&nbsp;  Assessment key PDF".html_safe, assessment_quizzes_download_pdf_path(id:@quiz.id,:format=>:pdf, "key" => true), :class=>"btn btn-default"
+
+    .goto{style:"position:absolute; top: 60px"}
+      = link_to "Edit Assessment", assessment_quiz_add_questions_path(id:@quiz), :class=>"btn btn-default"
+    - if !@quiz.question_ids.empty?
+      .goto{style:"position:absolute; top: 60px; left:95%;"}
+        = link_to "Publish", "publish(id:@quiz)", :class=>"btn btn-default"
+    - elsif !@quiz.quiz_section_ids.map{|qs_id| QuizSection.find(qs_id).question_ids}.flatten.empty?
+      .goto{style:"position:absolute; top: 60px; left:95%;"}
+        = link_to "Publish", "publish?id="+@quiz.id, :class=>"btn btn-default"
+  %br
+  %br
+  %br
+  .preview_area{style:"margin:auto; width:auto;background:#f9f9f9;"}
+    %br
+    %h2{style:"text-align:center"} Preview
+    .note{style:"width: 600px;margin:auto;"}
+      Note:
+      %p
+        Page breaks are not displayed in the preview. Please download PDF to view the complete pdf.
+    .live_assessment_preview{style:"background-color:#fff;box-shadow: 3px 3px 20px #DDD; border: 1px solid #ccc;padding:5%;width: 600px;margin:auto;"}= render partial: 'assessment_pdf_template'

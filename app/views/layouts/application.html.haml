@@ -10,14 +10,22 @@
   %body
     %nav.navbar.navbar-inverse.navbar-fixed-top{style:'background-color:#000;'}
       .container-fluid.collapse_early
-        #myNavbar.collapse.navbar-collapse.lis{style:'padding-top:0.9%'}
+        %div.container-fluid
+          %div.navbar-header
+            %a{ :class=>"navbar-brand", :href=>"#"}Assessments
           %ul.nav.navbar-nav.navbar-right
-            %li
-              %a{:href => assessment_all_quizzes_path}All Assessments
-            %li
-              %a{:href => assessment_zip_upload_question_path}Upload Zip
-            %li
-              %a{:href => assessment_migrate_quiz_path}Migrate Quiz
+            %li.dropdown
+              %a.dropdown-toggle{"data-toggle" => "dropdown", href: "#"}
+                Assessments
+                %b.caret
+              %ul.dropdown-menu
+                %li
+                  %a{:href => assessment_all_quizzes_path}All Assessments
+                %li
+                  %a{:href => assessment_zip_upload_question_path}Upload Zip
+
+              %li
+                %a{:href => assessment_migrate_quiz_path}Migrate Quiz
     .container{style:'margin-top: 4%;margin-bottom: -3%;'}
       - flash.each do |name, msg|
         = content_tag :div, msg, class: "alert alert-info"

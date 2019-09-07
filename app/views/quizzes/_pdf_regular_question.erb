@@ -1,0 +1,12 @@
+<div class="nobreak">
+  <table >
+    <tbody>
+    <tr>
+      <td style="text-align: center; width:25px; vertical-align: top;"><%= i %>.&nbsp;</td>
+      <td style="text-align: left; width:650px;"><%= question.question_language_specific_datas.where(language:Language::ENGLISH)[0].question_text.force_encoding('utf-8').encode.html_safe %></td>
+      <td style="text-align: center;width:50px; vertical-align: top;"><%= question.default_mark%></td>
+    </tr>
+    </tbody>
+  </table>
+  <br/>
+</div>

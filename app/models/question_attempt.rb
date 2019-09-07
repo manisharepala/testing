@@ -8,6 +8,8 @@ class QuestionAttempt
   field :marks_scored, type: Float
   field :question_id, type: String
   field :attempt_type, type: String #attempted,skipped,un_attempted
+  field :quiz_section_id, type: String
+  field :quiz_section_name, type: String
 
   embeds_many :question_answer_attempts, cascade_callbacks: true
   embeds_many :question_fill_blank_attempts, cascade_callbacks: true

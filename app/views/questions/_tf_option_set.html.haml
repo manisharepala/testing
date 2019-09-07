@@ -1,0 +1,18 @@
+-obj=ObjectiveQuestion.new
+-2.times do
+  -obj.question_answers.build
+-obj.question_answers.each_with_index do |question_answer, i|
+  = f.simple_fields_for :question_answers_attributes, question_answer, index: i do |qa|
+    %tr
+      %td.text-center{style:"width:10%;"}
+        =qa.check_box :fraction, :checked => (question_answer.fraction == true) ? true : false, class: 'SmcqQuestions'
+      -if i==1
+        %td
+          =qa.cktext_area :answer_english, :class => "form-control", required:true, value: true, :ckeditor => { :height => 100 }
+      -else
+        %td
+          =qa.cktext_area :answer_english, :class => "form-control", required:true, value: false, :ckeditor => { :height => 100 }
+:javascript
+  $('.SmcqQuestions').on ('change',function () {
+   $('.SmcqQuestions').not(this).prop('checked', false);
+  });

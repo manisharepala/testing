@@ -1,0 +1,83 @@
+.question_container.basic_container.nested-fields{style:"width:100%"}
+  %br
+  %table.question_table{cellpadding:"0", cellspacing:"0",  style:"padding-left: 8px; width:inherit;"}
+    /question data
+    %tr.question_type_select
+      %td
+        .fib_help_info{style:"float:left;display:none"}
+          Click on the &nbsp;
+          &nbsp; icon in text editor to add a blank
+        .styled-select{style: "width:200px"}
+          = f.select(:_type, options_for_select([['Select question type',"selectoptiontype"],['Single Multiple Choice',"SmcqQuestion"],['Multi Multiple Choice',"MmcqQuestion"],['True False',"TrueFalseQuestion"],['Fill in the Blanks',"FibQuestion"], ['AssertionReasonQuestion',"AssertionReasonQuestion"],['PassageQuestion',"PassageQuestion"],['Match the Following',"McqMatrixQuestion"]],0),{style:"float:right"},class:"question_selector form-control form-control-lg", :id => "qtype")
+        %br
+    %tr.ui-widget-content
+      %td.question_number{style: " padding: 20px; border: 1px solid #CCC;text-align: center; font-weight: bold;"}
+        1
+      %td{style: "border: 1px solid #CCC;  text-align: left;overflow:hidden;width:80%; max-width:700px"}
+        -if @question.question_language_specific_datas.blank?
+          -@question.question_language_specific_datas.build
+        - @question.question_language_specific_datas.each_with_index do |question_language_specific_data, i|
+          = f.simple_fields_for :question_language_specific_datas, question_language_specific_data do |qd|
+            - if(question_language_specific_data.language == Language::ENGLISH)
+              = qd.cktext_area :question_text, :class => "form-control", required:true, :class => "form-control", required:true, :ckeditor => {:toolbar =>    'Full'}, :ckeditor => { :height => 100 }
+              %td{style: " padding: 8px; border: 1px solid #CCC; text-align: center;"}
+                %center
+                  Marks
+                  %br
+                  = f.number_field :defaultmark, min:1,step: 0.01,value:1
+                  %br
+              %td{style: " margin: 0px; padding: 0px; text-align: center;background-color:white"}
+                %center{style: " padding: 5px; background-color:#f9f9f9; border: 1px solid #CCC;"}
+                  Negative Marks
+                  %br
+                  = f.number_field :penalty, min:0 ,step: 0.01,class:"penalty_marks"
+              %tr.extra_explanation{style:"display:none"}
+                %td{style: "border: 1px solid #CCC; text-align: center;"}
+                  Explanation:
+                %td{style: "border: 1px solid #CCC;  text-align: left;overflow:hidden;width:80%; max-width:700px"}
+                  = qd.cktext_area :general_feedback, :class => "form-control"
+              %tr
+                %td{:id => "opt",style: "border: 1px solid #CCC; text-align: center;"}
+                %td.options{:id => "option"}
+              %tr.add_hint{style:"display:show"}
+                %td{style: "border: 1px solid #CCC; text-align: center;"}
+                  Hint:
+                %td{colspan: "2", style: "padding: 8px; border: 1px solid #CCC; text-align: left;"}
+                  = qd.text_area :hint, placeholder:"Add hint here ...", class:"full_text"
+
+    %tr.extra_info
+      %td
+      %td
+        = link_to 'Reset',"#", class:"reset_question_feild"
+        = link_to 'Show Explanation',"#", class:"show_explanation_field"
+    %tr
+      %td{colspan: "3", style: "height: 4px; margin: 0px; padding: 0px; border: 0px; vertical-align: top;"}
+:javascript
+  $(function () {
+
+        $('#opt').html('#{escape_javascript( "Options:")}');
+        $("#qtype").change(function () {
+            qtype = $(this).val();
+            if(qtype == "MmcqQuestion"){
+              $('#opt').html('#{escape_javascript( "Options:")}');
+              $('#option').html('#{escape_javascript( render :partial => 'mcq_option_set', :locals => {f:f,que_id:@question.id })}');
+            }
+            else if(qtype == "SmcqQuestion"|| qtype == "AssertionReasonQuestion"|| qtype == "McqMatrixQuestion"){
+              $('#opt').html('#{escape_javascript( "Options:")}');
+              $('#option').html('#{escape_javascript( render :partial => 'smcq_option_set', :locals => {f:f})}');
+            }
+            else if(qtype == "TrueFalseQuestion"){
+              $('#opt').html('#{escape_javascript( "Options:")}');
+              $('#option').html('#{escape_javascript( render :partial => 'tf_option_set', locals:{f:f})}');
+            }
+            else if(qtype == "FibQuestion"){
+              $('#opt').html('#{escape_javascript( "Answer:")}');
+              $('#option').html('#{escape_javascript( render :partial => 'fib_option_set', locals:{f:f})}');
+            }
+            else if(qtype == "PassageQuestion"){
+              $('#opt').html('#{escape_javascript( "Answer:")}');
+              $('#option').html('#{escape_javascript( render :partial => 'passage_option_set', locals:{f:f,que:@question})}')
+            }
+
+        });
+    });

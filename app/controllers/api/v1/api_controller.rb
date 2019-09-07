@@ -31,6 +31,8 @@ class Api::V1::ApiController < ApplicationController
     concept_questions_map = {}
     tag_questions_map = {}
 
+    tags = params[:difficulty_tags].present?? params[:difficulty_tags] : params[:mark_tags]
+
     params[:chapters].each do |chapter_data|
       d = {}
       d['guid'] = chapter_data['guid']
@@ -38,7 +40,7 @@ class Api::V1::ApiController < ApplicationController
       d['concepts'] = []
       chapter_data['concepts'].each do |concept_data|
         tag_key = "cbse_#{params[:grade]['name']}_#{params[:subject]['name']}_#{chapter_data['name']}_#{concept_data['name']}"
-        tag_guid = 'abc'#TagsServer.get_tag_guid_by_key(tag_key)
+        tag_guid = TagsServer.get_tag_guid_by_key(tag_key)
         if tag_guid.present?
           d1 = {}
           d1['guid'] = concept_data['guid']
@@ -46,9 +48,9 @@ class Api::V1::ApiController < ApplicationController
           concept_questions_map[concept_data['guid']] ||= []
           d1['tags'] = []
 
-          params[:difficulty_tags].each do |difficulty_tag_data|
+          tags.each do |difficulty_tag_data|
             tag_questions_map[difficulty_tag_data['guid']] ||= []
-            questions = Question.where(:tag_ids.in=>[tag_guid,difficulty_tag_data['guid']])
+            questions = Question.all_in(:tag_ids.in=>[tag_guid,difficulty_tag_data['guid']])
             d1['tags'] << {'guid'=>difficulty_tag_data['guid'],'name'=>difficulty_tag_data['name'],'recommended_questions'=>0,'no_of_questions_available'=>questions.count}
 
             concept_questions_map[concept_data['guid']] << questions.map(&:guid)
@@ -62,7 +64,7 @@ class Api::V1::ApiController < ApplicationController
     end
 
     balanced_questions = {}
-    params[:difficulty_tags].each do |difficulty_tag_data|
+    tags.each do |difficulty_tag_data|
       balanced_questions[difficulty_tag_data['guid']] = difficulty_tag_data['required_questions']
     end
 
@@ -114,10 +116,10 @@ class Api::V1::ApiController < ApplicationController
     params[:chapters].each do |chapter_data|
       chapter_data['concepts'].each do |concept_data|
         tag_key = "cbse_#{params[:grade]['name']}_#{params[:subject]['name']}_#{chapter_data['name']}_#{concept_data['name']}"
-        tag_guid = 'abc'#TagsServer.get_tag_guid_by_key(tag_key)
+        tag_guid = TagsServer.get_tag_guid_by_key(tag_key)
         if tag_guid.present?
           concept_data['tags'].each do |difficulty_tag_data|
-            question_ids = Question.where(:tag_ids.in=>[tag_guid,difficulty_tag_data['guid']]).map(&:id)
+            question_ids = Question.all_in(:tag_ids.in=>[tag_guid,difficulty_tag_data['guid']]).map(&:id)
             q_ids = question_ids.sample(difficulty_tag_data['final_questions'])
             final_question_ids << q_ids
 
@@ -135,7 +137,7 @@ class Api::V1::ApiController < ApplicationController
       questions_data << q.as_json(with_key:true,with_language_support:false)
     end
 
-    data['question_data'] = questions_data
+    data['questions_data'] = questions_data
     data['question_replacement_map'] = question_replacement_map
 
     render json: data
@@ -146,18 +148,52 @@ class Api::V1::ApiController < ApplicationController
   end
 
   def generate_quiz
-    if params[:quiz_type].downcase == 'objective'
-      player = 'challenge test'
-    else
-      player = 'subjective'
-    end
-    total_marks = params[:question_ids].map{|id| Question.find(id).default_mark}.sum
+    data = {}
+    begin
+      if params[:quiz_type].downcase == 'objective'
+        player = 'challenge test'
+      else
+        player = 'subjective'
+      end
+      total_marks = params[:question_ids].map{|id| Question.find(id).default_mark}.sum
 
-    quiz = Quiz.create(quiz_language_specific_datas_attributes: [{name:params[:name],language: 'english'}],question_ids:params[:question_ids],type:player, player:player, total_marks:total_marks, total_time:params[:duration],created_by:current_user.id)
-    quiz.quiz_json = quiz.as_json(with_key:true,with_language_support:false)
-    quiz.final = true
-    quiz.tags_verified = true
-    quiz.save!
+      quiz = Quiz.create!(quiz_language_specific_datas_attributes: [{name:params[:name],language: 'english'}],question_ids:params[:question_ids],type:player, player:player, total_marks:total_marks, total_time:params[:duration],created_by:current_user.id)
+      quiz.quiz_json = quiz.as_json(with_key:true,with_language_support:false)
+      quiz.final = true
+      quiz.tags_verified = true
+      quiz.save!
+
+      if quiz.present?
+        data['quiz_id'] = quiz.id
+        data['success'] = true
+      else
+        data['success'] = false
+      end
+    rescue
+      data['success'] = false
+    end
+
+    render json: data
+  end
+
+  def publish_assessment
+    data = {}
+    begin
+      quiz_targeted_group_data = {password:params[:password], time_open:params[:time_open].to_i, time_close:params[:time_close].to_i, show_score_after:params[:show_score_after], show_answers_after:params[:show_answers_after], published_by:current_user.id, group_ids:params[:group_ids], user_ids:params[:user_ids], message_subject:params[:message_subject], message_body:params[:message_body],quiz_id:params[:quiz_id],shuffle_questions:params[:shuffle_questions],shuffle_options:params[:shuffle_options],pause:params[:pause],max_no_of_attempts:params[:max_no_of_attempts]}
+
+      qtg = QuizTargetedGroup.create!(quiz_targeted_group_data)
+
+      if qtg.present?
+        data['publish_id'] = qtg.id
+        data['success'] = true
+      else
+        data['success'] = false
+      end
+    rescue
+      data['success'] = false
+    end
+
+    render json: data
   end
 
   def assessments
@@ -197,7 +233,5 @@ class Api::V1::ApiController < ApplicationController
 
     render json: data
   end
-
-
 
 end
