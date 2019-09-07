@@ -273,4 +273,133 @@ class QuizAttemptData
   end
 
 
+  def self.get_user_attempt_analytics_v2(assessment,user_id)
+    quiz = Quiz.where(:guid=>assessment).last
+
+
+    sort_stage = {
+        "$sort" => { "score" => -1 }
+    }
+
+    user_match_stage = {
+        "$match" => {
+            "$and"=> [{ "quiz_guid" => assessment},
+                      {"user_id"=>user_id.to_s}
+            ]
+        }
+    }
+
+    topper_match_stage = {
+        "$match" => {
+            "$and"=> [{ "data.asset_download_id" => assessment}
+            ]
+        }
+    }
+
+    group_stage = {
+        "$group" => {
+            "_id" => {
+                "user_id" => "$user_id"
+            },
+            "score"=> {"$max"=>'$marks_scored'},
+            "attempted"=>{'$sum'=>{"$size"=>"$data.attempted"}},
+            "correct"=>{'$sum'=>{"$size"=>"$data.correct"}},
+            "incorrect"=>{'$sum'=>{"$size"=>"$data.incorrect"}},
+            "active_duration"=>{"$max"=>"$data.active_duration"}
+
+        }
+    }
+
+
+    avg_group_stage = {
+        "$group" => {
+            "_id" => {
+                "assessment" => "$data.asset_download_id"
+            },
+            "score"=> {"$avg"=>'$data.score'},
+            "attempted"=>{'$avg'=>{"$size"=>"$data.attempted"}},
+            "correct"=>{'$avg'=>{"$size"=>"$data.correct"}},
+            "incorrect"=>{'$avg'=>{"$size"=>"$data.incorrect"}},
+            "active_duration"=>{"$avg"=>"$data.active_duration"}
+
+        }
+    }
+
+    project_stage = {
+        "$project" => { "user_id"=> 1,"score"=>1,
+                        "attempted"=>1,
+                        "correct"=>1,
+                        "incorrect"=>1,
+                        "active_duration"=>1,
+                        "accuracy"=>{"$divide"=>["$correct","$attempted"]}
+
+        }
+    }
+
+    disk_stage = {
+        "allow_disk_use"=> true
+    }
+
+    limit_stage = {
+        "$limit" => 1
+    }
+
+    result = {}
+
+    begin
+      user_result = QuizAttemptData.collection.aggregate([user_match_stage,group_stage,project_stage,sort_stage,limit_stage],disk_stage)
+
+      user_data = JSON.load(user_result.to_json)
+    rescue
+      user_data = []
+    end
+
+    begin
+      topper_result = QuizAttemptData.collection.aggregate([topper_match_stage,group_stage,project_stage,sort_stage,limit_stage],disk_stage)
+      topper_data =  JSON.load(topper_result.to_json)
+    rescue
+      topper_data = []
+    end
+
+    begin
+      avg_result = QuizAttemptData.collection.aggregate([topper_match_stage,avg_group_stage,project_stage,sort_stage],disk_stage)
+
+      avg_data =  JSON.load(avg_result.to_json)
+
+    rescue
+      avg_data = []
+    end
+    #sections = QuizSection.where(:id.in=>quiz.quiz_section_ids).map{|i| i.as_json[:name]}
+
+
+    result["user"] = user_data.last
+    result["topper"] = topper_data.last
+    result["assessment_avg"] = avg_data.last
+    return result
+
+  end
+
+  def self.get_user_attempt_analytics_v1(assessment,user_id)
+
+
+    begin
+      user_result = QuizAttempt.collection.aggregate([{"$match"=>{"$and"=>[{"user_id"=>user_id},{"quiz_guid"=>assessment}]}},{"$unwind"=>"$quiz_section_attempts"},
+                                                          {"$group"=>{"_id"=>{"section"=>"$_id","subname"=>"$quiz_section_attempts.quiz_section_name"},"marks"=>{"$max"=>"$quiz_section_attempts.marks_scored"}}},
+                                                          {"$group"=>{"_id"=>{"subjectname"=>"$_id.subname"},"marksScored"=>{"$max"=>"$marks"}}}
+                                                         ])
+      user_data = JSON.load(user_result.to_json)
+    rescue
+      user_data = []
+    end
+
+    begin
+      topper_result = QuizAttempt.collection.aggregrate([])
+    rescue
+
+    end
+
+
+  end
+
+
 end
