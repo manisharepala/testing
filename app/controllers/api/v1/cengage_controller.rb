@@ -52,4 +52,10 @@ class Api::V1::CengageController < ApplicationController
     render json: data
   end
 
+  def generate_quiz_and_get_json
+    data = Quiz.find('5d6f7f6cfdbd261ee67d4975').quiz_json
+
+    render json: data
+  end
+
 end
