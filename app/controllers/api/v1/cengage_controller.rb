@@ -60,11 +60,11 @@ class Api::V1::CengageController < ApplicationController
     #quiz_type = 'concept_practice,challenge_test,jee_mains,jee_advanced'
 
     data = {}
-    difficulty_tags = {"Hard"=>"c001e8da-ec6b-4d55-9d91-5ecdea26caa1", "Medium"=>"20270e3a-cd9b-48b0-8742-6667d854c52f", "Easy"=>"a2db0be0-71f8-413a-9461-3f65c93d5f05"} #TagsServer.get_tags_by_name('difficulty_level').map{|a| {a['value']=>a['guid']}}.reduce(:merge) #{"Hard"=>"00be0a27-126d-4aca-905a-323b5f54553a", "Medium"=>"a945bd15-5066-43d8-b8d1-604409cefaad", "Easy"=>"90620785-a35b-492e-a67e-f441afc329ae"}
-    difficulty_levels = params[:difficulty_level].present?? params[:difficulty_level] : difficulty_tags.keys
+    difficulty_tags = {"Hard"=>"00be0a27-126d-4aca-905a-323b5f54553a", "Medium"=>"a945bd15-5066-43d8-b8d1-604409cefaad", "Easy"=>"90620785-a35b-492e-a67e-f441afc329ae"}#{"Hard"=>"c001e8da-ec6b-4d55-9d91-5ecdea26caa1", "Medium"=>"20270e3a-cd9b-48b0-8742-6667d854c52f", "Easy"=>"a2db0be0-71f8-413a-9461-3f65c93d5f05"} #TagsServer.get_tags_by_name('difficulty_level').map{|a| {a['value']=>a['guid']}}.reduce(:merge)
+    difficulty_levels = params['difficulty_level'].present?? params['difficulty_level'] : difficulty_tags.keys
 
-    if params[:quiz_type] == 'jee_mains'
-      subjects = params[:subjects].map{|a| a[:name]}.uniq#params[:subjects].map{|a| a['name']}.uniq
+    if params['quiz_type'] == 'jee_mains'
+      subjects = params['subjects'].map{|a| a['name']}.uniq#params[:subjects].map{|a| a['name']}.uniq
       subject_tags = {}
       question_sets = {}
       final_question_ids = {}
@@ -75,23 +75,23 @@ class Api::V1::CengageController < ApplicationController
         difficulty_levels.each do |difficulty_level|
           question_sets[subject_name][difficulty_level] = []
         end
-        subject_tags[subject_name] = params[:subjects].select{|a| a[:name]==subject_name}.map{|s| s[:guid]}#params[:subjects].select{|a| a['name']==subject_name}.map{|s| s['guid']}
+        subject_tags[subject_name] = params['subjects'].select{|a| a['name']==subject_name}.map{|s| s['guid']}#params[:subjects].select{|a| a['name']==subject_name}.map{|s| s['guid']}
       end
 
-      params[:chapters].each do |chapter_data|
+      params['chapters'].each do |chapter_data|
         if false #chapter_data['concepts'].present?
         else
           difficulty_levels.each do |difficulty_level|
-            all_difficulties_question_ids = Question.all_in(:tag_ids.in=>[difficulty_tags[difficulty_level],chapter_data[:guid]]).map(&:id)
+            all_difficulties_question_ids = Question.all_in(:tag_ids.in=>[difficulty_tags[difficulty_level],chapter_data['guid']]).map(&:id)
             subjects.each do |subject_name|
-              question_sets[subject_name][difficulty_level] << Question.where(id:all_difficulties_question_ids,:tag_ids.in=>subject_tags[subject_name]).map(&:id)
+              question_sets[subject_name][difficulty_level] << Question.where(:id.in=>all_difficulties_question_ids,:tag_ids.in=>subject_tags[subject_name]).map(&:id)
             end
           end
         end
       end
 
       subjects.each do |subject_name|
-        no_of_questions = params[:no_of_questions].to_i/3
+        no_of_questions = params['no_of_questions'].to_i/3
         pre_final_question_ids = []
 
         if difficulty_levels.count == 1
@@ -103,6 +103,7 @@ class Api::V1::CengageController < ApplicationController
         end
 
         question_sets[subject_name].values.each_with_index do |a_of_a,i|
+          a_of_a = a_of_a - [[]]
           question_ids = []
           select_questions_per_chapter = a_of_a.count/questions_count[i]
           a_of_a.each do |a|
@@ -118,12 +119,19 @@ class Api::V1::CengageController < ApplicationController
 
           pre_final_question_ids << question_ids
         end
-        final_question_ids[subject_name] = pre_final_question_ids.flatten
+
+        pre_final_question_ids = pre_final_question_ids.flatten
+        if pre_final_question_ids.count < no_of_questions
+          subject_level_all_questions = question_sets[subject_name].map{|a| a - [[]]}.flatten
+          pre_final_question_ids = pre_final_question_ids + (subject_level_all_questions - pre_final_question_ids).sample(no_of_questions - pre_final_question_ids.count)
+        end
+
+        final_question_ids[subject_name] = pre_final_question_ids
       end
 
-      total_marks = Question.where(id:final_question_ids.values.flatten).map{|q| q.default_mark}.sum
+      total_marks = Question.where(:id.in=>final_question_ids.values.flatten).map{|q| q.default_mark}.sum
 
-      quiz = Quiz.create!(quiz_language_specific_datas_attributes: [{name:params[:name],language: 'english'}],type:params[:quiz_type], player:params[:quiz_type], total_marks:total_marks, total_time:params[:duration],created_by:current_user.id)
+      quiz = Quiz.create!(quiz_language_specific_datas_attributes: [{name:params['name'],language: 'english'}],type:params['quiz_type'], player:params['quiz_type'], total_marks:total_marks, total_time:params['duration'],created_by:current_user.id)
 
       quiz_section_ids = []
       subjects.each do |subject_name|
@@ -146,7 +154,7 @@ class Api::V1::CengageController < ApplicationController
         question_sets[difficulty_level] = []
       end
 
-      params[:chapters].each do |chapter_data|
+      params['chapters'].each do |chapter_data|
         if false #chapter_data['concepts'].present?
         else
           difficulty_levels.each do |difficulty_level|
@@ -155,7 +163,7 @@ class Api::V1::CengageController < ApplicationController
         end
       end
 
-      no_of_questions = params[:no_of_questions].to_i
+      no_of_questions = params['no_of_questions'].to_i
       final_question_ids = []
 
       if difficulty_levels.count == 1
@@ -185,9 +193,14 @@ class Api::V1::CengageController < ApplicationController
 
       final_question_ids = final_question_ids.flatten
 
-      total_marks = Question.where(id:final_question_ids).map{|q| q.default_mark}.sum
+      if final_question_ids.count < no_of_questions
+        all_questions_from_all_subjects = question_sets.values.map{|a| a - [[]]}.flatten
+        final_question_ids = final_question_ids + (all_questions_from_all_subjects - final_question_ids).sample(no_of_questions - final_question_ids.count)
+      end
 
-      quiz = Quiz.create!(quiz_language_specific_datas_attributes: [{name:params[:name],language: 'english'}],question_ids:final_question_ids,type:params[:quiz_type], player:params[:quiz_type], total_marks:total_marks, total_time:params[:duration],created_by:current_user.id)
+      total_marks = Question.where(:id.in=>final_question_ids).map{|q| q.default_mark}.sum
+
+      quiz = Quiz.create!(quiz_language_specific_datas_attributes: [{name:params['name'],language: 'english'}],question_ids:final_question_ids,type:params['quiz_type'], player:params['quiz_type'], total_marks:total_marks, total_time:params['duration'],created_by:current_user.id)
       quiz.quiz_json = quiz.as_json(with_key:true,with_language_support:false)
       quiz.final = true
       quiz.tags_verified = true
