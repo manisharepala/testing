@@ -57,7 +57,7 @@ class Api::V1::CengageController < ApplicationController
     render json: data
   end
 
-  def generate_quiz_and_get_json
+  def generate_quiz
     #quiz_type = 'concept_practice,challenge_test,jee_mains,jee_advanced'
 
     # data = {}
@@ -197,7 +197,12 @@ class Api::V1::CengageController < ApplicationController
     #   data = quiz.quiz_json
     # end
 
-    data = Quiz.find("5d6f6b14fdbd2677dca48d92").quiz_json
+    data = {'success'=>true,'asset_download_id'=>'5d6f6b14fdbd2677dca48d92','assessment_guid'=>'5d6f6b14fdbd2677dca48d92','test_download_id'=>'5d6f6b14fdbd2677dca48d92'}
+    render json: data
+  end
+
+  def get_quiz_json
+    data = Quiz.find(params[:assessment_guid]).quiz_json
     render json: data
   end
 
