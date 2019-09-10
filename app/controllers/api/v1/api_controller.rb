@@ -151,7 +151,7 @@ class Api::V1::ApiController < ApplicationController
     data = {}
     begin
       if params[:quiz_type].downcase == 'objective'
-        player = 'challenge test'
+        player = 'challenge_test'
       else
         player = 'subjective'
       end
