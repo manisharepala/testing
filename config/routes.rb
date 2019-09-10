@@ -130,6 +130,9 @@ Rails.application.routes.draw do
         get '/grade_subjects_chapters_concepts' => 'api/v1/cengage#grade_subjects_chapters_concepts'
         post '/generate_quiz' => 'api/v1/cengage#generate_quiz'
         get '/get_quiz_json' => 'api/v1/cengage#get_quiz_json'
+
+        get '/get_question_json' => 'api/v1/cengage#get_question_json'
+        post '/publish_assessment' => 'api/v1/cengage#publish_assessment'
     end
   end
 
