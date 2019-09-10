@@ -391,6 +391,7 @@ class QuizzesController < ApplicationController
 
   def all_quizzes
     quizzes = Quiz.all.select{|q| (q.question_ids.count > 0 || q.quiz_section_ids.count > 0)}
+    # @qb_map = PublisherQuestionBank.all.map{|d| {d.id => d.name}}.reduce(:merge)
     if params[:search]
       @item = params[:search]["item"]
       logger.info @item
@@ -450,11 +451,11 @@ class QuizzesController < ApplicationController
   end
 
   def migrate_quiz
-
+    @publisher_question_bank_ids = PublisherQuestionBank.all
   end
 
   def process_migrate_quiz
-    response = Quiz.migrate_quizzes(params[:name])
+    response = Quiz.migrate_quizzes(params[:name],params[:publisher_question_bank_id])
     respond_to do |format|
       format.html { redirect_to assessment_migrate_quiz_path, notice: response}
     end
@@ -465,7 +466,7 @@ class QuizzesController < ApplicationController
     csv = CSV.parse(params[:file].read, :headers => true)
     csv.each do |row|
       begin
-        Quiz.migrate_quizzes(row[0])
+        Quiz.migrate_quizzes(row[0],params[:publisher_question_bank_id])
       rescue
         errors << row
       end

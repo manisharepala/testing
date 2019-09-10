@@ -11,6 +11,11 @@
       %br
       %div
         =form_tag(assessment_process_migrate_quiz_path,{:multipart=>true,:method=>:post}) do
+          =label_tag :file,"Choose Publisher Question Bank"
+          %br
+          = select_tag "publisher_question_bank_id", options_for_select(@publisher_question_bank_ids.map {|d| [d.name, d.id] }), class:'btn btn-default'
+          %br
+          %br
           %input{:name => "name", :type => "text", :placeholder => "assessment guid", style:'width:25%;'}
           %br
           %br
@@ -27,6 +32,11 @@
               -["guid"].each do |h|
                 %th=h
         %div{style:"background-color: #f9f9f9; width: 400px;"}
+        %br
+        =label_tag :file,"Choose Publisher Question Bank"
+        %br
+        = select_tag "publisher_question_bank_id", options_for_select(@publisher_question_bank_ids.map {|d| [d.name, d.id] }), class:'btn btn-default'
+        %br
         %br
         = file_field_tag "file"
         %br

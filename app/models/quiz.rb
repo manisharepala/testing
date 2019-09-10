@@ -218,7 +218,7 @@ class Quiz
     data
   end
 
-  def self.migrate_quizzes(guid)
+  def self.migrate_quizzes(guid,publisher_question_bank_id)
     require 'zip'
     zip_path = File.join(Rails.root.to_s,"public/quiz_zips/#{guid}") #"/home/inayath/edutor/assessment_app/public/quiz_zips/472508b1-6f7d-4f80-a1f0-b4ca4202be7b"
     tempfile = S3Server.download_quiz_zip(guid)
@@ -229,7 +229,6 @@ class Quiz
 
     images_dir = zip_path + "/" #zip_path + "/#{data['name']}_files"
     user_id = 1
-    publisher_question_bank_id = PublisherQuestionBank.first._id
     s3_path = 'question_images/'
 
     data.keys #[:name, :description, :instructions, :total_marks, :total_time, :player, :time_open, :time_close, :questions]
