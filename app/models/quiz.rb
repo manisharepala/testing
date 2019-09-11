@@ -218,10 +218,14 @@ class Quiz
     data
   end
 
-  def self.migrate_quizzes(guid,publisher_question_bank_id)
+  def self.migrate_quizzes(guid,publisher_question_bank_id,only_questions=true)
+    # Question.where(:publisher_question_bank_ids.in=>['5d775e46fdbd262e669612cb']).count
+    # publisher_question_bank_id = '5d775e46fdbd262e669612cb'
+
     require 'zip'
+    guid = SecureRandom.uuid
     zip_path = File.join(Rails.root.to_s,"public/quiz_zips/#{guid}") #"/home/inayath/edutor/assessment_app/public/quiz_zips/472508b1-6f7d-4f80-a1f0-b4ca4202be7b"
-    tempfile = S3Server.download_quiz_zip(guid)
+    tempfile = S3Server.download_quiz_zip(guid) #Rails.root.to_s + "/public/cengage_question_zips/2221"+number+".zip" #"/home/inayath/Downloads/222103.zip"
     FileUtils.mkdir_p (zip_path)
     Archive::Zip.extract(tempfile, zip_path)
 
@@ -230,6 +234,9 @@ class Quiz
     images_dir = zip_path + "/" #zip_path + "/#{data['name']}_files"
     user_id = 1
     s3_path = 'question_images/'
+    question_ids = []
+    quiz_section_ids = []
+    failed_q_ids = []
 
     data.keys #[:name, :description, :instructions, :total_marks, :total_time, :player, :time_open, :time_close, :questions]
 
@@ -240,26 +247,37 @@ class Quiz
     tags_not_present = tags_not_present.uniq
     question_wise_tags_not_present += tags_not_present_data[1]
 
-    question_ids = []
-    quiz_section_ids = []
-
     if (tags_not_present.count == 0) && (question_wise_tags_not_present.count == 0)
       skip_tags = false
     else
       skip_tags = true
     end
 
-    data['questions'].each do |ques_data|
+    if only_questions
+      data['questions'].each_with_index do |ques_data,i|
+        begin
           question = Question.create_question(Quiz.get_simple_question_hash(ques_data,user_id,publisher_question_bank_id,skip_tags))
           Quiz.update_image_path(question._id,s3_path)
           Quiz.copy_question_images(question._id,images_dir)
           question_ids << question._id.to_s
+        rescue
+          failed_q_ids << ques_data['id']
         end
+      end
+    else
+      data['questions'].each_with_index do |ques_data,i|
+        question = Question.create_question(Quiz.get_simple_question_hash(ques_data,user_id,publisher_question_bank_id,skip_tags))
+        Quiz.update_image_path(question._id,s3_path)
+        Quiz.copy_question_images(question._id,images_dir)
+        question_ids << question._id.to_s
+      end
+    end
 
     # data['quiz_sections'].each do |quiz_section|
     #   quiz_section = QuizSection.create(question_ids:question_ids_1, quiz_id: quiz.id.to_s,quiz_section_language_specific_datas_attributes: [{name:'Quiz Section 1 name in english',instructions:'quiz section 1 instructions in english', language: 'english'}, {name:'Quiz section 1 name in hindi',instructions:'quiz section 1 instructions in hindi', language: 'hindi'}])
     # end
 
+    if !only_questions
       quiz = Quiz.create(quiz_language_specific_datas_attributes: [{name:data['name'],description: data['description'],instructions:data['instructions'], language: 'english'}],question_ids:question_ids,quiz_section_ids:quiz_section_ids, type:data['player'], player:data['player'], total_marks:data['total_marks'], total_time:data['total_time'],guid:guid)
       quiz.guid = guid
       quiz.save!
@@ -270,6 +288,7 @@ class Quiz
       quiz.tags_verified = true if skip_tags == false
       quiz.save!
     end
+  end
 
   def Quiz.update_image_path(ques_id,s3_path)
     question = Question.find(ques_id)
