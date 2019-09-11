@@ -16,7 +16,7 @@ class Api::V1::CengageController < ApplicationController
   end
 
   def difficulty_tags
-    data = [{"guid"=>"00be0a27-126d-4aca-905a-323b5f54553a", "name"=>"Hard", "recommend_duration"=>1}, {"guid"=>"a945bd15-5066-43d8-b8d1-604409cefaad", "name"=>"Medium", "recommend_duration"=>1}, {"guid"=>"90620785-a35b-492e-a67e-f441afc329ae", "name"=>"Easy", "recommend_duration"=>1}]
+    data = [{"guid"=>"00be0a27-126d-4aca-905a-323b5f54553a", "name"=>"Hard"}, {"guid"=>"a945bd15-5066-43d8-b8d1-604409cefaad", "name"=>"Medium"}, {"guid"=>"90620785-a35b-492e-a67e-f441afc329ae", "name"=>"Easy"}]
     render json: data
   end
 
@@ -66,7 +66,7 @@ class Api::V1::CengageController < ApplicationController
 
     data = {}
     difficulty_tags = {"Hard"=>"00be0a27-126d-4aca-905a-323b5f54553a", "Medium"=>"a945bd15-5066-43d8-b8d1-604409cefaad", "Easy"=>"90620785-a35b-492e-a67e-f441afc329ae"}#{"Hard"=>"c001e8da-ec6b-4d55-9d91-5ecdea26caa1", "Medium"=>"20270e3a-cd9b-48b0-8742-6667d854c52f", "Easy"=>"a2db0be0-71f8-413a-9461-3f65c93d5f05"} #TagsServer.get_tags_by_name('difficulty_level').map{|a| {a['value']=>a['guid']}}.reduce(:merge)
-    difficulty_levels = params['difficulty_level'].present?? params['difficulty_level'] : difficulty_tags.keys
+    difficulty_levels = params['difficulty_level'].present?? params['difficulty_level'].map{|a| a['name']} : difficulty_tags.keys
 
     if params['quiz_type'] == 'jee_mains'
       subjects = params['subjects'].map{|a| a['name']}.uniq#params[:subjects].map{|a| a['name']}.uniq
