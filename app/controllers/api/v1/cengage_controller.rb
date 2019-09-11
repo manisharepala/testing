@@ -15,6 +15,11 @@ class Api::V1::CengageController < ApplicationController
     render json: data
   end
 
+  def difficulty_tags
+    data = [{"guid"=>"00be0a27-126d-4aca-905a-323b5f54553a", "name"=>"Hard", "recommend_duration"=>1}, {"guid"=>"a945bd15-5066-43d8-b8d1-604409cefaad", "name"=>"Medium", "recommend_duration"=>1}, {"guid"=>"90620785-a35b-492e-a67e-f441afc329ae", "name"=>"Easy", "recommend_duration"=>1}]
+    render json: data
+  end
+
   def grade_subjects_chapters_concepts
     # data = []
     #
