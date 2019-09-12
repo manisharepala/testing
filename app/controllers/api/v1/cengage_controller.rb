@@ -21,10 +21,15 @@ class Api::V1::CengageController < ApplicationController
     data = []
     attempted_quiz_ids = QuizAttemptData.where(user_id:current_user.id).map{|qad| qad.data['asset_download_id']}
 
-    all_quizzes = Quiz.where(:id.in=>(QuizTargetedGroup.where(:group_ids.in=>UserManagementServer.get_group_ids(current_user.id,current_user.token), is_cancelled:false) + QuizTargetedGroup.where(:user_ids.in=>[current_user.id], is_cancelled:false)).map(&:quiz_id))
+    qtgs = (QuizTargetedGroup.where(:group_ids.in=>UserManagementServer.get_group_ids(current_user.id,current_user.token), is_cancelled:false) + QuizTargetedGroup.where(:user_ids.in=>[current_user.id], is_cancelled:false))
 
-    all_quizzes.each do |quiz|
-      data << {'name'=>quiz.name,'id'=>quiz.id,'completed'=>(attempted_quiz_ids.include? quiz.id),'quiz_type'=>quiz.type,'player'=>quiz.player}
+    qtgs.each do |qtg|
+      quiz = Quiz.find(qtg.quiz_id)
+      data << {'name'=>quiz.name,'id'=>quiz.id,'completed'=>(attempted_quiz_ids.include? quiz.id),'quiz_type'=>quiz.type,'player'=>quiz.player,'time_open'=>qtg.time_open,'time_close'=>qtg.time_close}
+    end
+
+    if !data.present?
+      data = [{'name'=>'Quiz Name','id'=>'quiz_id','completed'=>false,'quiz_type'=>'jee_mains','player'=>'jee_mains','time_open'=>Time.now.to_i,'time_close'=>Time.now.to_i + 1.year.to_i}]
     end
 
     render json: data
