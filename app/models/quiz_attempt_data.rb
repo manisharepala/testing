@@ -14,8 +14,9 @@ class QuizAttemptData
   after_create :process_quiz_attempt_data
 
   def process_quiz_attempt_data
-    if [15664,19040].include? self.user_id.to_i
-      data = self.data
+    qad = self
+    if [15664,19040].include? qad.user_id.to_i
+      data = qad.data
       quiz = Quiz.where(guid:data['asset_download_id'])[0]
       quiz_json = quiz.quiz_json
       quiz_json_questions = quiz_json['questions']
@@ -30,12 +31,14 @@ class QuizAttemptData
         d['end_time'] = q_data['sessions'].last['end_time'].to_time.to_i
         d['time_taken'] = q_data['sessions'].map{|s| (s['end_time'].to_time.to_i - s['start_time'].to_time.to_i)}.sum
         d['correct'] = data['correct'].include? q_data['question_id']
-        d['marks_scored'] = (d['correct'] == true)? d['question_json']['marks']: d['question_json']['penalty']
         if data['attempted'].include? q_data['question_id']
+          d['marks_scored'] = (d['correct'] == true)? d['question_json']['marks']: d['question_json']['penalty']
           d['attempt_type'] = 'attempted'
         elsif data['unattempted'].include? q_data['question_id']
+          d['marks_scored'] = 0
           d['attempt_type'] = 'un_attempted'
         elsif data['skipped_questions'].include? q_data['question_id']
+          d['marks_scored'] = 0
           d['attempt_type'] = 'skipped'
         end
 
@@ -118,9 +121,9 @@ class QuizAttemptData
           d1['quiz_section_id'] = quiz_section_data['id']
           d1['quiz_section_name'] = quiz_section_data['name']
           d1['question_ids'] = quiz_section_data['question_ids']
-          d1['marks_scored'] = quiz_section_questions_data.map{|d| d['marks_scored']}.sum
-          d1['total_marks'] = quiz_section_questions_data.map{|d| d['question_json']['marks']}.sum
-          d1['active_duration'] = quiz_section_questions_data.map{|d| d['time_taken']}.sum
+          d1['marks_scored'] = quiz_section_questions_data.map{|d| d['marks_scored']}.sum rescue 0
+          d1['total_marks'] = quiz_section_questions_data.map{|d| d['question_json']['marks']}.sum rescue 0
+          d1['active_duration'] = quiz_section_questions_data.map{|d| d['time_taken']}.sum rescue 0
 
           d1['total'] = quiz_section_questions_data.count
           d1['attempted'] = quiz_section_questions_data.select{|d| d['attempt_type'] == 'attempted'}.count
@@ -140,8 +143,8 @@ class QuizAttemptData
       end
 
       data['active_duration'] = question_attempts_attributes_with_sections_data.map{|d| d['time_taken']}.sum
-      data['marks_scored'] = question_attempts_attributes_with_sections_data.map{|d| d['time_taken']}.sum
-      attempt_no = QuizAttempt.where(user_id:self.user_id.to_i,quiz_guid:data['asset_download_id']).count + 1
+      data['marks_scored'] = question_attempts_attributes_with_sections_data.map{|d| d['marks_scored']}.sum
+      attempt_no = QuizAttempt.where(user_id:qad.user_id.to_i,quiz_guid:data['asset_download_id']).count + 1
 
       total_count = question_attempts_attributes_with_sections_data.count
       attempted_count = question_attempts_attributes_with_sections_data.select{|d| d['attempt_type'] == 'attempted'}.count
@@ -150,7 +153,7 @@ class QuizAttemptData
       in_correct_count = attempted_count - correct_count
       skipped_count = question_attempts_attributes_with_sections_data.select{|d| d['attempt_type'] == 'skipped'}.count
 
-      quiz_attempt_data = {quiz_attempt_data_id:self.id.to_s,publish_id:data['publish_id'], user_id:self.user_id.to_i,book_guid:data['book_id'],quiz_guid:data['asset_download_id'],attempt_no:attempt_no,marks_scored:data['marks_scored'], total_marks:quiz.total_marks,start_time:data['start_time'].to_time.to_i,end_time:data['end_time'].to_time.to_i,active_duration:data['active_duration'],question_attempts_attributes:question_attempts_attributes_with_sections_data,quiz_section_attempts_attributes:quiz_section_attempts_attributes, total:total_count,attempted:attempted_count,un_attempted:un_attempted_count,correct:correct_count,in_correct:in_correct_count,skipped:skipped_count}
+      quiz_attempt_data = {quiz_attempt_data_id:qad.id.to_s,publish_id:data['publish_id'], user_id:qad.user_id.to_i,book_guid:data['book_id'],quiz_guid:data['asset_download_id'],attempt_no:attempt_no,marks_scored:data['marks_scored'], total_marks:quiz.total_marks,start_time:data['start_time'].to_time.to_i,end_time:data['end_time'].to_time.to_i,active_duration:data['active_duration'],question_attempts_attributes:question_attempts_attributes_with_sections_data,quiz_section_attempts_attributes:quiz_section_attempts_attributes, total:total_count,attempted:attempted_count,un_attempted:un_attempted_count,correct:correct_count,in_correct:in_correct_count,skipped:skipped_count}
       QuizAttempt.create(quiz_attempt_data)
     end
   end
