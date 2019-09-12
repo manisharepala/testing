@@ -8,10 +8,10 @@ class Api::V1::CengageController < ApplicationController
 
   def custom_tests
     data = []
-    attempted_quiz_ids = QuizAttemptData.where(user_id:current_user.id).map{|qad| qad.data['asset_download_id']}
+    attempted_quiz_ids = QuizAttemptData.where(user_id:current_user.id).map{|qad| qad.data['asset_download_id']}.uniq
 
     Quiz.where(created_by:current_user.id).each do |quiz|
-      data << {'name'=>quiz.name,'id'=>quiz.id,'completed'=>attempted_quiz_ids.include? quiz.id}
+      data << {'name'=>quiz.name,'id'=>quiz.id,'completed'=>(attempted_quiz_ids.include? quiz.id),'quiz_type'=>quiz.type,'player'=>quiz.player}
     end
 
     render json: data
@@ -24,7 +24,7 @@ class Api::V1::CengageController < ApplicationController
     all_quizzes = Quiz.where(:id.in=>(QuizTargetedGroup.where(:group_ids.in=>UserManagementServer.get_user_group_ids(current_user.id,current_user.token), is_cancelled:false) + QuizTargetedGroup.where(:user_ids.in=>[current_user.id], is_cancelled:false)).map(&:quiz_id))
 
     all_quizzes.each do |quiz|
-      data << {'name'=>quiz.name,'id'=>quiz.id,'completed'=>attempted_quiz_ids.include? quiz.id}
+      data << {'name'=>quiz.name,'id'=>quiz.id,'completed'=>(attempted_quiz_ids.include? quiz.id),'quiz_type'=>quiz.type,'player'=>quiz.player}
     end
 
     render json: data
