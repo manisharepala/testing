@@ -14,11 +14,12 @@ class QuizAttemptData
   after_create :process_quiz_attempt_data
 
   def process_quiz_attempt_data
-    QuizAttemptDataJob.set(wait: 2.minutes).perform_later
+    QuizAttemptDataJob.set(wait: 2.minutes).perform_later(self.id.to_s)
     # process_quiz_attempt_data_delayed_job(self).quiz_attempt_data_delay_later
   end
 
-  def process_quiz_attempt_data_delayed_job(qad)
+  def process_quiz_attempt_data_delayed_job
+    qad = self
     if true #[15664,19040].include? qad.user_id.to_i
       data = qad.data
       quiz = Quiz.where(guid:data['asset_download_id'])[0]
