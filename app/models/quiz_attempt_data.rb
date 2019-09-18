@@ -15,10 +15,17 @@ class QuizAttemptData
 
   def process_quiz_attempt_data
     QuizAttemptDataJob.set(wait: 2.minutes).perform_later(self.id.to_s)
-    # process_quiz_attempt_data_delayed_job(self).quiz_attempt_data_delay_later
   end
 
   def process_quiz_attempt_data_delayed_job
+    # failed_ids = []
+    # QuizAttemptData.all.each do |qad|
+    #   begin
+    #     qad.process_quiz_attempt_data
+    #   rescue
+    #     failed_ids << qad.id
+    #   end
+    # end
     qad = self
     if true #[15664,19040].include? qad.user_id.to_i
       data = qad.data
