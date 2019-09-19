@@ -6,6 +6,13 @@ class Api::V1::CengageController < ApplicationController
     render json: data
   end
 
+  def question_types
+    #Question.all.map(&:_type).uniq
+    data = ["SmcqQuestion", "MmcqQuestion", "FibQuestion", "TrueFalseQuestion", "SubjectiveQuestion", "PassageQuestion", "FibIntegerQuestion", "McqMatrixQuestion", "AssertionReasonQuestion"]
+
+    render json: data
+  end
+
   def custom_tests
     data = []
     attempted_quiz_ids = QuizAttemptData.where(user_id:current_user.id).map{|qad| qad.data['asset_download_id']}.uniq
