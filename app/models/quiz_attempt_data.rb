@@ -27,7 +27,7 @@ class QuizAttemptData
     #   end
     # end
     qad = self
-    if true #[15664,19040].include? qad.user_id.to_i
+    if ['jee_mains','challenge test'].include? qad.data['player_subtype'] #[15664,19040].include? qad.user_id.to_i
       data = qad.data
       quiz = Quiz.where(guid:data['asset_download_id'])[0]
       quiz_json = quiz.quiz_json
