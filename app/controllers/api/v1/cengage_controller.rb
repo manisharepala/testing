@@ -32,11 +32,11 @@ class Api::V1::CengageController < ApplicationController
 
     qtgs.each do |qtg|
       quiz = Quiz.find(qtg.quiz_id)
-      data << {'name'=>quiz.name,'id'=>quiz.id,'completed'=>(attempted_quiz_ids.include? quiz.id),'quiz_type'=>quiz.type,'player'=>quiz.player,'time_open'=>qtg.time_open,'time_close'=>qtg.time_close}
+      data << {'name'=>quiz.name,'published_id'=>qtg.id.to_s,'id'=>quiz.id,'completed'=>(attempted_quiz_ids.include? quiz.id),'quiz_type'=>quiz.type,'player'=>quiz.player,'time_open'=>qtg.time_open,'time_close'=>qtg.time_close}
     end
 
     if !data.present?
-      data = [{'name'=>'Quiz Name','id'=>'quiz_id','completed'=>false,'quiz_type'=>'jee_mains','player'=>'jee_mains','time_open'=>Time.now.to_i,'time_close'=>Time.now.to_i + 1.year.to_i}]
+      data = [{'name'=>'Quiz Name','published_id'=>'published_id','id'=>'quiz_id','completed'=>false,'quiz_type'=>'jee_mains','player'=>'jee_mains','time_open'=>Time.now.to_i,'time_close'=>Time.now.to_i + 1.year.to_i}]
     end
 
     render json: data
