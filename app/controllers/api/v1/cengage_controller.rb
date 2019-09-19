@@ -230,7 +230,7 @@ class Api::V1::CengageController < ApplicationController
 
       total_marks = Question.where(:id.in=>final_question_ids).map{|q| q.default_mark}.sum
 
-      quiz = Quiz.create!(quiz_language_specific_datas_attributes: [{name:params['name'],language: 'english'}],question_ids:final_question_ids,type:params['quiz_type'], player:params['quiz_type'], total_marks:total_marks, total_time:params['duration'],created_by:current_user.id)
+      quiz = Quiz.create!(quiz_language_specific_datas_attributes: [{name:params['name'],description:params['description'],instructions:params['instructions'],language: 'english'}],question_ids:final_question_ids,type:params['quiz_type'], player:params['quiz_type'], total_marks:total_marks, total_time:params['duration'],created_by:current_user.id)
       quiz.quiz_json = quiz.as_json(with_key:true,with_language_support:false)
       quiz.final = true
       quiz.tags_verified = true
