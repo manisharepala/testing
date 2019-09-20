@@ -23,6 +23,7 @@ class Quiz
   field :tags_verified, type: Boolean, default: false
   field :focus_area, type: BSON::Binary
   field :quiz_json, type: BSON::Binary
+  field :topic_details, type: BSON::Binary
 
   has_many :quiz_targeted_groups
   # has_many :quiz_sections
@@ -44,6 +45,59 @@ class Quiz
   # field :created_by, type: Integer
   # field :institution_id, type: Integer
   # field :center_id, type: Integer
+
+  def update_test_topic_details
+    quiz = self
+    data = {}
+    data['name'] = quiz.name
+    data['total_marks'] = quiz.total_marks
+    if quiz.quiz_section_ids.present?
+      data['total_questions'] = QuizSection.where(quiz_id:quiz.id).map{|a| a.question_ids}.flatten.count
+      data['sections'] = []
+
+      QuizSection.where(quiz_id:quiz.id).each do |qs|
+        qs_question_ids = qs.question_ids
+        topics_data = {}
+        questions_data = quiz.quiz_json['questions'].select{|a| qs_question_ids.include? a['id']}
+        questions_data.each do |q_d|
+          topic = (q_d['tags'].reduce(:merge))['concept']
+          if topic.present?
+            topics_data[topic] ||= {'name'=>topic,'total_marks'=>0,'total_questions'=>0}
+            topics_data[topic]['total_marks'] += q_d['marks']
+            topics_data[topic]['total_questions'] += 1
+          end
+        end
+
+        d1 = {}
+        d1['name'] = qs.name rescue ''
+        d1['total_marks'] = questions_data.map{|a| a['marks']}.sum
+        d1['total_questions'] = questions_data.count
+        d1['topics'] = topics_data.values
+
+        data['sections'] << d1
+      end
+
+      data['topics'] = data['sections'].map{|a| a['topics']}.flatten
+    else
+      data['total_questions'] = quiz.question_ids.count
+      data['sections'] = []
+
+      topics_data = {}
+      quiz.quiz_json['questions'].each do |q_d|
+        topic = (q_d['tags'].reduce(:merge))['concept']
+        if topic.present?
+          topics_data[topic] ||= {'name'=>topic,'total_marks'=>0,'total_questions'=>0}
+          topics_data[topic]['total_marks'] += q_d['marks']
+          topics_data[topic]['total_questions'] += 1
+        end
+      end
+
+      data['topics'] = topics_data.values
+    end
+
+    quiz.topic_details = data
+    quiz.save!
+  end
 
   def create_guid
     self.guid = SecureRandom.uuid
