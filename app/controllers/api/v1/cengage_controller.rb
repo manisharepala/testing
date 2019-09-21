@@ -18,7 +18,7 @@ class Api::V1::CengageController < ApplicationController
     attempted_quiz_ids = QuizAttemptData.where(user_id:current_user.id).map{|qad| qad.data['asset_download_id']}.uniq
 
     Quiz.where(created_by:current_user.id).each do |quiz|
-      data << {'name'=>quiz.name,'id'=>quiz.id,'completed'=>(attempted_quiz_ids.include? quiz.id),'quiz_type'=>quiz.type,'player'=>quiz.player,'duration'=>quiz.total_time,'total_marks'=>quiz.total_marks,'total_questions'=>quiz.total_questions,'created_at'=>quiz.created_at.to_i}
+      data << {'name'=>quiz.name,'id'=>quiz.id,'completed'=>(attempted_quiz_ids.include? quiz.id),'quiz_type'=>quiz.type,'player'=>quiz.player,'duration'=>quiz.total_time,'total_marks'=>quiz.get_total_marks,'total_questions'=>quiz.total_questions,'created_at'=>quiz.created_at.to_i}
     end
 
     render json: data

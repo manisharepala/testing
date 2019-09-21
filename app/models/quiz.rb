@@ -111,6 +111,10 @@ class Quiz
     quiz_section_ids.present? ? (QuizSection.where(quiz_id:id.to_s).map{|a| a.question_ids}.flatten.count) : question_ids.count
   end
 
+  def get_total_marks
+    quiz_section_ids.present? ? ((QuizSection.where(quiz_id:id.to_s).map{|a| a.question_ids}.flatten).map{|id| Question.find(id).default_mark}.sum) : total_marks
+  end
+
   def create_guid
     self.guid = SecureRandom.uuid
   end
