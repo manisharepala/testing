@@ -165,7 +165,21 @@ class QuizAttemptData
       in_correct_count = attempted_count - correct_count
       skipped_count = question_attempts_attributes_with_sections_data.select{|d| d['attempt_type'] == 'skipped'}.count
 
-      quiz_attempt_data = {quiz_attempt_data_id:qad.id.to_s,publish_id:data['publish_id'], user_id:qad.user_id.to_i,book_guid:data['book_id'],quiz_guid:data['asset_download_id'],attempt_no:attempt_no,marks_scored:data['marks_scored'], total_marks:quiz.total_marks,start_time:data['start_time'].to_time.to_i,end_time:data['end_time'].to_time.to_i,active_duration:data['active_duration'],question_attempts_attributes:question_attempts_attributes_with_sections_data,quiz_section_attempts_attributes:quiz_section_attempts_attributes, total:total_count,attempted:attempted_count,un_attempted:un_attempted_count,correct:correct_count,in_correct:in_correct_count,skipped:skipped_count}
+      if data['published_id'].present?
+        group_ids = QuizTargetedGroup.find(data['published_id']).group_ids
+        if group_ids.count == 1
+          group_id = group_ids[0]
+        else
+          group_ids.each do |id|
+            if UserManagementServer.get_students_in_group(id,'').map{|a| a['id']}.include? qad.user_id.to_i
+              group_id = id
+              break
+            end
+          end
+        end
+      end
+
+      quiz_attempt_data = {quiz_attempt_data_id:qad.id.to_s,published_id:data['published_id'], user_id:qad.user_id.to_i,group_id:(group_id rescue 0),book_guid:data['book_id'],quiz_guid:data['asset_download_id'],attempt_no:attempt_no,marks_scored:data['marks_scored'], total_marks:quiz.total_marks,start_time:data['start_time'].to_time.to_i,end_time:data['end_time'].to_time.to_i,active_duration:data['active_duration'],question_attempts_attributes:question_attempts_attributes_with_sections_data,quiz_section_attempts_attributes:quiz_section_attempts_attributes, total:total_count,attempted:attempted_count,un_attempted:un_attempted_count,correct:correct_count,in_correct:in_correct_count,skipped:skipped_count}
       QuizAttempt.create(quiz_attempt_data)
     end
   end
