@@ -112,7 +112,12 @@ class Quiz
   end
 
   def get_total_marks
-    quiz_section_ids.present? ? ((QuizSection.where(quiz_id:id.to_s).map{|a| a.question_ids}.flatten).map{|id| Question.find(id).default_mark}.sum) : total_marks
+    if quiz_section_ids.present?
+      all_question_ids = QuizSection.where(quiz_id:id.to_s).map{|a| a.question_ids}.flatten
+      return (all_question_ids.map{|id| Question.find(id).default_mark}.sum rescue all_question_ids.count)
+    else
+      return total_marks
+    end
   end
 
   def create_guid
