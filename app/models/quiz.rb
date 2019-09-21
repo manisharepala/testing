@@ -47,12 +47,20 @@ class Quiz
   # field :center_id, type: Integer
 
   def update_test_topic_details
+    # failed_ids = []
+    # Quiz.all.each do |quiz|
+    #   begin
+    #     quiz.update_test_topic_details
+    #   rescue
+    #     failed_ids << quiz.id
+    #   end
+    # end
     quiz = self
     data = {}
     data['name'] = quiz.name
     data['total_marks'] = quiz.total_marks
     if quiz.quiz_section_ids.present?
-      data['total_questions'] = QuizSection.where(quiz_id:quiz.id).map{|a| a.question_ids}.flatten.count
+      data['total_questions'] = quiz.total_questions
       data['sections'] = []
 
       QuizSection.where(quiz_id:quiz.id).each do |qs|
@@ -79,7 +87,7 @@ class Quiz
 
       data['topics'] = data['sections'].map{|a| a['topics']}.flatten
     else
-      data['total_questions'] = quiz.question_ids.count
+      data['total_questions'] = quiz.total_questions
       data['sections'] = []
 
       topics_data = {}
@@ -97,6 +105,10 @@ class Quiz
 
     quiz.topic_details = data
     quiz.save!
+  end
+
+  def total_questions
+    quiz_section_ids.present? ? (QuizSection.where(quiz_id:id.to_s).map{|a| a.question_ids}.flatten.count) : question_ids.count
   end
 
   def create_guid
