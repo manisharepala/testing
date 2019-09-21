@@ -30,6 +30,9 @@ class QuizAttemptData
     if ['jee_mains','challenge test'].include? qad.data['player_subtype'] #[15664,19040].include? qad.user_id.to_i
       data = qad.data
       quiz = Quiz.where(guid:data['asset_download_id'])[0]
+      if !quiz.present?
+        quiz = Quiz.find(data['asset_download_id'])
+      end
       quiz_json = quiz.quiz_json
       quiz_json_questions = quiz_json['questions']
       question_attempts_attributes = []
@@ -156,7 +159,7 @@ class QuizAttemptData
 
       data['active_duration'] = question_attempts_attributes_with_sections_data.map{|d| d['time_taken']}.sum
       data['marks_scored'] = question_attempts_attributes_with_sections_data.map{|d| d['marks_scored']}.sum
-      attempt_no = QuizAttempt.where(user_id:qad.user_id.to_i,quiz_guid:data['asset_download_id']).count + 1
+      attempt_no = QuizAttempt.where(user_id:qad.user_id.to_i,quiz_guid:quiz.guid).count + 1
 
       total_count = question_attempts_attributes_with_sections_data.count
       attempted_count = question_attempts_attributes_with_sections_data.select{|d| d['attempt_type'] == 'attempted'}.count
@@ -179,7 +182,7 @@ class QuizAttemptData
         end
       end
 
-      quiz_attempt_data = {quiz_attempt_data_id:qad.id.to_s,published_id:data['published_id'], user_id:qad.user_id.to_i,group_id:(group_id rescue 0),book_guid:data['book_id'],quiz_guid:data['asset_download_id'],attempt_no:attempt_no,marks_scored:data['marks_scored'], total_marks:quiz.total_marks,start_time:data['start_time'].to_time.to_i,end_time:data['end_time'].to_time.to_i,active_duration:data['active_duration'],question_attempts_attributes:question_attempts_attributes_with_sections_data,quiz_section_attempts_attributes:quiz_section_attempts_attributes, total:total_count,attempted:attempted_count,un_attempted:un_attempted_count,correct:correct_count,in_correct:in_correct_count,skipped:skipped_count}
+      quiz_attempt_data = {quiz_attempt_data_id:qad.id.to_s,published_id:data['published_id'], user_id:qad.user_id.to_i,group_id:(group_id rescue 0),book_guid:data['book_id'],quiz_guid:quiz.guid,attempt_no:attempt_no,marks_scored:data['marks_scored'], total_marks:quiz.total_marks,start_time:data['start_time'].to_time.to_i,end_time:data['end_time'].to_time.to_i,active_duration:data['active_duration'],question_attempts_attributes:question_attempts_attributes_with_sections_data,quiz_section_attempts_attributes:quiz_section_attempts_attributes, total:total_count,attempted:attempted_count,un_attempted:un_attempted_count,correct:correct_count,in_correct:in_correct_count,skipped:skipped_count}
       QuizAttempt.create(quiz_attempt_data)
     end
   end
