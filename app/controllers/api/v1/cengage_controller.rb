@@ -17,8 +17,17 @@ class Api::V1::CengageController < ApplicationController
     data = []
     attempted_quiz_ids = QuizAttemptData.where(user_id:current_user.id).map{|qad| qad.data['asset_download_id']}.uniq
 
-    Quiz.where(created_by:current_user.id).each do |quiz|
-      data << {'name'=>quiz.name,'id'=>quiz.id,'completed'=>(attempted_quiz_ids.include? quiz.id),'quiz_type'=>quiz.type,'player'=>quiz.player,'duration'=>quiz.total_time,'total_marks'=>quiz.get_total_marks,'total_questions'=>quiz.total_questions,'created_at'=>quiz.created_at.to_i}
+    is_student = UserManagementServer.get_user_details(current_user.id,current_user.token)['roles'].include? 'student'
+    quizzes = Quiz.where(created_by:current_user.id)
+    published_quiz_ids = QuizTargetedGroup.where(:quiz_id.in=>quizzes.map(&:id),published_by:current_user.id).map(&:quiz_id).uniq
+
+    quizzes.each do |quiz|
+      d = {'name'=>quiz.name,'id'=>quiz.id,'completed'=>(attempted_quiz_ids.include? quiz.id),'quiz_type'=>quiz.type,'player'=>quiz.player,'duration'=>quiz.total_time,'total_marks'=>quiz.get_total_marks,'total_questions'=>quiz.total_questions,'created_at'=>quiz.created_at.to_i}
+      if is_student
+        data << d
+      else
+        data << d.merge('is_published'=>(published_quiz_ids.include? quiz.id))
+      end
     end
 
     render json: data
