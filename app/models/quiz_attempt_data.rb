@@ -358,6 +358,7 @@ class QuizAttemptData
     marks[:quiz_section_details] = quiz_section_details
     quiz_section_data = get_quiz_section_data(assessment,user_id,quiz_attempt.quiz_attempt_data_id)
     marks[:quiz_section_data] = quiz_section_data
+    return marks
   end
 
   def self.get_user_quiz_attempt_rank(assessment,user_id)
