@@ -335,8 +335,8 @@ class QuizAttemptData
     @context = ExecJS.compile(@source)
     marks = {}
     @quiz = Quiz.where(:guid=>assessment).last
-    marks[:total_questions] = quiz.total_marks
-    marks[:total_time] = quiz.total_time
+    marks[:total_questions] = @quiz.total_marks
+    marks[:total_time] = @quiz.total_time
 
     quiz_attempt = QuizAttempt.where(:quiz_guid=>assessment.guid,:user_id=>user_id).last
     marks[:score] = quiz_attempt.marks_scored
