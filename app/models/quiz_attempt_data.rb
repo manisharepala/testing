@@ -340,8 +340,8 @@ class QuizAttemptData
 
     quiz_attempt = QuizAttempt.where(:quiz_guid=>assessment,:user_id=>user_id).last
     marks[:score] = quiz_attempt.marks_scored
-    marks[:accuracy] = (quiz_attempt.correct/quiz_attempt.total).to_f
-    marks[:attempt_rate] = (quiz_attempt.attempted/quiz_attempt.active_duration)
+    marks[:accuracy] = (quiz_attempt.correct.to_f/quiz_attempt.total.to_f).to_f
+    marks[:attempt_rate] = (quiz_attempt.attempted.to_f/quiz_attempt.active_duration.to_f)
     marks[:time] = quiz_attempt.active_duration
     marks[:marks_scored] = quiz_attempt.marks_scored
     marks[:correct] = quiz_attempt.correct
