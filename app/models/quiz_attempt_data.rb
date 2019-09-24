@@ -409,7 +409,7 @@ class QuizAttemptData
     @source = File.read(Rails.root.join("app/assets/javascripts/rank_array.js"))
     @context = ExecJS.compile(@source)
     section_data = []
-    @quiz.section_ids.each do |section_id|
+    @quiz.quiz_section_ids.each do |section_id|
 
       data = QuizAttempt.collection.aggregate([{"$unwind"=>"$quiz_section_attempts"},
                                                {"$match"=>{"$and"=>[{"quiz_section_attempts.quiz_section_id"=>section_id},{"quiz_guid"=>assessment}]}},
