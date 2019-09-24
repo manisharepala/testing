@@ -1,7 +1,8 @@
 class QuizAttempt
   include Mongoid::Document
   field :quiz_attempt_data_id, type: String
-  field :publish_id, type: Integer
+  field :published_id, type: String
+  field :group_id, type: Integer
   field :user_id, type: Integer
   field :book_guid, type: String
   field :quiz_guid, type: String
@@ -18,7 +19,6 @@ class QuizAttempt
   field :correct, type: Integer
   field :in_correct, type: Integer
   field :skipped, type: Integer
-
 
   embeds_many :question_attempts
   embeds_many :quiz_section_attempts

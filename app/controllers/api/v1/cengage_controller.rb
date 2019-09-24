@@ -6,12 +6,53 @@ class Api::V1::CengageController < ApplicationController
     render json: data
   end
 
-  def list_of_assessments
+  def question_types
+    #Question.all.map(&:_type).uniq
+    data = ["SmcqQuestion", "MmcqQuestion", "FibQuestion", "TrueFalseQuestion", "SubjectiveQuestion", "PassageQuestion", "FibIntegerQuestion", "McqMatrixQuestion", "AssertionReasonQuestion"]
+
+    render json: data
+  end
+
+  def custom_tests
     data = []
-    [1,2,3,4,5].each do |i|
-      data << {'name'=>"#{params[:assessment_type]}-Test-#{i}",'guid'=>"guid-#{i}"}
+    attempted_quiz_ids = QuizAttemptData.where(user_id:current_user.id).map{|qad| qad.data['asset_download_id']}.uniq
+
+    is_student = UserManagementServer.get_user_details(current_user.id,current_user.token)['roles'].include? 'student'
+    quizzes = Quiz.where(created_by:current_user.id)
+    published_quiz_ids = QuizTargetedGroup.where(:quiz_id.in=>quizzes.map(&:id),published_by:current_user.id).map(&:quiz_id).uniq
+
+    quizzes.each do |quiz|
+      d = {'name'=>quiz.name,'id'=>quiz.id,'completed'=>(attempted_quiz_ids.include? quiz.id),'quiz_type'=>quiz.type,'player'=>quiz.player,'duration'=>quiz.total_time,'total_marks'=>quiz.get_total_marks,'total_questions'=>quiz.total_questions,'created_at'=>quiz.created_at.to_i}
+      if is_student
+        data << d
+      else
+        data << d.merge('is_published'=>(published_quiz_ids.include? quiz.id))
+      end
     end
 
+    render json: data
+  end
+
+  def published_tests
+    data = []
+    attempted_quiz_ids = QuizAttemptData.where(user_id:current_user.id).map{|qad| qad.data['asset_download_id']}
+
+    qtgs = (QuizTargetedGroup.where(:group_ids.in=>UserManagementServer.get_group_ids(current_user.id,current_user.token), is_cancelled:false) + QuizTargetedGroup.where(:user_ids.in=>[current_user.id], is_cancelled:false))
+
+    qtgs.each do |qtg|
+      quiz = Quiz.find(qtg.quiz_id)
+      data << {'name'=>quiz.name,'published_id'=>qtg.id.to_s,'id'=>quiz.id,'completed'=>(attempted_quiz_ids.include? quiz.id),'quiz_type'=>quiz.type,'player'=>quiz.player,'time_open'=>qtg.time_open,'time_close'=>qtg.time_close}
+    end
+
+    if !data.present?
+      data = [{'name'=>'Quiz Name','published_id'=>'published_id','id'=>'quiz_id','completed'=>false,'quiz_type'=>'jee_mains','player'=>'jee_mains','time_open'=>Time.now.to_i,'time_close'=>Time.now.to_i + 1.year.to_i}]
+    end
+
+    render json: data
+  end
+
+  def difficulty_tags
+    data = [{"guid"=>"00be0a27-126d-4aca-905a-323b5f54553a", "name"=>"Hard"}, {"guid"=>"a945bd15-5066-43d8-b8d1-604409cefaad", "name"=>"Medium"}, {"guid"=>"90620785-a35b-492e-a67e-f441afc329ae", "name"=>"Easy"}]
     render json: data
   end
 
@@ -61,7 +102,7 @@ class Api::V1::CengageController < ApplicationController
 
     data = {}
     difficulty_tags = {"Hard"=>"00be0a27-126d-4aca-905a-323b5f54553a", "Medium"=>"a945bd15-5066-43d8-b8d1-604409cefaad", "Easy"=>"90620785-a35b-492e-a67e-f441afc329ae"}#{"Hard"=>"c001e8da-ec6b-4d55-9d91-5ecdea26caa1", "Medium"=>"20270e3a-cd9b-48b0-8742-6667d854c52f", "Easy"=>"a2db0be0-71f8-413a-9461-3f65c93d5f05"} #TagsServer.get_tags_by_name('difficulty_level').map{|a| {a['value']=>a['guid']}}.reduce(:merge)
-    difficulty_levels = params['difficulty_level'].present?? params['difficulty_level'] : difficulty_tags.keys
+    difficulty_levels = params['difficulty_level'].present?? params['difficulty_level'].map{|a| a['name']} : difficulty_tags.keys
 
     if params['quiz_type'] == 'jee_mains'
       subjects = params['subjects'].map{|a| a['name']}.uniq#params[:subjects].map{|a| a['name']}.uniq
@@ -121,9 +162,14 @@ class Api::V1::CengageController < ApplicationController
         end
 
         pre_final_question_ids = pre_final_question_ids.flatten
-        if pre_final_question_ids.count < no_of_questions
-          subject_level_all_questions = question_sets[subject_name].map{|a| a - [[]]}.flatten
+        if pre_final_question_ids.count < no_of_questions  #include any question from the subject and within chapters selected
+          subject_level_all_questions = question_sets[subject_name].values.map{|a| a - [[]]}.flatten
           pre_final_question_ids = pre_final_question_ids + (subject_level_all_questions - pre_final_question_ids).sample(no_of_questions - pre_final_question_ids.count)
+        end
+
+        if pre_final_question_ids.count < no_of_questions #include any question from the subject
+          global_subject_level_all_questions =  Question.where(:tag_ids.in=>subject_tags[subject_name]).map(&:id)
+          pre_final_question_ids = pre_final_question_ids + (global_subject_level_all_questions - pre_final_question_ids).sample(no_of_questions - pre_final_question_ids.count)
         end
 
         final_question_ids[subject_name] = pre_final_question_ids
@@ -131,7 +177,7 @@ class Api::V1::CengageController < ApplicationController
 
       total_marks = Question.where(:id.in=>final_question_ids.values.flatten).map{|q| q.default_mark}.sum
 
-      quiz = Quiz.create!(quiz_language_specific_datas_attributes: [{name:params['name'],language: 'english'}],type:params['quiz_type'], player:params['quiz_type'], total_marks:total_marks, total_time:params['duration'],created_by:current_user.id)
+      quiz = Quiz.create!(quiz_language_specific_datas_attributes: [{name:params['name'],description:params['description'],instructions:params['instructions'],language: 'english'}],type:params['quiz_type'], player:params['quiz_type'], total_marks:total_marks, total_time:params['duration'],created_by:current_user.id)
 
       quiz_section_ids = []
       subjects.each do |subject_name|
@@ -147,7 +193,7 @@ class Api::V1::CengageController < ApplicationController
       quiz.tags_verified = true
       quiz.save!
 
-      data = {'success'=>true,'asset_download_id'=>quiz.id,'assessment_guid'=>quiz.id,'test_download_id'=>quiz.id}
+      data = {'success'=>true,'asset_download_id'=>quiz.guid,'assessment_guid'=>quiz.id,'test_download_id'=>quiz.id}
     else
       question_sets = {}
       difficulty_levels.each do |difficulty_level|
@@ -200,7 +246,7 @@ class Api::V1::CengageController < ApplicationController
 
       total_marks = Question.where(:id.in=>final_question_ids).map{|q| q.default_mark}.sum
 
-      quiz = Quiz.create!(quiz_language_specific_datas_attributes: [{name:params['name'],language: 'english'}],question_ids:final_question_ids,type:params['quiz_type'], player:params['quiz_type'], total_marks:total_marks, total_time:params['duration'],created_by:current_user.id)
+      quiz = Quiz.create!(quiz_language_specific_datas_attributes: [{name:params['name'],description:params['description'],instructions:params['instructions'],language: 'english'}],question_ids:final_question_ids,type:params['quiz_type'], player:params['quiz_type'], total_marks:total_marks, total_time:params['duration'],created_by:current_user.id)
       quiz.quiz_json = quiz.as_json(with_key:true,with_language_support:false)
       quiz.final = true
       quiz.tags_verified = true

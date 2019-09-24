@@ -32,6 +32,9 @@ class QuizSection
     end
   end
 
+  def name
+    quiz_section_language_specific_datas.where(language:Language::ENGLISH)[0].name rescue 'quiz_section_name'
+  end
 
   def self.create_quiz_section(attrs)
     q = QuizSection.send(:new, attrs)

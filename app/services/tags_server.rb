@@ -5,8 +5,10 @@ class TagsServer
   # base_uri '13.233.76.145'
   FIND_TAG = '/tags/find_tag'
 
-  def self.get_tag_guid(name,value)
-    res = get(FIND_TAG, {query: {name: name, value:value}})
+  #tags_db_id Learnflix = '5c209b1e68ce596b0168bf33', Cengage = '5d7623c6fdbd263418f59abc'
+
+  def self.get_tag_guid(name,value,tags_db_id='5c209b1e68ce596b0168bf33')
+    res = get(FIND_TAG, {query: {name: name, value:value, tags_db_id:tags_db_id}})
     if res.code == 200
       (JSON.parse(res.body))['guid']
     else
@@ -14,8 +16,8 @@ class TagsServer
     end
   end
 
-  def self.get_tag_guid_by_key(key)
-    res = get(FIND_TAG, {query: {key:key}})
+  def self.get_tag_guid_by_key(key,tags_db_id='5c209b1e68ce596b0168bf33')
+    res = get(FIND_TAG, {query: {key:key, tags_db_id:tags_db_id}})
     if res.code == 200
       (JSON.parse(res.body))['guid']
     else
@@ -41,8 +43,8 @@ class TagsServer
     end
   end
 
-  def self.get_tags_by_name(name)
-    res = get('/tags/get_tags_by_name', {query: {name:name}})
+  def self.get_tags_by_name(name,tags_db_id='5c209b1e68ce596b0168bf33')
+    res = get('/tags/get_tags_by_name', {query: {name:name, tags_db_id:tags_db_id}})
     if res.code == 200
       JSON.parse(res.body)
     else
@@ -68,8 +70,8 @@ class TagsServer
     end
   end
 
-  def self.get_uniq_tag_values_with_guids
-    res = get('/tags/get_uniq_tag_values_with_guids')
+  def self.get_uniq_tag_values_with_guids(tags_db_id='5c209b1e68ce596b0168bf33')
+    res = get('/tags/get_uniq_tag_values_with_guids', {query: {tags_db_id:tags_db_id}})
     if res.code == 200
       JSON.parse(res.body)
     else

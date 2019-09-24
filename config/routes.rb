@@ -126,7 +126,10 @@ Rails.application.routes.draw do
   scope '/assessment' do
     scope '/apis' do
         get '/assessment_types' => 'api/v1/cengage#assessment_types'
-        get '/list_of_assessments' => 'api/v1/cengage#list_of_assessments'
+        get '/question_types' => 'api/v1/cengage#question_types'
+        get '/difficulty_tags' => 'api/v1/cengage#difficulty_tags'
+        get '/custom_tests' => 'api/v1/cengage#custom_tests'
+        get '/published_tests' => 'api/v1/cengage#published_tests'
         get '/grade_subjects_chapters_concepts' => 'api/v1/cengage#grade_subjects_chapters_concepts'
         post '/generate_quiz' => 'api/v1/cengage#generate_quiz'
         get '/get_quiz_json' => 'api/v1/cengage#get_quiz_json'
