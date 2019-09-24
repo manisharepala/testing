@@ -419,12 +419,12 @@ class QuizAttemptData
                                                                                              "correct"=>"$quiz_section_attempts.correct",
                                                                                              "quiz_attempt_data_id"=>"$quiz_attempt_data_id",
                                                                                              "incorrect"=>"$quiz_section_attempts.in_correct","unattempted"=>"$quiz_section_attempts.un_attempted",
-                                                                                             "skipped"=>"$quiz_section_attempts.skipped","active_duration"=>"$quiz_section_attempts.active_duration"}}}},
+                                                                                             "skipped"=>"$quiz_section_attempts.skipped","total"=>"$quiz_section_attempts.total","active_duration"=>"$quiz_section_attempts.active_duration"}}}},
                                                {"$addFields"=>{"users"=>@context.call("rankArray","$users","marks_scored","dense=false")}},
                                                {"$unwind"=>{"path"=>"$users"}},
                                                {"$project"=>{"quiz_attempt_data_id"=>"$users.quiz_attempt_data_id","user"=>"$users.user_id",
                                                              "sub"=>"$users.sub","marks"=>"$users.marks_scored","rank"=>"$users.rank","correct"=>"$users.correct",
-                                                             "incorrect"=>"$users.incorrect","unattempted"=>"$users.unattempted","skipped"=>"$users.skipped",
+                                                             "incorrect"=>"$users.incorrect","unattempted"=>"$users.unattempted","skipped"=>"$users.skipped","total_questions"=>"$users.total",
                                                              "active_duration"=>"$users.active_duration","_id"=>0}},{"$match"=>{"$and"=>[{"user"=>user_id},{"quiz_attempt_data_id"=>attempt_id}]}}])
 
       section_data << JSON.load(data.to_json)[0]

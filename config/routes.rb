@@ -4,6 +4,8 @@ Rails.application.routes.draw do
   mount Ckeditor::Engine => '/ckeditor'
   mount Sidekiq::Web, at: '/sidekiq'
 
+  get '/assessment/get_user_attempt_analytics_v1/:guid', to: 'quizzes#get_user_attempt_analytics_v1'
+
   get '/assessment/get_user_attempt_analytics/:guid', to: 'quizzes#get_user_attempt_analytics'
 
   get '/assessment/get_assessment_attempts/:book_id', to: 'quizzes#get_all_assessment_attempts'
