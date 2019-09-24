@@ -330,7 +330,7 @@ class QuizAttemptData
 
   end
 
-  def self.get_user_attempt_analytics_v2(assessment,user_id)
+  def self.get_user_attempt_analytics_v1(assessment,user_id)
     @source = File.read(Rails.root.join("app/assets/javascripts/rank_array.js"))
     @context = ExecJS.compile(@source)
     marks = {}
