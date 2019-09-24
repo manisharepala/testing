@@ -347,7 +347,7 @@ class QuizAttemptData
     marks[:correct] = quiz_attempt.correct
     marks[:in_correct] = quiz_attempt.in_correct
     marks[:un_attempted] = quiz_attempt.un_attempted
-    marks[:rank] = get_user_quiz_attempt_rank(assessment,user_id)
+    marks[:rank] = get_user_quiz_attempt_rank(assessment,user_id,quiz_attempt.quiz_attempt_data_id)
     min_max_average = get_quiz_max_min_details(assessment,user_id)
 
     marks[:min_marks] = min_max_average["min_marks"]
@@ -361,17 +361,17 @@ class QuizAttemptData
     return marks
   end
 
-  def self.get_user_quiz_attempt_rank(assessment,user_id)
+  def self.get_user_quiz_attempt_rank(assessment,user_id,attempt_id)
     @source = File.read(Rails.root.join("app/assets/javascripts/rank_array.js"))
     @context = ExecJS.compile(@source)
-    data = QuizAttempt.collection.aggregate([{"$project"=>{"user_id"=>1,"marks_scored"=>1,"quiz_guid"=>1}},
+    data = QuizAttempt.collection.aggregate([{"$project"=>{"user_id"=>1,"marks_scored"=>1,"quiz_guid"=>1,"quiz_attempt_data_id"=>1}},
                                              {"$match"=>{"quiz_guid"=>assessment}},
                                              {"$sort"=>{"marks_scored"=>-1}},
-                                             {"$group"=>{"_id"=>false, "users"=>{"$push"=>{"_id"=>"$_id","user_id"=>"$user_id","quiz"=>"$quiz_guid","marks_scored"=>"$marks_scored"}}}},
+                                             {"$group"=>{"_id"=>false, "users"=>{"$push"=>{"_id"=>"$_id","user_id"=>"$user_id","quiz"=>"$quiz_guid","marks_scored"=>"$marks_scored","quiz_attempt_data_id"=>"$quiz_attempt_data_id"}}}},
                                              {"$addFields"=>{"users"=>@context.call("rankArray","$users","marks_scored","dense=false")}},
                                              {"$unwind"=>{"path"=> "$users"}},
-                                             {"$project"=>{"user"=>"$users.user_id","rank"=>"$users.rank","_id"=>0}},
-                                             {"$match"=>{"user"=>user_id}}])
+                                             {"$project"=>{"user"=>"$users.user_id","rank"=>"$users.rank","_id"=>0,"quiz_attempt_data_id"=>"$users.quiz_attempt_data_id"}},
+                                             {"$match"=>{"$and"=>[{"user"=>user_id},{"quiz_attempt_data_id"=>attempt_id}]}}])
 
     return JSON.load(data.to_json)[0]["rank"]
 
@@ -422,7 +422,7 @@ class QuizAttemptData
                                                                                              "skipped"=>"$quiz_section_attempts.skipped","active_duration"=>"$quiz_section_attempts.active_duration"}}}},
                                                {"$addFields"=>{"users"=>@context.call("rankArray","$users","marks_scored","dense=false")}},
                                                {"$unwind"=>{"path"=>"$users"}},
-                                               {"$project"=>{"quiz_attempt_data_id"=>"$users.quiz_attempt_data_id","user"=>"$users.user_id","assessment_id"=>"$users.quiz",
+                                               {"$project"=>{"quiz_attempt_data_id"=>"$users.quiz_attempt_data_id","user"=>"$users.user_id",
                                                              "sub"=>"$users.sub","marks"=>"$users.marks_scored","rank"=>"$users.rank","correct"=>"$users.correct",
                                                              "incorrect"=>"$users.incorrect","unattempted"=>"$users.unattempted","skipped"=>"$users.skipped",
                                                              "active_duration"=>"$users.active_duration","_id"=>0}},{"$match"=>{"$and"=>[{"user"=>user_id},{"quiz_attempt_data_id"=>attempt_id}]}}])
