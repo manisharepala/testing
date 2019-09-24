@@ -361,6 +361,8 @@ class QuizAttemptData
   end
 
   def self.get_user_quiz_attempt_rank(assessment,user_id)
+    @source = File.read(Rails.root.join("app/assets/javascripts/rank_array.js"))
+    @context = ExecJS.compile(@source)
     data = QuizAttempt.collection.aggregate([{"$project"=>{"user_id"=>1,"marks_scored"=>1,"quiz_guid"=>1}},
                                              {"$match"=>{"quiz_guid"=>assessment}},
                                              {"$sort"=>{"marks_scored"=>-1}},
@@ -403,6 +405,8 @@ class QuizAttemptData
 
 
   def self.get_quiz_section_data(assessment,user_id,attempt_id)
+    @source = File.read(Rails.root.join("app/assets/javascripts/rank_array.js"))
+    @context = ExecJS.compile(@source)
     section_data = []
     @quiz.section_ids.each do |section_id|
 
