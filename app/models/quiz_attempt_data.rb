@@ -361,6 +361,72 @@ class QuizAttemptData
     return marks
   end
 
+
+  def self.get_user_quiz_attempt_topic_details(assessment,user_id)
+    topic_data = {}
+    @quiz = Quiz.where(:guid=>assessment).last
+    topic_details = @quiz.topic_deatils
+    quiz_attempt = QuizAttempt.where(:quiz_guid=>assessment,:user_id=>user_id).last
+
+    data = QuizAttempt.collection.aggregate([{"$project"=>{"user_id"=>1,"quiz_guid"=>1,"quiz_section_attempts"=>1,"quiz_attempt_data_id"=>1,"question_attempts"=>1}},
+                                             {"$match"=>{"$and"=>[{"user_id"=>user_id},{"quiz_attempt_data_id"=>quiz_attempt.quiz_attempt_data_id},{"quiz_guid"=>assessment}]}},
+                                             {"$group"=>{"_id"=>{"user_id"=>"$user_id","quiz_attempt_data_id"=>"$quiz_attempt_data_id","marks_scored"=>"$question_attempts.marks_scored",
+                                                                 "assessment_id"=>"$quiz_guid","question"=>"$question_attempts.question_json.id","corrects"=>"$question_attempts.correct"}}},
+                                             {"$project"=>{"user_id"=>"$_id.user_id","quiz_attempt_data_id"=>"$_id.quiz_attempt_data_id","marks_scored"=>"$_id.marks_scored",
+                                                           "assessment_id"=>"$_id.assessment_id","question_id"=>"$_id.question","corrects"=>"$_id.corrects","_id"=>0}}
+                                            ])
+
+    data = JSON.load(data.to_json)[0]
+    keys = data["question_id"]
+    corrects = data["corrects"]
+    marks = data["marks_scored"]
+    vals = corrects.zip(marks)
+    question_hash = Hash[keys.zip(vals)]
+    topic_details["sections"].each do |sec|
+      topic_data[sec["name"]] = []
+      sec["topics"].each do |topic|
+        topic[topic["name"]] = {}
+        topic[topic["name"]]["total_marks"] = topic["total_marks"]
+        topic[topic["name"]]["total_questions"] = topic["total_questions"]
+        marks = 0
+        topic["question_ids"].each do |qid|
+         marks = marks+question_hash[qid][1]
+        end
+        topic[topic["name"]]["marks_scored"] = marks
+        topic_data[sec["name"]] << {topic["name"]=>topic[topic["name"]]}
+      end
+    end
+
+
+   return topic_data
+
+  end
+
+
+  def self.get_quiz_question_attempts(assessment,user_id)
+    @quiz = Quiz.where(:guid=>assessment).last
+    topic_details = @quiz.topic_deatils
+    quiz_attempt = QuizAttempt.where(:quiz_guid=>assessment,:user_id=>user_id).last
+    sections_data = {}
+    QuizSection.where(:id.in=>@quiz.quiz_section_ids).map{|i| sections_data.merge!({i.id.to_s=>i.name})}
+    data= {}
+    data["sections"] = []
+    topic_details["sections"].each do |sec|
+      data["sections"] << {"name"=>sec["name"],"total_questions"=>sec["total_questions"]}
+    end
+    data["total_topics"] = topic_details["sections"].map{|i|i["topics"].count}.sum
+    data["correct"] = quiz_attempt.correct
+    data["in_correct"] = quiz_attempt.in_correct
+    data["un_attempted"] = quiz_attempt.un_attempted
+    data["questions"] = []
+    quiz_attempt.question_attempts.each do |qa|
+      data["questions"] << {"question_id"=>qa.question_id,"correct"=>qa.correct,"start_time"=>qa.start_time,"end_time"=>qa.end_time,"section_name"=>sections_data[qa.quiz_section_id]}
+    end
+
+    return data
+
+  end
+
   def self.get_user_quiz_attempt_rank(assessment,user_id,attempt_id)
     @source = File.read(Rails.root.join("app/assets/javascripts/rank_array.js"))
     @context = ExecJS.compile(@source)

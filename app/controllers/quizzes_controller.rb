@@ -953,6 +953,11 @@ class QuizzesController < ApplicationController
     render json: data
   end
 
+  def get_user_attempt_analytics_v1
+    data = QuizAttemptData.get_user_attempt_analytics_v1(params[:guid],current_user.id)
+    render json :data
+  end
+
   private
   def quiz_params
     params.require(:quiz).permit(:type,:_id,:quiz_section_ids,:final,quiz_language_specific_datas_attributes: [:name, :instructions, :description,:language])
