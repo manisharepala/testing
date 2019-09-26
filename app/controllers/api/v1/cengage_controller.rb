@@ -30,7 +30,7 @@ class Api::V1::CengageController < ApplicationController
       end
     end
 
-    render json: data.sort{|a| a['created_at']}.reverse
+    render json: (data.sort_by{|a| a['created_at']}).reverse
   end
 
   def published_tests
@@ -48,7 +48,7 @@ class Api::V1::CengageController < ApplicationController
       data = [{'name'=>'Quiz Name','published_id'=>'published_id','id'=>'quiz_id','completed'=>false,'quiz_type'=>'jee_mains','player'=>'jee_mains','time_open'=>Time.now.to_i,'time_close'=>Time.now.to_i + 1.year.to_i,'published_on'=>Time.now.to_i}]
     end
 
-    render json: data.sort{|a| a['published_on']}.reverse
+    render json: (data.sort_by{|a| a['published_on']}).reverse
   end
 
   def difficulty_tags
