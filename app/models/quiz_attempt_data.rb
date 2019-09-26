@@ -365,7 +365,7 @@ class QuizAttemptData
   def self.get_user_quiz_attempt_topic_details(assessment,user_id)
     topic_data = {}
     @quiz = Quiz.where(:guid=>assessment).last
-    topic_details = @quiz.topic_deatils
+    topic_details = @quiz.topic_details
     quiz_attempt = QuizAttempt.where(:quiz_guid=>assessment,:user_id=>user_id).last
 
     data = QuizAttempt.collection.aggregate([{"$project"=>{"user_id"=>1,"quiz_guid"=>1,"quiz_section_attempts"=>1,"quiz_attempt_data_id"=>1,"question_attempts"=>1}},
@@ -431,10 +431,39 @@ class QuizAttemptData
     assessments.each do |assessment|
       quiz = Quiz.where(:guid=>assessment)
       attempt = QuizAttempt.where(:quiz_guid=>assessment).last
-      data <<  {"score"=>attempt.marks_scored,"date"=>Time.at(attempt.end_time),"rank"=>get_user_quiz_attempt_rank(assessment,user_id,attempt.quiz_attempt_data_id),
-       "subject_data" => get_quiz_section_data(assessment,user_id,attempt.quiz_attempt_data_id).map{|i| {"sub"=>i["sub"],"rank"=>i["rank"],"marks"=>i["marks"],"total_questions"=>i["total_questions"]}}}
+      data <<  {"name"=>quiz.name,"score"=>attempt.marks_scored,"date"=>Time.at(attempt.end_time),"rank"=>get_user_quiz_attempt_rank(assessment,user_id,attempt.quiz_attempt_data_id),
+                "subject_data" => get_quiz_section_data(assessment,user_id,attempt.quiz_attempt_data_id).map{|i| {"sub"=>i["sub"],"rank"=>i["rank"],"marks"=>i["marks"],"total_questions"=>i["total_questions"]}}}
     end
-   return data
+    return data
+  end
+
+
+  def self.get_given_quiz_topic_analytics(assessments,user_id)
+    data = []
+    result = {}
+    assessments.each do |assessment|
+      quiz = Quiz.where(:guid=>assessment)
+      attempt = QuizAttempt.where(:quiz_guid=>assessment).last
+      data << get_user_quiz_attempt_topic_details(assessment,user_id)
+    end
+
+    tmp_array = []
+    data.each do |d|
+      d.keys.each do |sub|
+        d[sub].each do |tp|
+          if tmp_array.include? (sub+"_"+tp.keys[0]).to_s
+            result[tp.keys[0]]["count"] = result[tp.keys[0]]["count"].to_i+1
+            result[tp.keys[0]]["total_marks"] = result[tp.keys[0]]["total_marks"].to_f+tp[tp.keys[0]]["total_marks"].to_f
+            result[tp.keys[0]]["total_questions"] = result[tp.keys[0]]["total_questions"].to_i+tp[tp.keys[0]]["total_questions"].to_i
+            result[tp.keys[0]]["marks_scored"] = result[tp.keys[0]]["marks_scored"].to_f+tp[tp.keys[0]]["marks_scored"].to_f
+          else
+            tmp_array << (sub+"_"+tp.keys[0]).to_s
+            result = result.merge({tp.keys[0]=>(tp[tp.keys[0]].merge({"count"=>1,"subject"=>sub}))})
+          end
+        end
+      end
+    end
+    return result
   end
 
   def self.get_user_quiz_attempt_rank(assessment,user_id,attempt_id)
@@ -510,4 +539,5 @@ class QuizAttemptData
   end
 
 end
+
 
