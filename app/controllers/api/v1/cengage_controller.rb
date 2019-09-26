@@ -22,7 +22,7 @@ class Api::V1::CengageController < ApplicationController
     published_quiz_ids = QuizTargetedGroup.where(:quiz_id.in=>quizzes.map(&:id),published_by:current_user.id).map(&:quiz_id).uniq
 
     quizzes.each do |quiz|
-      d = {'name'=>quiz.name,'guid'=>quiz.guid,'completed'=>(attempted_quiz_ids.include? quiz.id),'quiz_type'=>quiz.type,'player'=>quiz.player,'duration'=>quiz.total_time,'total_marks'=>quiz.get_total_marks,'total_questions'=>quiz.total_questions,'created_at'=>quiz.created_at.to_i}
+      d = {'name'=>quiz.name,'id'=>quiz.id,'guid'=>quiz.guid,'completed'=>(attempted_quiz_ids.include? quiz.id),'quiz_type'=>quiz.type,'player'=>quiz.player,'duration'=>quiz.total_time,'total_marks'=>quiz.get_total_marks,'total_questions'=>quiz.total_questions,'created_at'=>quiz.created_at.to_i}
       if is_student
         data << d
       else
@@ -42,13 +42,13 @@ class Api::V1::CengageController < ApplicationController
     qtgs.each do |qtg|
       begin
         quiz = Quiz.find(qtg.quiz_id)
-        data << {'name'=>quiz.name,'published_id'=>qtg.id.to_s,'guid'=>quiz.guid,'completed'=>(attempted_quiz_ids.include? quiz.id),'quiz_type'=>quiz.type,'player'=>quiz.player,'time_open'=>qtg.time_open,'time_close'=>qtg.time_close,'published_on'=>qtg.published_on.to_i}
+        data << {'name'=>quiz.name,'published_id'=>qtg.id.to_s,'id'=>quiz.id,'guid'=>quiz.guid,'completed'=>(attempted_quiz_ids.include? quiz.id),'quiz_type'=>quiz.type,'player'=>quiz.player,'time_open'=>qtg.time_open,'time_close'=>qtg.time_close,'published_on'=>qtg.published_on.to_i}
       rescue
       end
     end
 
     if !data.present?
-      data = [{'name'=>'Quiz Name','published_id'=>'published_id','id'=>'quiz_id','completed'=>false,'quiz_type'=>'jee_mains','player'=>'jee_mains','time_open'=>Time.now.to_i,'time_close'=>Time.now.to_i + 1.year.to_i,'published_on'=>Time.now.to_i}]
+      data = [{'name'=>'Quiz Name','published_id'=>'published_id','id'=>'quiz_id','guid'=>'quiz_guid','completed'=>false,'quiz_type'=>'jee_mains','player'=>'jee_mains','time_open'=>Time.now.to_i,'time_close'=>Time.now.to_i + 1.year.to_i,'published_on'=>Time.now.to_i}]
     end
 
     render json: (data.sort_by{|a| a['published_on']}).reverse
