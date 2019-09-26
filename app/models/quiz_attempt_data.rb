@@ -390,7 +390,7 @@ class QuizAttemptData
         topic[topic["name"]]["total_questions"] = topic["total_questions"]
         marks = 0
         topic["question_ids"].each do |qid|
-         marks = marks+question_hash[qid][1]
+          marks = marks+question_hash[qid][1]
         end
         topic[topic["name"]]["marks_scored"] = marks
         topic_data[sec["name"]] << {topic["name"]=>topic[topic["name"]]}
@@ -398,7 +398,7 @@ class QuizAttemptData
     end
 
 
-   return topic_data
+    return topic_data
 
   end
 
@@ -424,7 +424,17 @@ class QuizAttemptData
     end
 
     return data
+  end
 
+  def self.get_given_quiz_analytics(assessments,user_id)
+    data = []
+    assessments.each do |assessment|
+      quiz = Quiz.where(:guid=>assessment)
+      attempt = QuizAttempt.where(:quiz_guid=>assessment).last
+      data <<  {"score"=>attempt.marks_scored,"date"=>Time.at(attempt.end_time),"rank"=>get_user_quiz_attempt_rank(assessment,user_id,attempt.quiz_attempt_data_id),
+       "subject_data" => get_quiz_section_data(assessment,user_id,attempt.quiz_attempt_data_id).map{|i| {"sub"=>i["sub"],"rank"=>i["rank"],"marks"=>i["marks"],"total_questions"=>i["total_questions"]}}}
+    end
+   return data
   end
 
   def self.get_user_quiz_attempt_rank(assessment,user_id,attempt_id)
@@ -475,6 +485,7 @@ class QuizAttemptData
     @source = File.read(Rails.root.join("app/assets/javascripts/rank_array.js"))
     @context = ExecJS.compile(@source)
     section_data = []
+    @quiz = Quiz.where(:guid=>assessment).last
     @quiz.quiz_section_ids.each do |section_id|
 
       data = QuizAttempt.collection.aggregate([{"$unwind"=>"$quiz_section_attempts"},
