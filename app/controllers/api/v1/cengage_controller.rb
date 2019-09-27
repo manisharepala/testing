@@ -22,11 +22,11 @@ class Api::V1::CengageController < ApplicationController
     published_quiz_ids = QuizTargetedGroup.where(:quiz_id.in=>quizzes.map(&:id),published_by:current_user.id).map(&:quiz_id).uniq
 
     quizzes.each do |quiz|
-      d = {'name'=>quiz.name,'id'=>quiz.id,'guid'=>quiz.guid,'completed'=>(attempted_quiz_ids.include? quiz.id),'quiz_type'=>quiz.type,'player'=>quiz.player,'duration'=>quiz.total_time,'total_marks'=>quiz.get_total_marks,'total_questions'=>quiz.total_questions,'created_at'=>quiz.created_at.to_i}
+      d = {'name'=>quiz.name,'id'=>quiz.id,'guid'=>quiz.guid,'completed'=>(attempted_quiz_ids.include? quiz.guid),'quiz_type'=>quiz.type,'player'=>quiz.player,'duration'=>quiz.total_time,'total_marks'=>quiz.get_total_marks,'total_questions'=>quiz.total_questions,'created_at'=>quiz.created_at.to_i}
       if is_student
         data << d
       else
-        data << d.merge('is_published'=>(published_quiz_ids.include? quiz.id))
+        data << d.merge('is_published'=>(published_quiz_ids.include? quiz.guid))
       end
     end
 
