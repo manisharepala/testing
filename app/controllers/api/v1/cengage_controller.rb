@@ -255,7 +255,7 @@ class Api::V1::CengageController < ApplicationController
       quiz.tags_verified = true
       quiz.save!
 
-      data = {'success'=>true,'asset_download_id'=>quiz.id,'assessment_guid'=>quiz.id,'test_download_id'=>quiz.id}
+      data = {'success'=>true,'asset_download_id'=>quiz.guid,'assessment_guid'=>quiz.id,'test_download_id'=>quiz.id}
     end
 
     render json: data
