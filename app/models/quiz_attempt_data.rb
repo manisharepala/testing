@@ -338,25 +338,27 @@ class QuizAttemptData
     marks[:total_questions] = @quiz.total_marks
     marks[:total_time] = @quiz.total_time
     quiz_attempt = QuizAttempt.where(:quiz_guid=>assessment,:user_id=>user_id).last
-    marks[:total_score] = @quiz.total_marks
-    marks[:accuracy] = (quiz_attempt.correct.to_f/quiz_attempt.total.to_f).to_f
-    marks[:attempt_rate] = (quiz_attempt.attempted.to_f/quiz_attempt.active_duration.to_f)
-    marks[:time] = quiz_attempt.active_duration
-    marks[:marks_scored] = quiz_attempt.marks_scored
-    marks[:correct] = quiz_attempt.correct
-    marks[:in_correct] = quiz_attempt.in_correct
-    marks[:un_attempted] = quiz_attempt.un_attempted
-    marks[:rank] = get_user_quiz_attempt_rank(assessment,user_id,quiz_attempt.quiz_attempt_data_id)
-    min_max_average = get_quiz_max_min_details(assessment,user_id)
+    if quiz_attempt.present?
+      marks[:total_score] = @quiz.total_marks
+      marks[:accuracy] = (quiz_attempt.correct.to_f/quiz_attempt.total.to_f).to_f
+      marks[:attempt_rate] = (quiz_attempt.attempted.to_f/quiz_attempt.active_duration.to_f)
+      marks[:time] = quiz_attempt.active_duration
+      marks[:marks_scored] = quiz_attempt.marks_scored
+      marks[:correct] = quiz_attempt.correct
+      marks[:in_correct] = quiz_attempt.in_correct
+      marks[:un_attempted] = quiz_attempt.un_attempted
+      marks[:rank] = get_user_quiz_attempt_rank(assessment,user_id,quiz_attempt.quiz_attempt_data_id)
+      min_max_average = get_quiz_max_min_details(assessment,user_id)
 
-    marks[:min_marks] = min_max_average["min_marks"]
-    marks[:max_marks] = min_max_average["max_marks"]
-    marks[:avg_marks] = min_max_average["avg_score"]
+      marks[:min_marks] = min_max_average["min_marks"]
+      marks[:max_marks] = min_max_average["max_marks"]
+      marks[:avg_marks] = min_max_average["avg_score"]
 
-    quiz_section_details = get_quiz_section_details(assessment,user_id)
-    marks[:quiz_section_details] = quiz_section_details
-    quiz_section_data = get_quiz_section_data(assessment,user_id,quiz_attempt.quiz_attempt_data_id)
-    marks[:quiz_section_data] = quiz_section_data
+      quiz_section_details = get_quiz_section_details(assessment,user_id)
+      marks[:quiz_section_details] = quiz_section_details
+      quiz_section_data = get_quiz_section_data(assessment,user_id,quiz_attempt.quiz_attempt_data_id)
+      marks[:quiz_section_data] = quiz_section_data
+    end
     return marks
   end
 
