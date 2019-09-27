@@ -294,13 +294,13 @@ class Api::V1::CengageController < ApplicationController
     data = []
     tags = params['difficulty_levels'].present?? params['difficulty_levels']:["00be0a27-126d-4aca-905a-323b5f54553a","a945bd15-5066-43d8-b8d1-604409cefaad","90620785-a35b-492e-a67e-f441afc329ae"]
     if params['concepts'].present?
-      tags = tagss + params['concepts']
+      tags = tags + params['concepts']
     elsif params['chapters'].present?
-      tags = tagss + params['chapters']
+      tags = tags + params['chapters']
     elsif params['subjects'].present?
-      tags = tagss + params['subjects']
+      tags = tags + params['subjects']
     elsif params['grades'].present?
-      tags = tagss + params['grades']
+      tags = tags + params['grades']
     end
 
     data = Kaminari.paginate_array(Question.where(:tag_ids.in=>tags,:_type.in=>params['question_types'])).page(params[:page]).per(10)
