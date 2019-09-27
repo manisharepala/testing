@@ -196,7 +196,7 @@ class Api::V1::CengageController < ApplicationController
       quiz.tags_verified = true
       quiz.save!
 
-      data = {'success'=>true,'asset_download_id'=>quiz.guid,'assessment_guid'=>quiz.id,'test_download_id'=>quiz.id}
+      data = {'success'=>true,'asset_download_id'=>quiz.guid,'assessment_guid'=>quiz.guid,'test_download_id'=>quiz.guid}
     else
       question_sets = {}
       difficulty_levels.each do |difficulty_level|
@@ -255,7 +255,7 @@ class Api::V1::CengageController < ApplicationController
       quiz.tags_verified = true
       quiz.save!
 
-      data = {'success'=>true,'asset_download_id'=>quiz.guid,'assessment_guid'=>quiz.id,'test_download_id'=>quiz.id}
+      data = {'success'=>true,'asset_download_id'=>quiz.guid,'assessment_guid'=>quiz.guid,'test_download_id'=>quiz.guid}
     end
 
     render json: data
@@ -280,6 +280,59 @@ class Api::V1::CengageController < ApplicationController
       if qtg.present?
         data['publish_id'] = qtg.id
         data['success'] = true
+      else
+        data['success'] = false
+      end
+    rescue
+      data['success'] = false
+    end
+
+    render json: data
+  end
+
+  def search_questions
+    data = []
+    tags = params['difficulty_levels'].present?? params['difficulty_levels']:["00be0a27-126d-4aca-905a-323b5f54553a","a945bd15-5066-43d8-b8d1-604409cefaad","90620785-a35b-492e-a67e-f441afc329ae"]
+    if params['concepts'].present?
+      tags = tagss + params['concepts']
+    elsif params['chapters'].present?
+      tags = tagss + params['chapters']
+    elsif params['subjects'].present?
+      tags = tagss + params['subjects']
+    elsif params['grades'].present?
+      tags = tagss + params['grades']
+    end
+
+    data = Kaminari.paginate_array(Question.where(:tag_ids.in=>tags,:_type.in=>params['question_types'])).page(params[:page]).per(10)
+
+    render json: data
+  end
+
+  def generate_quiz_by_question_ids
+    data = {}
+    begin
+      total_marks = params[:question_ids].map{|id| Question.find(id).default_mark}.sum
+
+      quiz = Quiz.create!(quiz_language_specific_datas_attributes: [{name:params['name'],description:params['description'],instructions:params['instructions'],language: 'english'}],question_ids:params[:question_ids],type:params[:quiz_type], player:params[:quiz_type], total_marks:total_marks, total_time:params[:duration],created_by:current_user.id)
+
+      if quiz.present?
+        if params['sections'].present?
+          section_ids = []
+          params['sections'].each do |section_data|
+            section_ids << QuizSection.create(question_ids:section_data['question_ids'], quiz_id: quiz.id.to_s,quiz_section_language_specific_datas_attributes: [{name:section_data['name'],description:section_data['description'],instructions:section_data['instructions'], language: 'english'}]).id.to_s
+          end
+
+          quiz.quiz_section_ids = section_ids
+          quiz.save!
+        end
+
+        quiz.total_marks = quiz.get_total_marks
+        quiz.quiz_json = quiz.as_json(with_key:true,with_language_support:false)
+        quiz.final = true
+        quiz.tags_verified = true
+        quiz.save!
+
+        data = {'success'=>true,'asset_download_id'=>quiz.guid,'assessment_guid'=>quiz.guid,'test_download_id'=>quiz.guid}
       else
         data['success'] = false
       end

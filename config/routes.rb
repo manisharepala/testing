@@ -109,7 +109,7 @@ Rails.application.routes.draw do
   get '/assessment/update_question_tags', to: 'tags#update_question_tags'
 
   post '/assessment/questions/preview_section', to: 'questions#preview_section'
-  
+
   scope '/assessment' do
     scope '/apis' do
       scope '/v1' do
@@ -135,17 +135,20 @@ Rails.application.routes.draw do
 
   scope '/assessment' do
     scope '/apis' do
-        get '/assessment_types' => 'api/v1/cengage#assessment_types'
-        get '/question_types' => 'api/v1/cengage#question_types'
-        get '/difficulty_tags' => 'api/v1/cengage#difficulty_tags'
-        get '/custom_tests' => 'api/v1/cengage#custom_tests'
-        get '/published_tests' => 'api/v1/cengage#published_tests'
-        get '/grade_subjects_chapters_concepts' => 'api/v1/cengage#grade_subjects_chapters_concepts'
-        post '/generate_quiz' => 'api/v1/cengage#generate_quiz'
-        get '/get_quiz_json' => 'api/v1/cengage#get_quiz_json'
+      get '/assessment_types' => 'api/v1/cengage#assessment_types'
+      get '/question_types' => 'api/v1/cengage#question_types'
+      get '/difficulty_tags' => 'api/v1/cengage#difficulty_tags'
+      get '/custom_tests' => 'api/v1/cengage#custom_tests'
+      get '/published_tests' => 'api/v1/cengage#published_tests'
+      get '/grade_subjects_chapters_concepts' => 'api/v1/cengage#grade_subjects_chapters_concepts'
+      post '/generate_quiz' => 'api/v1/cengage#generate_quiz'
+      get '/get_quiz_json' => 'api/v1/cengage#get_quiz_json'
 
-        get '/get_question_json' => 'api/v1/cengage#get_question_json'
-        post '/publish_assessment' => 'api/v1/cengage#publish_assessment'
+      get '/get_question_json' => 'api/v1/cengage#get_question_json'
+      post '/publish_assessment' => 'api/v1/cengage#publish_assessment'
+
+      get '/search_questions' => 'api/v1/cengage#search_questions'
+      get '/generate_quiz_by_question_ids' => 'api/v1/cengage#generate_quiz_by_question_ids'
     end
   end
 
