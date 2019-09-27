@@ -135,7 +135,7 @@ class Api::V1::CengageController < ApplicationController
       end
 
       subjects.each do |subject_name|
-        no_of_questions = params['no_of_questions'].to_i/3
+        no_of_questions = 30 #params['no_of_questions'].to_i/3
         pre_final_question_ids = []
 
         if difficulty_levels.count == 1
