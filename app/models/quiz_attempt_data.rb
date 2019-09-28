@@ -406,7 +406,7 @@ class QuizAttemptData
 
   def self.get_quiz_question_attempts(assessment,user_id)
     @quiz = Quiz.where(:guid=>assessment).last
-    topic_details = @quiz.topic_deatils
+    topic_details = @quiz.topic_details
     quiz_attempt = QuizAttempt.where(:quiz_guid=>assessment,:user_id=>user_id).last
     sections_data = {}
     QuizSection.where(:id.in=>@quiz.quiz_section_ids).map{|i| sections_data.merge!({i.id.to_s=>i.name})}
