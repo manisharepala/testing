@@ -42,7 +42,7 @@ class Api::V1::CengageController < ApplicationController
     qtgs.each do |qtg|
       begin
         quiz = Quiz.find(qtg.quiz_id)
-        data << {'name'=>quiz.name,'published_id'=>qtg.id.to_s,'id'=>quiz.id,'guid'=>quiz.guid,'completed'=>(attempted_quiz_ids.include? quiz.id),'quiz_type'=>quiz.type,'player'=>quiz.player,'time_open'=>qtg.time_open,'time_close'=>qtg.time_close,'published_on'=>qtg.published_on.to_i}
+        data << {'name'=>quiz.name,'published_id'=>qtg.id.to_s,'id'=>quiz.id,'guid'=>quiz.guid,'completed'=>(attempted_quiz_ids.include? quiz.guid),'quiz_type'=>quiz.type,'player'=>quiz.player,'time_open'=>qtg.time_open,'time_close'=>qtg.time_close,'published_on'=>qtg.published_on.to_i}
       rescue
       end
     end
