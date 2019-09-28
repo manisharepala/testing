@@ -1,6 +1,6 @@
 class QuizzesController < ApplicationController
 
-  skip_before_action :authenticate_user!, except:[:challenge_test_attempt_data, :get_all_quiz_attempt_datas, :get_quiz_attempt_data_by_id,:get_all_assessment_attempts,:get_user_attempt_analytics,:get_user_attempt_analytics_v1]
+  skip_before_action :authenticate_user!, except:[:challenge_test_attempt_data, :get_all_quiz_attempt_datas, :get_quiz_attempt_data_by_id,:get_all_assessment_attempts,:get_user_attempt_analytics,:get_user_attempt_analytics_v1,:get_user_quiz_attempt_topic_details,:get_quiz_question_attempts,:get_given_quiz_analytics,:get_given_quiz_topic_analytics]
 
   def get_quizzes_analytics_data
     assessment_ids = params[:assessment_ids]
