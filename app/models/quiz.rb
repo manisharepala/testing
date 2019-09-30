@@ -31,7 +31,7 @@ class Quiz
   #embeds_many :quiz_question_instances, as: :question_instances
 
   before_create :create_guid
-  after_create :update_test_topic_details
+  # after_create :update_test_topic_details
 
   # after_save :upload_zip
 
@@ -109,6 +109,10 @@ class Quiz
 
     quiz.topic_details = data
     quiz.save!
+  end
+
+  def all_question_ids
+    quiz_section_ids.present? ? (QuizSection.where(quiz_id:id.to_s).map{|a| a.question_ids}.flatten) : question_ids
   end
 
   def total_questions

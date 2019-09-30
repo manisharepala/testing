@@ -195,6 +195,7 @@ class Api::V1::CengageController < ApplicationController
       quiz.final = true
       quiz.tags_verified = true
       quiz.save!
+      quiz.update_test_topic_details
 
       data = {'success'=>true,'asset_download_id'=>quiz.guid,'assessment_guid'=>quiz.guid,'test_download_id'=>quiz.guid}
     else
@@ -254,6 +255,7 @@ class Api::V1::CengageController < ApplicationController
       quiz.final = true
       quiz.tags_verified = true
       quiz.save!
+      quiz.update_test_topic_details
 
       data = {'success'=>true,'asset_download_id'=>quiz.guid,'assessment_guid'=>quiz.guid,'test_download_id'=>quiz.guid}
     end
@@ -333,6 +335,7 @@ class Api::V1::CengageController < ApplicationController
         quiz.final = true
         quiz.tags_verified = true
         quiz.save!
+        quiz.update_test_topic_details
 
         data = {'success'=>true,'asset_download_id'=>quiz.guid,'assessment_guid'=>quiz.guid,'test_download_id'=>quiz.guid}
       else
