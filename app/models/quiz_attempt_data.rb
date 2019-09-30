@@ -27,7 +27,7 @@ class QuizAttemptData
     #   end
     # end
     qad = self
-    if ['jee_mains','challenge test'].include? qad.data['player_subtype'] #[15664,19040].include? qad.user_id.to_i
+    if ['jee_mains'].include? qad.data['player_subtype'] #[15664,19040].include? qad.user_id.to_i
       data = qad.data
       quiz = Quiz.where(guid:data['asset_download_id'])[0]
       if !quiz.present?
@@ -398,8 +398,17 @@ class QuizAttemptData
       end
     end
 
+    result = []
+    topic_data.keys.each do |k|
+      topic_details = []
+      topic_data[k].each do |t|
+        topic_details << {"name"=>t.keys.last}.merge!(t[t.keys.last])
+      end
+      result << {"name" => k, "topic_details" => topic_details }
+    end
 
-    return topic_data
+
+    return result
 
   end
 
