@@ -31,6 +31,7 @@ class Quiz
   #embeds_many :quiz_question_instances, as: :question_instances
 
   before_create :create_guid
+  after_create :update_test_topic_details
 
   # after_save :upload_zip
 

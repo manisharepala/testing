@@ -1,5 +1,7 @@
 class QuizAttempt
   include Mongoid::Document
+  include Mongoid::Timestamps
+
   field :quiz_attempt_data_id, type: String
   field :published_id, type: String
   field :group_id, type: Integer
