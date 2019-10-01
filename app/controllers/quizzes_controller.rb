@@ -1,6 +1,6 @@
 class QuizzesController < ApplicationController
 
-  skip_before_action :authenticate_user!, except:[:challenge_test_attempt_data, :get_all_quiz_attempt_datas, :get_quiz_attempt_data_by_id,:get_all_assessment_attempts,:get_user_attempt_analytics,:get_user_attempt_analytics_v1,:get_user_quiz_attempt_topic_details,:get_quiz_question_attempts,:get_given_quiz_analytics,:get_given_quiz_topic_analytics]
+  skip_before_action :authenticate_user!, except:[:challenge_test_attempt_data, :get_all_quiz_attempt_datas, :get_quiz_attempt_data_by_id,:get_all_assessment_attempts,:get_user_attempt_analytics,:get_user_attempt_analytics_v1,:get_user_quiz_attempt_topic_details,:get_quiz_question_attempts,:get_given_quiz_analytics,:get_given_quiz_topic_analytics,:get_group_assessment_analytics, :get_group_assessment_rank_data, :get_group_assessment_subject_details, :get_assessment_group_topic_details]
 
   def get_quizzes_analytics_data
     assessment_ids = params[:assessment_ids]
@@ -977,6 +977,35 @@ class QuizzesController < ApplicationController
     data = QuizAttemptData.get_given_quiz_topic_analytics(params[:assessment_guids],current_user.id)
     render json: data
   end
+
+  def get_group_assessment_analytics
+    publish_id = ""
+    group = ""
+    data = QuizAttemptData.get_group_assessment_analytics(params[:guid],publish_id,group)
+    render json: data
+  end
+
+  def get_group_assessment_rank_data
+    publish_id = ""
+    group = ""
+    data = QuizAttemptData.get_group_assessment_rank_data(params[:guid],publish_id,group)
+    render json: data
+  end
+
+  def get_group_assessment_subject_details
+    publish_id = ""
+    group = ""
+    data = QuizAttemptData.get_group_assessment_subject_details(params[:guid],publish_id,group)
+    render json: data
+  end
+
+  def get_assessment_group_topic_details
+    publish_id = ""
+    group = ""
+    data = QuizAttemptData.get_assessment_group_topic_details(params[:guid],publish_id,group)
+    render json: data
+  end
+
 
   private
   def quiz_params

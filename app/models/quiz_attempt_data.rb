@@ -516,7 +516,7 @@ class QuizAttemptData
                                                 {"$group"=>{"_id"=>{"assessment_id"=>"$quiz_guid","user_id"=>"$user_id","sub"=>"$quiz_section_attempts.quiz_section_name"},
                                                             "min_marks"=>{"$min"=>"$quiz_section_attempts.marks_scored"},"max_marks"=>{"$max"=>"$quiz_section_attempts.marks_scored"}, "avg_score"=>{"$avg"=>"$quiz_section_attempts.marks_scored"}}},
                                                 {"$project"=>{"subject"=>"$_id.sub","max_marks"=>"$max_marks","min_marks"=>"$min_marks","avg_score"=>"$avg_score","_id"=>0}}])
-    return JSON.load(data.to_json).reverse
+    return JSON.load(data.to_json).reverse!
   end
 
 
@@ -546,6 +546,233 @@ class QuizAttemptData
       section_data << JSON.load(data.to_json)[0]
     end
     return section_data
+  end
+
+  def get_group_assessment_analytics(assessment,publish_id,group)
+    result = []
+    data = {}
+    @quiz = Quiz.where(:guid=>assessment).last
+    data[:total_questions] = @quiz.total_questions
+    data[:total_marks] = @quiz.total_marks
+    data[:total_time] = @quiz.total_time
+    @group_data = []
+    @attempts = QuizAttempt.where(:quiz_guid=>assessment,:attempt_no=>1)
+    data["max_score"] = @attempts.max(:marks_scored)
+    data["avg_score"] = @attempts.avg(:marks_scored)
+    @topper_attempt = @attempts.where(:marks_scored=>data["max_score"]).first
+    topper_data = []
+    @quiz.quiz_section_ids.each do |section_id|
+      section_details = {}
+      section_attempt = @topper_attempt.quiz_section_attempts.where(:quiz_section_id=>section_id).last
+      section_details["name"] = section_attempt["quiz_section_name"]
+      section_details["topper_score"] = section_attempt["marks_scored"]
+      section_details["topper_attempt_rate"] = section_attempt["attempted"]/section_attempt["total"].to_f
+      section_details["topper_accuracy"] = section_attempt["correct"]/section_attempt["attempted"].to_f
+      section_details["topper_active_duration"] = section_attempt["active_duration"]
+      section_details["time_per_question"] = @topper_attempt.question_attempts.where("question_id"=>{"$in"=>section_attempt["question_ids"]}).avg(:time_taken)
+      topper_data << section_details
+    end
+
+    topper_data.reverse!
+
+    @topper_attempt.quiz_section_attempts.each do |section|
+    end
+
+
+    section_data = []
+
+    section_data =  QuizAttempt.collection.aggregate([{"$unwind"=>"$quiz_section_attempts"},
+                                                      {"$match"=>{"$and"=>[{"quiz_guid"=>assessment},{"attempt_no"=>1}]}},
+                                                      {"$group"=>{"_id"=>{"assessment_id"=>"$quiz_guid","sub"=>"$quiz_section_attempts.quiz_section_name","marks"=>"$total_marks","total_questions"=>"$quiz_section_attempts.total"},
+                                                                  "avg_score"=>{"$avg"=>"$quiz_section_attempts.marks_scored"},"avg_corrects"=>{"$avg"=>"$quiz_section_attempts.correct"},"avg_attempted"=>{"$avg"=>"$quiz_section_attempts.attempted"},"avg_duration"=>{"$avg"=>"$quiz_section_attempts.active_duration"},
+                                                      }},
+                                                      {"$project"=>{"subject"=>"$_id.sub",
+                                                                    "total"=>"$_id.marks","avg_score"=>"$avg_score","_id"=>0,"avg_attempt_rate"=>{"$divide"=>["$avg_attempted","$_id.total_questions"]},"avg_accuracy"=>{"$divide"=>["$avg_corrects","$avg_attempted"]},"average_duration"=>"$avg_duration"}}])
+
+    section_data = JSON.load(section_data.to_json)
+
+
+    time_question_data = QuizAttempt.collection.aggregate([{"$unwind"=>"$question_attempts"},
+                                                           {"$match"=>{"$and"=>[{"quiz_guid"=>assessment},{"attempt_no"=>1},{"question_attempts.attempt_type" => "attempted"},"question_attempts.question_id"=>{"$in"=>@quiz.question_ids}]}},
+                                                           {"$group"=>{"_id"=>{"question"=>"$question_attempts.question_id","section_id"=>"$question_attempts.quiz_section_name",
+                                                           },"avg"=>{"$avg"=>"$question_attempts.time_taken"}}},
+                                                           {"$project"=>{"_id"=>0,"subject"=>"$_id.section_id","avg_time"=>"$avg"}},
+                                                           {"$group"=>{"_id"=>{"subject"=>'$subject'},"avg"=>{"$avg"=>'$avg_time'}}},
+                                                           {"$project"=>{"_id"=>0,"subject"=>"$_id.subject","avg"=>"$avg"}}
+                                                          ])
+
+    time_question_data = JSON.load(time_question_data.to_json)
+
+    section_combine_data = []
+    section_data.each do |k|
+      time_question_data.each do |j|
+        if j["subject"] == k["subject"]
+          k = k.merge({"avg_time_question"=>j["avg"]})
+          section_combine_data << k
+        end
+      end
+    end
+    result << {"section_data"=>section_combine_data}
+    result  << {"quiz_details"=>data}
+    result << {"topper_data"=>topper_data}
+
+    return result
+
+  end
+
+  def get_group_assessment_rank_data(assessment,publish_id,group_id)
+    result = []
+    @source = File.read(Rails.root.join("app/assets/javascripts/rank_array.js"))
+    @context = ExecJS.compile(@source)
+    section_data = []
+    @quiz = Quiz.where(:guid=>assessment).last
+    @quiz.quiz_section_ids.each do |section_id|
+
+      data = QuizAttempt.collection.aggregate([{"$unwind"=>"$quiz_section_attempts"},
+                                               {"$match"=>{"$and"=>[{"quiz_section_attempts.quiz_section_id"=>section_id},{"quiz_guid"=>assessment},{"attempt_no"=>1}]}},
+                                               {"$project"=>{"user_id"=>1,"_id"=>0,"quiz_guid"=>1,"quiz_section_attempts"=>1,"quiz_attempt_data_id"=>1}}, {"$sort"=>{"quiz_section_attempts.marks_scored"=>-1}},
+                                               {"$group"=>{"_id"=>false, "users"=>{"$push"=>{"_id"=>"$_id", "user_id"=>"$user_id","quiz"=>"$quiz_guid",
+                                                                                             "sub"=>"$quiz_section_attempts.quiz_section_name","marks_scored"=>"$quiz_section_attempts.marks_scored",
+                                                                                             "correct"=>"$quiz_section_attempts.correct",
+                                                                                             "quiz_attempt_data_id"=>"$quiz_attempt_data_id",
+                                                                                             "incorrect"=>"$quiz_section_attempts.in_correct","unattempted"=>"$quiz_section_attempts.un_attempted",
+                                                                                             "attempted"=>"$quiz_section_attempts.attempted","total"=>"$quiz_section_attempts.total","active_duration"=>"$quiz_section_attempts.active_duration"}}}},
+                                               {"$addFields"=>{"users"=>@context.call("rankArray","$users","marks_scored","dense=false")}},
+                                               {"$unwind"=>{"path"=>"$users"}},
+                                               {"$project"=>{"user"=>"$users.user_id",
+                                                             "sub"=>"$users.sub","marks"=>"$users.marks_scored","rank"=>"$users.rank","correct"=>"$users.correct",
+                                                             "incorrect"=>"$users.incorrect","unattempted"=>"$users.unattempted","attempted"=>"$users.attempted","total_questions"=>"$users.total",
+                                                             "active_duration"=>"$users.active_duration","_id"=>0}}])
+
+      section_data << JSON.load(data.to_json)
+    end
+    ress = []
+    users  = section_data.map{|i| i.map{|j|  j["user"]}}.flatten.uniq
+    subjects = section_data.map{|i| i.map{|j|  j["sub"]}}.flatten.uniq
+    users.each do |u|
+      u_data = {}
+      u_data[u] = []
+      subjects.each do |s|
+        section_data.each do |sd|
+          sd.each do |d|
+            if d["user"] == u && d["sub"] == s
+              td = d
+              td.delete("user")
+              td =  td.merge({"attempt_rate"=>td["attempted"]/td["total_questions"].to_f})
+              td =  td.merge({"accuracy"=>td["correct"]/td["attempted"].to_f})
+              u_data[u] << td
+            end
+          end
+        end
+      end
+      ress << u_data
+    end
+    ress.each do |re|
+      re.keys.each do |k|
+        subject_details = []
+        subject_details << {"name"=>re.keys.last}.merge!({"subject_details"=>re[re.keys.last]})
+        result << subject_details
+      end
+    end
+    return result.flatten
+  end
+
+
+  def get_group_assessment_subject_details(assessment,publish_id,group)
+    user_data = QuizAttempt.collection.aggregate([
+                                                     {"$match"=>{"$and"=>[{"attempt_no"=>1},{"quiz_guid"=>assessment}]}},
+                                                     {"$group"=>{"_id"=>{"user"=>"$user_id","marks_scored"=>"$marks_scored"}}},
+                                                     {"$project"=>{"user_id"=>"$_id.user","total_marks_scored"=>"$_id.marks_scored","_id"=>0}}
+                                                 ])
+
+    user_data = JSON.load(user_data.to_json)
+    user_sec_data = QuizAttempt.collection.aggregate([{"$unwind"=>"$quiz_section_attempts"},
+                                                      {"$match"=>{"$and"=>[{"attempt_no"=>1},{"quiz_guid"=>assessment}]}},
+                                                      {"$group"=>{"_id"=>{"user"=>"$user_id","marks_scored"=>"$quiz_section_attempts.marks_scored","sub"=>"$quiz_section_attempts.quiz_section_name"}}},
+                                                      {"$project"=>{"user_id"=>"$_id.user","subject"=>"$_id.sub","marks_scored"=>"$_id.marks_scored","_id"=>0}},
+                                                      {"$sort"=>{"user_id"=>1}} ])
+
+    user_sec_data = JSON.load(user_sec_data.to_json)
+
+    users = user_data.map{|i| {i["user_id"]=>i["total_marks_scored"]}}.inject(&:merge)
+
+    ress = []
+    users.keys.each do |k|
+      uk = {}
+      uk[k] = []
+      user_sec_data.each do |ud|
+        if ud["user_id"] == k
+          uk[k] << ud
+        end
+        ress << uk
+      end
+    end
+
+    result = []
+
+    ress.uniq.each do |re|
+      re.keys.each do |k|
+        sub_details = []
+        re[k].each do |i|
+          i.delete("user_id")
+          sub_details << i
+        end
+        result << {"user"=>k,"subject_details"=>sub_details,"total_marks"=>users[k]}
+      end
+    end
+
+    return result
+
+  end
+
+  def get_assessment_group_topic_details(assessment,publish_id,group)
+    topic_data = {}
+    @quiz = Quiz.where(:guid=>assessment).last
+    topic_details = @quiz.topic_details
+    quiz_attempt = QuizAttempt.where(:quiz_guid=>assessment,:user_id=>user_id).last
+
+    data = QuizAttempt.collection.aggregate([{"$project"=>{"user_id"=>1,'attempt_no'=>1,"quiz_guid"=>1,"quiz_section_attempts"=>1,"quiz_attempt_data_id"=>1,"question_attempts"=>1}},
+                                             {"$match"=>{"$and"=>[{"attempt_no"=>1},{"quiz_guid"=>assessment}]}},
+                                             {"$group"=>{"_id"=>{"user_id"=>"$user_id","quiz_attempt_data_id"=>"$quiz_attempt_data_id","marks_scored"=>"$question_attempts.marks_scored",
+                                                                 "assessment_id"=>"$quiz_guid","question"=>"$question_attempts.question_json.id","corrects"=>"$question_attempts.correct"}}},
+                                             {"$project"=>{"user_id"=>"$_id.user_id","quiz_attempt_data_id"=>"$_id.quiz_attempt_data_id","marks_scored"=>"$_id.marks_scored",
+                                                           "assessment_id"=>"$_id.assessment_id","question_id"=>"$_id.question","corrects"=>"$_id.corrects","_id"=>0}}
+                                            ])
+
+    data = JSON.load(data.to_json)[0]
+    keys = data["question_id"]
+    corrects = data["corrects"]
+    marks = data["marks_scored"]
+    vals = corrects.zip(marks)
+    question_hash = Hash[keys.zip(vals)]
+    topic_details["sections"].each do |sec|
+      topic_data[sec["name"]] = []
+      sec["topics"].each do |topic|
+        topic[topic["name"]] = {}
+        topic[topic["name"]]["total_marks"] = topic["total_marks"]
+        topic[topic["name"]]["total_questions"] = topic["total_questions"]
+        marks = 0
+        topic["question_ids"].each do |qid|
+          marks = marks+question_hash[qid][1]
+        end
+        topic[topic["name"]]["marks_scored"] = marks
+        topic[topic["name"]]["avg_marks"] = marks.to_f/topic["total_marks"]
+        topic_data[sec["name"]] << {topic["name"]=>topic[topic["name"]]}
+      end
+    end
+
+    result = []
+    topic_data.keys.each do |k|
+      topic_details = []
+      topic_data[k].each do |t|
+        topic_details << {"name"=>t.keys.last}.merge!(t[t.keys.last])
+      end
+      result << {"name" => k, "topic_details" => topic_details }
+    end
+
+
+    return result
+
   end
 
 end
