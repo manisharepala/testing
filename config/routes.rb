@@ -9,20 +9,15 @@ Rails.application.routes.draw do
   get '/assessment/get_group_assessment_rank_data/:guid', to: 'quizzes#get_group_assessment_rank_data'
   get '/assessment/get_group_assessment_analytics/:guid',to: 'quizzes#get_group_assessment_analytics'
 
+  get '/assessment/get_user_quiz_attempt_topic_details/:guid', to: 'quizzes#get_user_quiz_attempt_topic_details'
+  get '/assessment/get_quiz_question_attempts/:guid', to: 'quizzes#get_quiz_question_attempts'
+  get '/assessment/get_user_attempt_analytics_v1/:guid', to: 'quizzes#get_user_attempt_analytics_v1'
+  get '/assessment/get_user_attempt_analytics/:guid', to: 'quizzes#get_user_attempt_analytics'
   get '/assessment/get_given_quiz_topic_analytics', to: 'quizzes#get_given_quiz_topic_analytics'
-
   get '/assessment/get_given_quiz_analytics', to: 'quizzes#get_given_quiz_analytics'
 
-  get '/assessment/get_user_quiz_attempt_topic_details/:guid', to: 'quizzes#get_user_quiz_attempt_topic_details'
-
-  get '/assessment/get_quiz_question_attempts/:guid', to: 'quizzes#get_quiz_question_attempts'
-
-  get '/assessment/get_user_attempt_analytics_v1/:guid', to: 'quizzes#get_user_attempt_analytics_v1'
-
-  get '/assessment/get_user_attempt_analytics/:guid', to: 'quizzes#get_user_attempt_analytics'
 
   get '/assessment/get_assessment_attempts/:book_id', to: 'quizzes#get_all_assessment_attempts'
-
   get '/assessment/get_assessment_attempt/:attempt_id', to: 'quizzes#get_assessment_attempt_by_attempt_id'
 
   get '/assessment/ckeditor/pictures', to: 'ckeditor/pictures#index'

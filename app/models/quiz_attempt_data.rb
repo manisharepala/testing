@@ -407,9 +407,7 @@ class QuizAttemptData
       result << {"name" => k, "topic_details" => topic_details }
     end
 
-
     return result
-
   end
 
 
@@ -454,26 +452,27 @@ class QuizAttemptData
     assessments.each do |assessment|
       quiz = Quiz.where(:guid=>assessment)
       attempt = QuizAttempt.where(:quiz_guid=>assessment).last
-      data << get_user_quiz_attempt_topic_details(assessment,user_id)
+      data << QuizAttemptData.get_user_quiz_attempt_topic_details(assessment,user_id)
     end
 
-    tmp_array = []
-    data.each do |d|
-      d.keys.each do |sub|
-        d[sub].each do |tp|
-          if tmp_array.include? (sub+"_"+tp.keys[0]).to_s
-            result[tp.keys[0]]["count"] = result[tp.keys[0]]["count"].to_i+1
-            result[tp.keys[0]]["total_marks"] = result[tp.keys[0]]["total_marks"].to_f+tp[tp.keys[0]]["total_marks"].to_f
-            result[tp.keys[0]]["total_questions"] = result[tp.keys[0]]["total_questions"].to_i+tp[tp.keys[0]]["total_questions"].to_i
-            result[tp.keys[0]]["marks_scored"] = result[tp.keys[0]]["marks_scored"].to_f+tp[tp.keys[0]]["marks_scored"].to_f
-          else
-            tmp_array << (sub+"_"+tp.keys[0]).to_s
-            result = result.merge({tp.keys[0]=>(tp[tp.keys[0]].merge({"count"=>1,"subject"=>sub}))})
-          end
-        end
-      end
-    end
-    return result
+    data = data.flatten
+    # tmp_array = []
+    # data.each do |d|
+    #   d.keys.each do |sub|
+    #     d[sub].each do |tp|
+    #       if tmp_array.include? (sub+"_"+tp.keys[0]).to_s
+    #         result[tp.keys[0]]["count"] = result[tp.keys[0]]["count"].to_i+1
+    #         result[tp.keys[0]]["total_marks"] = result[tp.keys[0]]["total_marks"].to_f+tp[tp.keys[0]]["total_marks"].to_f
+    #         result[tp.keys[0]]["total_questions"] = result[tp.keys[0]]["total_questions"].to_i+tp[tp.keys[0]]["total_questions"].to_i
+    #         result[tp.keys[0]]["marks_scored"] = result[tp.keys[0]]["marks_scored"].to_f+tp[tp.keys[0]]["marks_scored"].to_f
+    #       else
+    #         tmp_array << (sub+"_"+tp.keys[0]).to_s
+    #         result = result.merge({tp.keys[0]=>(tp[tp.keys[0]].merge({"count"=>1,"subject"=>sub}))})
+    #       end
+    #     end
+    #   end
+    # end
+    return data
   end
 
   def self.get_user_quiz_attempt_rank(assessment,user_id,attempt_id)
