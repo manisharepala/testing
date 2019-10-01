@@ -266,6 +266,13 @@ class Api::V1::CengageController < ApplicationController
 
   def get_quiz_json
     data = Quiz.where(guid:params[:assessment_guid])[0].quiz_json
+    if params['published_id'].present?
+      qtg = QuizTargetedGroup.find(params['published_id'])
+      if qtg.present?
+        extra_data = {'published_id'=>qtg.id.to_s,'time_open'=>qtg.time_open,'time_close'=>qtg.time_close,'show_score_after'=>qtg.show_score_after,'show_answers_after'=>qtg.show_answers_after,'password'=>qtg.password,'shuffle_questions'=>qtg.shuffle_questions,'shuffle_options'=>qtg.shuffle_options,'pause'=>qtg.pause,'max_no_of_attempts'=>qtg.max_no_of_attempts}
+        data = data.merge(extra_data)
+      end
+    end
     render json: data
   end
 
