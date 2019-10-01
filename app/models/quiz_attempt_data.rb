@@ -548,7 +548,7 @@ class QuizAttemptData
     return section_data
   end
 
-  def get_group_assessment_analytics(assessment,publish_id,group)
+  def self.get_group_assessment_analytics(assessment,publish_id,group)
     result = []
     data = {}
     @quiz = Quiz.where(:guid=>assessment).last
@@ -620,7 +620,7 @@ class QuizAttemptData
 
   end
 
-  def get_group_assessment_rank_data(assessment,publish_id,group_id)
+  def self.get_group_assessment_rank_data(assessment,publish_id,group_id)
     result = []
     @source = File.read(Rails.root.join("app/assets/javascripts/rank_array.js"))
     @context = ExecJS.compile(@source)
@@ -678,7 +678,7 @@ class QuizAttemptData
   end
 
 
-  def get_group_assessment_subject_details(assessment,publish_id,group)
+  def self.get_group_assessment_subject_details(assessment,publish_id,group)
     user_data = QuizAttempt.collection.aggregate([
                                                      {"$match"=>{"$and"=>[{"attempt_no"=>1},{"quiz_guid"=>assessment}]}},
                                                      {"$group"=>{"_id"=>{"user"=>"$user_id","marks_scored"=>"$marks_scored"}}},
@@ -725,7 +725,7 @@ class QuizAttemptData
 
   end
 
-  def get_assessment_group_topic_details(assessment,publish_id,group)
+  def self.get_assessment_group_topic_details(assessment,publish_id,group)
     topic_data = {}
     @quiz = Quiz.where(:guid=>assessment).last
     topic_details = @quiz.topic_details
