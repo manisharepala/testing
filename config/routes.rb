@@ -13,8 +13,8 @@ Rails.application.routes.draw do
   get '/assessment/get_quiz_question_attempts/:guid', to: 'quizzes#get_quiz_question_attempts'
   get '/assessment/get_user_attempt_analytics_v1/:guid', to: 'quizzes#get_user_attempt_analytics_v1'
   get '/assessment/get_user_attempt_analytics/:guid', to: 'quizzes#get_user_attempt_analytics'
-  get '/assessment/get_given_quiz_topic_analytics', to: 'quizzes#get_given_quiz_topic_analytics'
-  get '/assessment/get_given_quiz_analytics', to: 'quizzes#get_given_quiz_analytics'
+  match '/assessment/get_given_quiz_topic_analytics', to: 'quizzes#get_given_quiz_topic_analytics', via: [:get, :post]
+  match '/assessment/get_given_quiz_analytics', to: 'quizzes#get_given_quiz_analytics', via: [:get, :post]
 
 
   get '/assessment/get_assessment_attempts/:book_id', to: 'quizzes#get_all_assessment_attempts'
