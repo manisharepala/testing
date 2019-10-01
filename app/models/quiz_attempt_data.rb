@@ -729,7 +729,6 @@ class QuizAttemptData
     topic_data = {}
     @quiz = Quiz.where(:guid=>assessment).last
     topic_details = @quiz.topic_details
-    quiz_attempt = QuizAttempt.where(:quiz_guid=>assessment,:user_id=>user_id).last
 
     data = QuizAttempt.collection.aggregate([{"$project"=>{"user_id"=>1,'attempt_no'=>1,"quiz_guid"=>1,"quiz_section_attempts"=>1,"quiz_attempt_data_id"=>1,"question_attempts"=>1}},
                                              {"$match"=>{"$and"=>[{"attempt_no"=>1},{"quiz_guid"=>assessment}]}},
