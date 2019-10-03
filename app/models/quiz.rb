@@ -56,19 +56,47 @@ class Quiz
     #     failed_ids << quiz.id
     #   end
     # end
-    quiz = self
-    data = {}
-    data['name'] = quiz.name
-    data['total_marks'] = quiz.total_marks
-    if quiz.quiz_section_ids.present?
-      data['total_questions'] = quiz.total_questions
-      data['sections'] = []
+    begin
+      quiz = self
+      questions_data_from_quiz_json = (quiz.as_json(with_key:true,with_language_support:false))['questions']
+      data = {}
+      data['name'] = quiz.name
+      data['total_marks'] = quiz.total_marks
+      if quiz.quiz_section_ids.present?
+        data['total_questions'] = quiz.total_questions
+        data['sections'] = []
 
-      QuizSection.where(quiz_id:quiz.id).each do |qs|
-        qs_question_ids = qs.question_ids
+        QuizSection.where(quiz_id:quiz.id).each do |qs|
+          qs_question_ids = qs.question_ids
+          topics_data = {}
+          questions_data = questions_data_from_quiz_json.select{|a| qs_question_ids.include? a['id']}
+          questions_data.each do |q_d|
+            topic = (q_d['tags'].reduce(:merge))['concept']
+            if topic.present?
+              topics_data[topic] ||= {'name'=>topic,'total_marks'=>0,'total_questions'=>0,'question_ids'=>[]}
+              topics_data[topic]['total_marks'] += q_d['marks']
+              topics_data[topic]['total_questions'] += 1
+              topics_data[topic]['question_ids'] << q_d['id']
+            end
+          end
+
+          d1 = {}
+          d1['name'] = qs.name rescue ''
+          d1['total_marks'] = questions_data.map{|a| a['marks']}.sum
+          d1['total_questions'] = questions_data.count
+          d1['question_ids'] = questions_data.map{|a| a['id']}
+          d1['topics'] = topics_data.values
+
+          data['sections'] << d1
+        end
+
+        data['topics'] = data['sections'].map{|a| a['topics']}.flatten
+      else
+        data['total_questions'] = quiz.total_questions
+        data['sections'] = []
+
         topics_data = {}
-        questions_data = quiz.quiz_json['questions'].select{|a| qs_question_ids.include? a['id']}
-        questions_data.each do |q_d|
+        questions_data_from_quiz_json.each do |q_d|
           topic = (q_d['tags'].reduce(:merge))['concept']
           if topic.present?
             topics_data[topic] ||= {'name'=>topic,'total_marks'=>0,'total_questions'=>0,'question_ids'=>[]}
@@ -78,37 +106,13 @@ class Quiz
           end
         end
 
-        d1 = {}
-        d1['name'] = qs.name rescue ''
-        d1['total_marks'] = questions_data.map{|a| a['marks']}.sum
-        d1['total_questions'] = questions_data.count
-        d1['question_ids'] = questions_data.map{|a| a['id']}
-        d1['topics'] = topics_data.values
-
-        data['sections'] << d1
+        data['topics'] = topics_data.values
       end
 
-      data['topics'] = data['sections'].map{|a| a['topics']}.flatten
-    else
-      data['total_questions'] = quiz.total_questions
-      data['sections'] = []
-
-      topics_data = {}
-      quiz.quiz_json['questions'].each do |q_d|
-        topic = (q_d['tags'].reduce(:merge))['concept']
-        if topic.present?
-          topics_data[topic] ||= {'name'=>topic,'total_marks'=>0,'total_questions'=>0,'question_ids'=>[]}
-          topics_data[topic]['total_marks'] += q_d['marks']
-          topics_data[topic]['total_questions'] += 1
-          topics_data[topic]['question_ids'] << q_d['id']
-        end
-      end
-
-      data['topics'] = topics_data.values
+      quiz.topic_details = data
+      quiz.save!
+    rescue
     end
-
-    quiz.topic_details = data
-    quiz.save!
   end
 
   def all_question_ids
