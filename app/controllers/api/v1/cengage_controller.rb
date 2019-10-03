@@ -328,9 +328,9 @@ class Api::V1::CengageController < ApplicationController
   def generate_quiz_by_question_ids
     data = {}
     begin
-      total_marks = params[:question_ids].map{|id| Question.find(id).default_mark}.sum
+      total_marks = params['question_ids'].map{|id| Question.find(id).default_mark}.sum
 
-      quiz = Quiz.create!(quiz_language_specific_datas_attributes: [{name:params['name'],description:params['description'],instructions:params['instructions'],language: 'english'}],question_ids:params[:question_ids],type:params[:quiz_type], player:params[:quiz_type], total_marks:total_marks, total_time:params[:duration],created_by:current_user.id)
+      quiz = Quiz.create!(quiz_language_specific_datas_attributes: [{name:params['name'],description:params['description'],instructions:params['instructions'],language: 'english'}],question_ids:params['question_ids'],type:params['quiz_type'], player:params['quiz_type'], total_marks:total_marks, total_time:params['duration'],created_by:current_user.id)
 
       if quiz.present?
         if params['sections'].present?
