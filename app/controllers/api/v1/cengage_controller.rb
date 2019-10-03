@@ -26,7 +26,7 @@ class Api::V1::CengageController < ApplicationController
       if is_student
         data << d
       else
-        data << d.merge('is_published'=>(published_quiz_ids.include? quiz.guid))
+        data << d.merge('is_published'=>(published_quiz_ids.include? quiz.id))
       end
     end
 
