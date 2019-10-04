@@ -44,13 +44,13 @@ class Api::V1::CengageController < ApplicationController
     qtgs.each do |qtg|
       begin
         quiz = Quiz.find(qtg.quiz_id)
-        data << {'name'=>quiz.name,'published_id'=>qtg.id.to_s,'id'=>quiz.id,'guid'=>quiz.guid,'completed'=>(quiz_attempt_data_guids.include? quiz.guid),'is_analytics_ready'=>(quiz_attempt_guids.include? quiz.guid),'quiz_type'=>quiz.type,'player'=>quiz.player,'time_open'=>qtg.time_open,'time_close'=>qtg.time_close,'show_score_after'=>qtg.show_score_after,'show_answers_after'=>qtg.show_answers_after,'password'=>qtg.password,'shuffle_questions'=>qtg.shuffle_questions,'shuffle_options'=>qtg.shuffle_options,'pause'=>qtg.pause,'max_no_of_attempts'=>qtg.max_no_of_attempts,'published_on'=>qtg.published_on.to_i}
+        data << {'name'=>quiz.name,'published_id'=>qtg.id.to_s,'id'=>quiz.id,'guid'=>quiz.guid,'completed'=>(quiz_attempt_data_guids.include? quiz.guid),'is_analytics_ready'=>(quiz_attempt_guids.include? quiz.guid),'quiz_type'=>quiz.type,'player'=>quiz.player,'time_open'=>qtg.time_open,'time_close'=>qtg.time_close,'show_score_after'=>qtg.show_score_after,'show_answers_after'=>qtg.show_answers_after,'password'=>qtg.password,'shuffle_questions'=>qtg.shuffle_questions,'shuffle_options'=>qtg.shuffle_options,'pause'=>qtg.pause,'max_no_of_attempts'=>qtg.max_no_of_attempts,'published_on'=>qtg.published_on.to_i,'duration'=>quiz.total_time,'total_marks'=>quiz.get_total_marks,'total_questions'=>quiz.total_questions,'grades'=>UserManagementServer.get_group_grade_names(qtg.group_ids,current_user.token)}
       rescue
       end
     end
 
     if !data.present?
-      data = [{'name'=>'Quiz Name','published_id'=>'published_id','id'=>'quiz_id','guid'=>'quiz_guid','completed'=>false,'quiz_type'=>'jee_mains','player'=>'jee_mains','time_open'=>Time.now.to_i,'time_close'=>Time.now.to_i + 1.year.to_i,'show_score_after'=>60,'show_answers_after'=>60,'password'=>'123456','shuffle_questions'=>false,'shuffle_options'=>false,'pause'=>false,'max_no_of_attempts'=>0,'published_on'=>Time.now.to_i}]
+      data = [{'name'=>'Quiz Name','published_id'=>'published_id','id'=>'quiz_id','guid'=>'quiz_guid','completed'=>false,'quiz_type'=>'jee_mains','player'=>'jee_mains','time_open'=>Time.now.to_i,'time_close'=>Time.now.to_i + 1.year.to_i,'show_score_after'=>60,'show_answers_after'=>60,'password'=>'123456','shuffle_questions'=>false,'shuffle_options'=>false,'pause'=>false,'max_no_of_attempts'=>0,'published_on'=>Time.now.to_i,'duration'=>90,'total_marks'=>90,'total_questions'=>90,'grades'=>['XI','XII']}]
     end
 
     render json: (data.sort_by{|a| a['published_on']}).reverse
