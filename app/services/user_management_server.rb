@@ -11,7 +11,7 @@ class UserManagementServer
 
   def self.get_group_grade_names(group_ids,token)
     # token = "eyJhbGciOiJIUzI1NiJ9.eyJ1c2VybmFtZSI6bnVsbCwiZW1haWwiOiJjbGFzc182X3RlYWNoZXJfMV8xNTUyOTkwOTU4X0B2YXJzaXR5LmNvbSIsInJvbGxfbm8iOm51bGwsInVzZXJfaWQiOjM2Mywic3ViIjoiMzYzIiwic2NwIjoidXNlciIsImF1ZCI6bnVsbCwiaWF0IjoxNTU2NTE1MDgyLCJleHAiOjE1NTY2MDE0ODIsImp0aSI6Ijk5YWJiYTFiLTAwNjMtNDg2My1hZWFhLWExM2M0ZWM5ZWEwNSJ9.PT0uU986H3XBAELUzWyp9CD1uLzvrUlSpPCsFaVqE3I"
-    res = get("/user_management/apis/v1/get_group_grade_names?group_ids=#{group_ids}&token=#{token}")
+    res = get("/user_management/apis/v1/get_group_grade_names", {query: {group_ids:group_ids, token:token}})
     res.success? ? JSON.parse(res.body) : []
   end
 
