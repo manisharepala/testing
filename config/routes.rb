@@ -149,6 +149,7 @@ Rails.application.routes.draw do
 
       match '/search_questions' => 'api/v1/cengage#search_questions', via: [:get, :post]
       post '/generate_quiz_by_question_ids' => 'api/v1/cengage#generate_quiz_by_question_ids'
+      get '/get_quiz_params_for_duplication' => 'api/v1/cengage#get_quiz_params_for_duplication'
     end
   end
 

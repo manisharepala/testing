@@ -144,6 +144,14 @@ class Quiz
     quiz_language_specific_datas.where(language:Language::ENGLISH)[0].name rescue 'quiz_name'
   end
 
+  def description
+    quiz_language_specific_datas.where(language:Language::ENGLISH)[0].description rescue 'description'
+  end
+
+  def instructions
+    quiz_language_specific_datas.where(language:Language::ENGLISH)[0].instructions rescue 'instructions'
+  end
+
   def create_zip
     quiz = self
 
