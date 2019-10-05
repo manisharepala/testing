@@ -369,9 +369,9 @@ class Api::V1::CengageController < ApplicationController
   end
 
   def get_quiz_params_for_duplication
-    data = {}
     quiz = Quiz.find(params['quiz_id'])
 
+    data = {}
     data['name'] = quiz.name
     data['description'] = quiz.description
     data['instructions'] = quiz.instructions
@@ -380,13 +380,13 @@ class Api::V1::CengageController < ApplicationController
     data['quiz_type'] = quiz.type
 
     tags_data = TagsServer.get_tags_data(quiz.tag_ids)
-    data['grades'] = tags_data.select{|a| a['name'] == 'grade'}.map{|b| b['guid']}
-    data['subjects'] = tags_data.select{|a| a['name'] == 'subject'}.map{|b| b['guid']}
+    data['grades'] = tags_data.select{|a| a['name'] == 'grade'}.map{|b| b['guid']} rescue []
+    data['subjects'] = tags_data.select{|a| a['name'] == 'subject'}.map{|b| b['guid']} rescue []
 
     if quiz.quiz_section_ids.present?
       data['question_ids'] = []
       data['sections'] = []
-      QuizSection.where(:quiz_id.in=>quiz.quiz_section_ids).each do |qs|
+      QuizSection.where(quiz_id:quiz.id).each do |qs|
         data['sections'] << {'name'=>qs.name,'description'=>qs.description,'instructions'=>qs.instructions,'question_ids'=>qs.question_ids}
       end
     else

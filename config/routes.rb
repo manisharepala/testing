@@ -144,7 +144,7 @@ Rails.application.routes.draw do
       post '/generate_quiz' => 'api/v1/cengage#generate_quiz'
       get '/get_quiz_json' => 'api/v1/cengage#get_quiz_json'
 
-      get '/get_question_json' => 'api/v1/cengage#get_question_json'
+      match '/get_question_json' => 'api/v1/cengage#get_question_json', via: [:get, :post]
       post '/publish_assessment' => 'api/v1/cengage#publish_assessment'
 
       match '/search_questions' => 'api/v1/cengage#search_questions', via: [:get, :post]
