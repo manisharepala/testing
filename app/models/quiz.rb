@@ -58,7 +58,7 @@ class Quiz
     # end
     begin
       quiz = self
-      questions_data_from_quiz_json = (quiz.as_json(with_key:true,with_language_support:false))['questions']
+      questions_data_from_quiz_json = (quiz.as_json(with_key:true,with_language_support:false))[:questions]
       data = {}
       data['name'] = quiz.name
       data['total_marks'] = quiz.total_marks
