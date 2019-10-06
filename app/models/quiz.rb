@@ -69,22 +69,22 @@ class Quiz
         QuizSection.where(quiz_id:quiz.id).each do |qs|
           qs_question_ids = qs.question_ids
           topics_data = {}
-          questions_data = questions_data_from_quiz_json.select{|a| qs_question_ids.include? a['id']}
+          questions_data = questions_data_from_quiz_json.select{|a| qs_question_ids.include? a[:id]}
           questions_data.each do |q_d|
-            topic = (q_d['tags'].reduce(:merge))['concept']
+            topic = (q_d[:tags].reduce(:merge))['concept']
             if topic.present?
               topics_data[topic] ||= {'name'=>topic,'total_marks'=>0,'total_questions'=>0,'question_ids'=>[]}
-              topics_data[topic]['total_marks'] += q_d['marks']
+              topics_data[topic]['total_marks'] += q_d[:marks]
               topics_data[topic]['total_questions'] += 1
-              topics_data[topic]['question_ids'] << q_d['id']
+              topics_data[topic]['question_ids'] << q_d[:id]
             end
           end
 
           d1 = {}
           d1['name'] = qs.name rescue ''
-          d1['total_marks'] = questions_data.map{|a| a['marks']}.sum
+          d1['total_marks'] = questions_data.map{|a| a[:marks]}.sum
           d1['total_questions'] = questions_data.count
-          d1['question_ids'] = questions_data.map{|a| a['id']}
+          d1['question_ids'] = questions_data.map{|a| a[:id]}
           d1['topics'] = topics_data.values
 
           data['sections'] << d1
@@ -97,12 +97,12 @@ class Quiz
 
         topics_data = {}
         questions_data_from_quiz_json.each do |q_d|
-          topic = (q_d['tags'].reduce(:merge))['concept']
+          topic = (q_d[:tags].reduce(:merge))['concept']
           if topic.present?
             topics_data[topic] ||= {'name'=>topic,'total_marks'=>0,'total_questions'=>0,'question_ids'=>[]}
-            topics_data[topic]['total_marks'] += q_d['marks']
+            topics_data[topic]['total_marks'] += q_d[:marks]
             topics_data[topic]['total_questions'] += 1
-            topics_data[topic]['question_ids'] << q_d['id']
+            topics_data[topic]['question_ids'] << q_d[:id]
           end
         end
 
