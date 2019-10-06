@@ -337,7 +337,7 @@ class QuizAttemptData
     @quiz = Quiz.where(:guid=>assessment).last
     quiz_attempt = QuizAttempt.where(:quiz_guid=>assessment,:user_id=>user_id).last
     if quiz_attempt.present?
-      marks[:total_questions] = @quiz.total_marks
+      marks[:total_questions] = @quiz.total_questions
       marks[:total_time] = @quiz.total_time
       marks[:total_score] = @quiz.total_marks
       marks[:accuracy] = (quiz_attempt.correct.to_f/quiz_attempt.total.to_f).to_f
