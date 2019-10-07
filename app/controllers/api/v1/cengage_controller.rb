@@ -168,12 +168,13 @@ class Api::V1::CengageController < ApplicationController
           pre_final_question_ids << question_ids
         end
 
-        pre_final_question_ids = pre_final_question_ids.flatten
+        pre_final_question_ids = pre_final_question_ids.flatten.uniq
         if pre_final_question_ids.count < no_of_questions  #include any question from the subject and within chapters selected
           subject_level_all_questions = question_sets[subject_name].values.map{|a| a - [[]]}.flatten
           pre_final_question_ids = pre_final_question_ids + (subject_level_all_questions - pre_final_question_ids).sample(no_of_questions - pre_final_question_ids.count)
         end
 
+        pre_final_question_ids = pre_final_question_ids.uniq
         if pre_final_question_ids.count < no_of_questions #include any question from the subject
           global_subject_level_all_questions =  Question.where(:tag_ids.in=>subject_tags[subject_name]).map(&:id)
           pre_final_question_ids = pre_final_question_ids + (global_subject_level_all_questions - pre_final_question_ids).sample(no_of_questions - pre_final_question_ids.count)
@@ -245,10 +246,10 @@ class Api::V1::CengageController < ApplicationController
         final_question_ids << question_ids
       end
 
-      final_question_ids = final_question_ids.flatten
+      final_question_ids = final_question_ids.flatten.uniq
 
       if final_question_ids.count < no_of_questions
-        all_questions_from_all_subjects = question_sets.values.map{|a| a - [[]]}.flatten
+        all_questions_from_all_subjects = question_sets.values.map{|a| a - [[]]}.flatten.uniq
         final_question_ids = final_question_ids + (all_questions_from_all_subjects - final_question_ids).sample(no_of_questions - final_question_ids.count)
       end
 
