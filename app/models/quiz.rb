@@ -49,9 +49,10 @@ class Quiz
 
   def update_test_topic_details
     # failed_ids = []
-    # Quiz.all.each do |quiz|
+    # Quiz.all.each_with_index do |quiz,i|
     #   begin
     #     quiz.update_test_topic_details
+    #     puts "------------------------ #{i} ----------------------------------"
     #   rescue
     #     failed_ids << quiz.id
     #   end

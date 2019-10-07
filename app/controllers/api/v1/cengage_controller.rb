@@ -16,7 +16,7 @@ class Api::V1::CengageController < ApplicationController
   def custom_tests
     data = []
     quiz_attempt_data_guids = QuizAttemptData.where(user_id:current_user.id).map{|qad| qad.data['asset_download_id']}.uniq
-    quiz_attempt_guids = QuizAttempt.where(:quiz_guid.in=>quiz_attempt_data_guids).map{|a| a.quiz_guid}
+    quiz_attempt_guids = QuizAttempt.where(:quiz_guid.in=>quiz_attempt_data_guids,user_id:current_user.id).map{|a| a.quiz_guid}
 
     is_student = UserManagementServer.get_user_details(current_user.id,current_user.token)['roles'].include? 'student'
     quizzes = Quiz.where(created_by:current_user.id)
@@ -36,15 +36,15 @@ class Api::V1::CengageController < ApplicationController
 
   def published_tests
     data = []
-    quiz_attempt_data_guids = QuizAttemptData.where(user_id:current_user.id).map{|qad| qad.data['asset_download_id']}
-    quiz_attempt_guids = QuizAttempt.where(:quiz_guid.in=>quiz_attempt_data_guids).map{|a| a.quiz_guid}
+    quiz_attempt_published_ids = QuizAttemptData.where(user_id:current_user.id).map{|qad| qad.data['published_id']}
+    quiz_attempt_published_ids = QuizAttempt.where(:published_id.in=>quiz_attempt_published_ids,user_id:current_user.id).map{|a| a.published_id}
 
     qtgs = (QuizTargetedGroup.where(:group_ids.in=>UserManagementServer.get_group_ids(current_user.id,current_user.token), is_cancelled:false) + QuizTargetedGroup.where(:user_ids.in=>[current_user.id], is_cancelled:false))
 
     qtgs.each do |qtg|
       begin
         quiz = Quiz.find(qtg.quiz_id)
-        data << {'name'=>quiz.name,'published_id'=>qtg.id.to_s,'id'=>quiz.id,'guid'=>quiz.guid,'completed'=>(quiz_attempt_data_guids.include? quiz.guid),'is_analytics_ready'=>(quiz_attempt_guids.include? quiz.guid),'quiz_type'=>quiz.type,'player'=>quiz.player,'time_open'=>qtg.time_open,'time_close'=>qtg.time_close,'show_score_after'=>qtg.show_score_after,'show_answers_after'=>qtg.show_answers_after,'password'=>qtg.password,'shuffle_questions'=>qtg.shuffle_questions,'shuffle_options'=>qtg.shuffle_options,'pause'=>qtg.pause,'max_no_of_attempts'=>qtg.max_no_of_attempts,'published_on'=>qtg.published_on.to_i,'duration'=>quiz.total_time,'total_marks'=>quiz.get_total_marks,'total_questions'=>quiz.total_questions,'grades'=>UserManagementServer.get_group_grade_names(qtg.group_ids,current_user.token)}
+        data << {'name'=>quiz.name,'published_id'=>qtg.id.to_s,'id'=>quiz.id,'guid'=>quiz.guid,'completed'=>(quiz_attempt_published_ids.include? qtg.id),'is_analytics_ready'=>(quiz_attempt_published_ids.include? qtg.id),'quiz_type'=>quiz.type,'player'=>quiz.player,'time_open'=>qtg.time_open,'time_close'=>qtg.time_close,'show_score_after'=>qtg.show_score_after,'show_answers_after'=>qtg.show_answers_after,'password'=>qtg.password,'shuffle_questions'=>qtg.shuffle_questions,'shuffle_options'=>qtg.shuffle_options,'pause'=>qtg.pause,'max_no_of_attempts'=>qtg.max_no_of_attempts,'published_on'=>qtg.published_on.to_i,'duration'=>quiz.total_time,'total_marks'=>quiz.get_total_marks,'total_questions'=>quiz.total_questions,'grades'=>UserManagementServer.get_group_grade_names(qtg.group_ids,current_user.token)}
       rescue
       end
     end
