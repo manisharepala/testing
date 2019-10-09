@@ -140,6 +140,7 @@ Rails.application.routes.draw do
       get '/difficulty_tags' => 'api/v1/cengage#difficulty_tags'
       get '/custom_tests' => 'api/v1/cengage#custom_tests'
       get '/published_tests' => 'api/v1/cengage#published_tests'
+      get '/teacher_published_tests' => 'api/v1/cengage#teacher_published_tests'
       get '/grade_subjects_chapters_concepts' => 'api/v1/cengage#grade_subjects_chapters_concepts'
       post '/generate_quiz' => 'api/v1/cengage#generate_quiz'
       get '/get_quiz_json' => 'api/v1/cengage#get_quiz_json'
