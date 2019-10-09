@@ -598,7 +598,7 @@ class QuizAttemptData
 
 
     time_question_data = QuizAttempt.collection.aggregate([{"$unwind"=>"$question_attempts"},
-                                                           {"$match"=>{"$and"=>[{"quiz_guid"=>assessment},{"attempt_no"=>1},{"question_attempts.attempt_type" => "attempted"},"question_attempts.question_id"=>{"$in"=>@quiz.question_ids}]}},
+                                                           {"$match"=>{"$and"=>[{"quiz_guid"=>assessment},{"attempt_no"=>1},{"question_attempts.attempt_type" => "attempted"},"question_attempts.question_id"=>{"$in"=>@quiz.all_question_ids}]}},
                                                            {"$group"=>{"_id"=>{"question"=>"$question_attempts.question_id","section_id"=>"$question_attempts.quiz_section_name",
                                                            },"avg"=>{"$avg"=>"$question_attempts.time_taken"}}},
                                                            {"$project"=>{"_id"=>0,"subject"=>"$_id.section_id","avg_time"=>"$avg"}},
