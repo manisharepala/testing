@@ -588,7 +588,11 @@ class QuizAttemptData
                                                                   "avg_score"=>{"$avg"=>"$quiz_section_attempts.marks_scored"},"avg_corrects"=>{"$avg"=>"$quiz_section_attempts.correct"},"avg_attempted"=>{"$avg"=>"$quiz_section_attempts.attempted"},"avg_duration"=>{"$avg"=>"$quiz_section_attempts.active_duration"},
                                                       }},
                                                       {"$project"=>{"subject"=>"$_id.sub",
-                                                                    "total"=>"$_id.marks","avg_score"=>"$avg_score","_id"=>0,"avg_attempt_rate"=>{"$divide"=>["$avg_attempted","$_id.total_questions"]},"avg_accuracy"=>{"$divide"=>["$avg_corrects","$avg_attempted"]},"average_duration"=>"$avg_duration"}}])
+                                                                    "total"=>"$_id.marks",
+                                                                    "avg_score"=>"$avg_score","_id"=>0,
+                                                                    "avg_attempt_rate"=>{"$cond"=>[{"$eq"=>["$_id.total_questions",0]},"N/A", {"$divide"=>["$avg_attempted","$_id.total_questions"]}]},
+                                                                    "avg_accuracy"=>{"$cond"=>[{"$eq"=>["$avg_attempted",0.0]},"N/A",{"$divide"=>["$avg_corrects","$avg_attempted"]}]},
+                                                                    "average_duration"=>"$avg_duration"}}])
 
     section_data = JSON.load(section_data.to_json)
 
