@@ -427,10 +427,12 @@ class QuizAttemptData
     data["in_correct"] = quiz_attempt.in_correct
     data["un_attempted"] = quiz_attempt.un_attempted
     data["questions"] = []
-    quiz_attempt.question_attempts.where("question_json.id"=>{"$in"=>@quiz.all_question_ids}).each do |qa|
-      selected_options = qa.question_answer_attempts.select{|a| a.is_selected == true}.map{|b| b.question_answer_json['id']} rescue []
-      correct_options = qa.question_json['answers'].flatten rescue []
-      data["questions"] << {"question_id"=>qa.question_id,'selected_options'=>selected_options,'correct_options'=>correct_options,"correct"=>qa.correct,"start_time"=>qa.start_time,"end_time"=>qa.end_time,"section_name"=>sections_data[qa.quiz_section_id]}
+    @quiz.all_question_ids.each do |q_id|
+      quiz_attempt.question_attempts.where("question_json.id"=>q_id).each do |qa|
+        selected_options = qa.question_answer_attempts.select{|a| a.is_selected == true}.map{|b| b.question_answer_json['id']} rescue []
+        correct_options = qa.question_json['answers'].flatten rescue []
+        data["questions"] << {"question_id"=>qa.question_id,'selected_options'=>selected_options,'correct_options'=>correct_options,"correct"=>qa.correct,"start_time"=>qa.start_time,"end_time"=>qa.end_time,"section_name"=>sections_data[qa.quiz_section_id]}
+      end
     end
 
     return data
