@@ -340,8 +340,8 @@ class QuizAttemptData
       marks[:total_questions] = @quiz.total_questions
       marks[:total_time] = @quiz.total_time
       marks[:total_score] = @quiz.total_marks
-      marks[:accuracy] = (quiz_attempt.correct.to_f/quiz_attempt.total.to_f).round(2)
-      marks[:attempt_rate] = (quiz_attempt.attempted.to_f/quiz_attempt.active_duration.to_f).round(2)
+      marks[:accuracy] = (quiz_attempt.correct.to_f/quiz_attempt.total.to_f)
+      marks[:attempt_rate] = (quiz_attempt.attempted.to_f/quiz_attempt.active_duration.to_f)
       marks[:time] = quiz_attempt.active_duration
       marks[:marks_scored] = quiz_attempt.marks_scored
       marks[:correct] = quiz_attempt.correct
@@ -570,8 +570,8 @@ class QuizAttemptData
       section_attempt = @topper_attempt.quiz_section_attempts.where(:quiz_section_id=>section_id).last
       section_details["name"] = section_attempt["quiz_section_name"]
       section_details["topper_score"] = section_attempt["marks_scored"]
-      section_details["topper_attempt_rate"] = (section_attempt["attempted"]/section_attempt["total"].to_f).round(2)
-      section_details["topper_accuracy"] = (section_attempt["correct"]/section_attempt["attempted"].to_f).round(2)
+      section_details["topper_attempt_rate"] = (section_attempt["attempted"]/section_attempt["total"].to_f)
+      section_details["topper_accuracy"] = (section_attempt["correct"]/section_attempt["attempted"].to_f)
       section_details["topper_active_duration"] = section_attempt["active_duration"]
       section_details["time_per_question"] = @topper_attempt.question_attempts.where("question_id"=>{"$in"=>section_attempt["question_ids"]}).avg(:time_taken)
       topper_data << section_details
@@ -665,9 +665,9 @@ class QuizAttemptData
           sd.each do |d|
             if d["user"] == u && d["sub"] == s
               td = d
-              td =  td.merge({"attempt_rate"=>(td["attempted"]/td["total_questions"].to_f).round(2)})
-              td =  td.merge({"accuracy"=>(td["correct"]/td["attempted"].to_f).round(2)})
-              td = td.merge({"speed"=>(td["attempted"]/td["active_duration"]).round(2)})
+              td =  td.merge({"attempt_rate"=>(td["attempted"]/td["total_questions"].to_f)})
+              td =  td.merge({"accuracy"=>(td["correct"]/td["attempted"].to_f)})
+              td = td.merge({"speed"=>(td["attempted"]/td["active_duration"])})
               u_data[u] << td
             end
           end
@@ -791,7 +791,7 @@ class QuizAttemptData
           marks = marks+question_hash[qid][1]
         end
         topic[topic["name"]]["marks_scored"] = marks
-        topic[topic["name"]]["avg_marks"] = (marks.to_f/topic["total_marks"]).round(2)
+        topic[topic["name"]]["avg_marks"] = (marks.to_f/topic["total_marks"])
         topic_data[sec["name"]] << {topic["name"]=>topic[topic["name"]]}
       end
     end
