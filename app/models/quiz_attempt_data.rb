@@ -375,7 +375,7 @@ class QuizAttemptData
                                                                  "assessment_id"=>"$quiz_guid","question"=>"$question_attempts.question_json.id","corrects"=>"$question_attempts.correct"}}},
                                              {"$project"=>{"user_id"=>"$_id.user_id","quiz_attempt_data_id"=>"$_id.quiz_attempt_data_id","marks_scored"=>"$_id.marks_scored",
                                                            "assessment_id"=>"$_id.assessment_id","question_id"=>"$_id.question","corrects"=>"$_id.corrects","_id"=>0}}
-                                            ])
+                                            ],"allow_disk_use"=> true)
 
     data = JSON.load(data.to_json)[0]
     keys = data["question_id"]
@@ -487,7 +487,7 @@ class QuizAttemptData
                                              {"$addFields"=>{"users"=>@context.call("rankArray","$users","marks_scored","dense=false")}},
                                              {"$unwind"=>{"path"=> "$users"}},
                                              {"$project"=>{"user"=>"$users.user_id","rank"=>"$users.rank","_id"=>0,"quiz_attempt_data_id"=>"$users.quiz_attempt_data_id"}},
-                                             {"$match"=>{"$and"=>[{"user"=>user_id},{"quiz_attempt_data_id"=>attempt_id}]}}])
+                                             {"$match"=>{"$and"=>[{"user"=>user_id},{"quiz_attempt_data_id"=>attempt_id}]}}],"allow_disk_use"=> true)
 
     return JSON.load(data.to_json)[0]["rank"]
 
@@ -498,7 +498,7 @@ class QuizAttemptData
     data =  QuizAttempt.collection.aggregate([{"$project"=>{"user_id"=>1,"quiz_guid"=>1,"marks_scored"=>1}},
                                               {"$match"=>{"quiz_guid"=>assessment}},
                                               {"$group"=>{"_id"=>{"assessment_id"=>"$quiz_guid"},"min_marks"=>{"$min"=>"$marks_scored"},"max_marks"=>{"$max"=>"$marks_scored"},"avg_score"=>{"$avg"=>"$marks_scored"},}},
-                                              {"$project"=>{"max_marks"=>"$max_marks","min_marks"=>"$min_marks","avg_score"=>"$avg_score","_id"=>0}}])
+                                              {"$project"=>{"max_marks"=>"$max_marks","min_marks"=>"$min_marks","avg_score"=>"$avg_score","_id"=>0}}],"allow_disk_use"=> true)
 
 
     return JSON.load(data.to_json)[0]
@@ -516,7 +516,7 @@ class QuizAttemptData
                                                 {"$group"=>{"_id"=>{"assessment_id"=>"$quiz_guid","user_id"=>"$user_id","sub"=>"$quiz_section_attempts.quiz_section_name","total"=>"$quiz_section_attempts.total"},
                                                             "min_marks"=>{"$min"=>"$quiz_section_attempts.marks_scored"},"max_marks"=>{"$max"=>"$quiz_section_attempts.marks_scored"}, "avg_score"=>{"$avg"=>"$quiz_section_attempts.marks_scored"}}},
                                                 {"$project"=>{"subject"=>"$_id.sub","max_marks"=>"$max_marks","min_marks"=>"$min_marks","avg_score"=>"$avg_score","_id"=>0,"total_questions"=>"$_id.total"}},
-                                                {"$sort"=>{"subject"=>-1}}])
+                                                {"$sort"=>{"subject"=>-1}}],"allow_disk_use"=> true)
     return JSON.load(data.to_json).reverse!
   end
 
@@ -543,7 +543,7 @@ class QuizAttemptData
                                                              "sub"=>"$users.sub","marks"=>"$users.marks_scored","rank"=>"$users.rank","correct"=>"$users.correct",
                                                              "incorrect"=>"$users.incorrect","unattempted"=>"$users.unattempted","skipped"=>"$users.skipped","total_questions"=>"$users.total",
                                                              "active_duration"=>"$users.active_duration","_id"=>0}},{"$match"=>{"$and"=>[{"user"=>user_id},{"quiz_attempt_data_id"=>attempt_id}]}},
-                                               {"$sort"=>{"sub"=>-1}}])
+                                               {"$sort"=>{"sub"=>-1}}],"allow_disk_use"=> true)
 
       section_data << JSON.load(data.to_json)[0]
     end
@@ -593,7 +593,7 @@ class QuizAttemptData
                                                                     "avg_score"=>"$avg_score","_id"=>0,
                                                                     "avg_attempt_rate"=>{"$cond"=>[{"$eq"=>["$_id.total_questions",0]},0, {"$divide"=>["$avg_attempted","$_id.total_questions"]}]},
                                                                     "avg_accuracy"=>{"$cond"=>[{"$eq"=>["$avg_attempted",0.0]},0,{"$divide"=>["$avg_corrects","$avg_attempted"]}]},
-                                                                    "average_duration"=>"$avg_duration"}}])
+                                                                    "average_duration"=>"$avg_duration"}}],"allow_disk_use"=> true)
 
     section_data = JSON.load(section_data.to_json)
 
@@ -605,7 +605,7 @@ class QuizAttemptData
                                                            {"$project"=>{"_id"=>0,"subject"=>"$_id.section_id","avg_time"=>"$avg"}},
                                                            {"$group"=>{"_id"=>{"subject"=>'$subject'},"avg"=>{"$avg"=>'$avg_time'}}},
                                                            {"$project"=>{"_id"=>0,"subject"=>"$_id.subject","avg"=>"$avg"}}
-                                                          ])
+                                                          ],"allow_disk_use"=> true)
 
     time_question_data = JSON.load(time_question_data.to_json)
 
@@ -648,7 +648,7 @@ class QuizAttemptData
                                                {"$project"=>{"user"=>"$users.user_id",
                                                              "sub"=>"$users.sub","marks"=>"$users.marks_scored","rank"=>"$users.rank","correct"=>"$users.correct",
                                                              "incorrect"=>"$users.incorrect","unattempted"=>"$users.unattempted","attempted"=>"$users.attempted","total_questions"=>"$users.total",
-                                                             "active_duration"=>"$users.active_duration","_id"=>0}}])
+                                                             "active_duration"=>"$users.active_duration","_id"=>0}}],"allow_disk_use"=> true)
 
       section_data << JSON.load(data.to_json)
     end
@@ -713,14 +713,14 @@ class QuizAttemptData
                                                      {"$group"=>{"_id"=>{"user"=>"$user_id","marks_scored"=>"$marks_scored","total"=>"$total"}}},
                                                      {"$project"=>{"user_id"=>"$_id.user","total_marks_scored"=>"$_id.marks_scored","_id"=>0,"total"=>"$_id.total",
                                                                    "avg"=>{"$cond"=>[{"$eq"=>["$_id.total",0]},0, {"$divide"=>["$_id.marks_scored","$_id.total"]}]}}}
-                                                 ])
+                                                 ],"allow_disk_use"=> true)
 
     user_data = JSON.load(user_data.to_json)
     user_sec_data = QuizAttempt.collection.aggregate([{"$unwind"=>"$quiz_section_attempts"},
                                                       {"$match"=>{"$and"=>[{"attempt_no"=>1},{"quiz_guid"=>assessment}]}},
                                                       {"$group"=>{"_id"=>{"user"=>"$user_id","marks_scored"=>"$quiz_section_attempts.marks_scored","sub"=>"$quiz_section_attempts.quiz_section_name","total"=>"$quiz_section_attempts.total"}}},
                                                       {"$project"=>{"user_id"=>"$_id.user","subject"=>"$_id.sub","marks_scored"=>"$_id.marks_scored","_id"=>0,"total"=>"$_id.total","avg"=>{"$cond"=>[{"$eq"=>["$_id.total",0]},0, {"$divide"=>["$_id.marks_scored","$_id.total"]}]}}},
-                                                      {"$sort"=>{"user_id"=>1}} ])
+                                                      {"$sort"=>{"user_id"=>1}} ],"allow_disk_use"=> true)
 
     user_sec_data = JSON.load(user_sec_data.to_json)
 
@@ -770,7 +770,7 @@ class QuizAttemptData
                                                                  "assessment_id"=>"$quiz_guid","question"=>"$question_attempts.question_json.id","corrects"=>"$question_attempts.correct"}}},
                                              {"$project"=>{"user_id"=>"$_id.user_id","quiz_attempt_data_id"=>"$_id.quiz_attempt_data_id","marks_scored"=>"$_id.marks_scored",
                                                            "assessment_id"=>"$_id.assessment_id","question_id"=>"$_id.question","corrects"=>"$_id.corrects","_id"=>0}}
-                                            ])
+                                            ],"allow_disk_use"=> true)
 
     data = JSON.load(data.to_json)[0]
     keys = data["question_id"]
@@ -821,7 +821,7 @@ class QuizAttemptData
                                                            "accuracy"=>{"$cond"=>[{"$eq"=>["$users.attempted",0]},0, {"$divide"=>["$users.correct","$users.attempted"]}]},
                                                            "speed"=>{"$cond"=>[{"$eq"=>["$users.duration",0]},0, {"$divide"=>["$users.attempted","$users.duration"]}]}
                                              }},
-                                            ])
+                                            ],"allow_disk_use"=> true)
 
     return JSON.load(data.to_json)
   end
