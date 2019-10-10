@@ -705,7 +705,7 @@ class QuizAttemptData
     #   end
     # end
 
-    return result
+    return result.flatten
   end
 
 
