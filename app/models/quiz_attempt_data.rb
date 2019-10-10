@@ -665,9 +665,9 @@ class QuizAttemptData
           sd.each do |d|
             if d["user"] == u && d["sub"] == s
               td = d
-              td =  td.merge({"attempt_rate"=>(td["attempted"]/td["total_questions"].to_f)})
-              td =  td.merge({"accuracy"=>(td["correct"]/td["attempted"].to_f)})
-              td = td.merge({"speed"=>(td["attempted"]/td["active_duration"])})
+              td =  td.merge({"attempt_rate"=>(td["attempted"]/td["total_questions"].to_f rescue 0)})
+              td =  td.merge({"accuracy"=>(td["correct"]/td["attempted"].to_f rescue 0)})
+              td = td.merge({"speed"=>(td["attempted"]/td["active_duration"] rescue 0)})
               u_data[u] << td
             end
           end
