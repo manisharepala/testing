@@ -543,7 +543,7 @@ class QuizAttemptData
                                                              "sub"=>"$users.sub","marks"=>"$users.marks_scored","rank"=>"$users.rank","correct"=>"$users.correct",
                                                              "incorrect"=>"$users.incorrect","unattempted"=>"$users.unattempted","skipped"=>"$users.skipped","total_questions"=>"$users.total",
                                                              "active_duration"=>"$users.active_duration","_id"=>0}},{"$match"=>{"$and"=>[{"user"=>user_id},{"quiz_attempt_data_id"=>attempt_id}]}},
-                                              {"$sort"=>{"subject"=>-1}}])
+                                               {"$sort"=>{"sub"=>-1}}])
 
       section_data << JSON.load(data.to_json)[0]
     end
@@ -663,7 +663,6 @@ class QuizAttemptData
           sd.each do |d|
             if d["user"] == u && d["sub"] == s
               td = d
-              td.delete("user")
               td =  td.merge({"attempt_rate"=>(td["attempted"]/td["total_questions"].to_f).round(2)})
               td =  td.merge({"accuracy"=>(td["correct"]/td["attempted"].to_f).round(2)})
               td = td.merge({"speed"=>(td["attempted"]/td["active_duration"]).round(2)})
@@ -689,7 +688,22 @@ class QuizAttemptData
         result << subject_details
       end
     end
-    return result.flatten
+
+    sections = QuizSection.where(:id.in=>@quiz.quiz_section_ids).map{|i|i.quiz_section_language_specific_datas.last.name}.sort
+
+    user_section_details = {}
+    sections.each do |i|
+      user_section_details[i] = []
+      result.flatten.each do |re|
+        re["subject_details"].each do |rsub|
+          if  rsub["sub"] == i
+            user_section_details[i] << rsub
+          end
+        end
+      end
+    end
+
+    return user_section_details
   end
 
 
@@ -803,11 +817,11 @@ class QuizAttemptData
                                              {"$addFields"=>{"users"=>@context.call("rankArray","$users","marks_scored","dense=false")}},
                                              {"$unwind"=>{"path"=> "$users"}},
                                              {"$project"=>{"user"=>"$users.user_id","rank"=>"$users.rank","_id"=>0,"score"=>"$users.marks_scored","correct"=>"$users.correct","incorrect"=>"$users.incorrect", "attempted"=>"$users.attempted","un_attempted"=>"$users.un_attempted","total"=>"$users.total","duration"=>"$users.duration",
-                                             "attempt_rate"=>{"$cond"=>[{"$eq"=>["$users.total",0]},0, {"$divide"=>["$users.attempted","$users.total"]}]},
-                                             "accuracy"=>{"$cond"=>[{"$eq"=>["$users.attempted",0]},0, {"$divide"=>["$users.correct","$users.attempted"]}]},
-                                             "speed"=>{"$cond"=>[{"$eq"=>["$users.duration",0]},0, {"$divide"=>["$users.attempted","$users.duration"]}]}
+                                                           "attempt_rate"=>{"$cond"=>[{"$eq"=>["$users.total",0]},0, {"$divide"=>["$users.attempted","$users.total"]}]},
+                                                           "accuracy"=>{"$cond"=>[{"$eq"=>["$users.attempted",0]},0, {"$divide"=>["$users.correct","$users.attempted"]}]},
+                                                           "speed"=>{"$cond"=>[{"$eq"=>["$users.duration",0]},0, {"$divide"=>["$users.attempted","$users.duration"]}]}
                                              }},
-                                             ])
+                                            ])
 
     return JSON.load(data.to_json)
   end
