@@ -516,7 +516,7 @@ class QuizAttemptData
                                                 {"$group"=>{"_id"=>{"assessment_id"=>"$quiz_guid","user_id"=>"$user_id","sub"=>"$quiz_section_attempts.quiz_section_name","total"=>"$quiz_section_attempts.total"},
                                                             "min_marks"=>{"$min"=>"$quiz_section_attempts.marks_scored"},"max_marks"=>{"$max"=>"$quiz_section_attempts.marks_scored"}, "avg_score"=>{"$avg"=>"$quiz_section_attempts.marks_scored"}}},
                                                 {"$project"=>{"subject"=>"$_id.sub","max_marks"=>"$max_marks","min_marks"=>"$min_marks","avg_score"=>"$avg_score","_id"=>0,"total_questions"=>"$_id.total"}},
-                                                {"$sort"=>"subject"}])
+                                                {"$sort"=>"$subject"}])
     return JSON.load(data.to_json).reverse!
   end
 
@@ -543,7 +543,7 @@ class QuizAttemptData
                                                              "sub"=>"$users.sub","marks"=>"$users.marks_scored","rank"=>"$users.rank","correct"=>"$users.correct",
                                                              "incorrect"=>"$users.incorrect","unattempted"=>"$users.unattempted","skipped"=>"$users.skipped","total_questions"=>"$users.total",
                                                              "active_duration"=>"$users.active_duration","_id"=>0}},{"$match"=>{"$and"=>[{"user"=>user_id},{"quiz_attempt_data_id"=>attempt_id}]}},
-                                              {"$sort"=>"subject"}])
+                                              {"$sort"=>"$subject"}])
 
       section_data << JSON.load(data.to_json)[0]
     end
@@ -663,6 +663,7 @@ class QuizAttemptData
           sd.each do |d|
             if d["user"] == u && d["sub"] == s
               td = d
+              td.delete("user")
               td =  td.merge({"attempt_rate"=>(td["attempted"]/td["total_questions"].to_f).round(2)})
               td =  td.merge({"accuracy"=>(td["correct"]/td["attempted"].to_f).round(2)})
               td = td.merge({"speed"=>(td["attempted"]/td["active_duration"]).round(2)})
