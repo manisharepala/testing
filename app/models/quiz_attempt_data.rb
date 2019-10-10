@@ -691,21 +691,21 @@ class QuizAttemptData
       end
     end
 
-    sections = QuizSection.where(:id.in=>@quiz.quiz_section_ids).map{|i|i.quiz_section_language_specific_datas.last.name}.sort
+    # sections = QuizSection.where(:id.in=>@quiz.quiz_section_ids).map{|i|i.quiz_section_language_specific_datas.last.name}.sort
+    #
+    # user_section_details = {}
+    # sections.each do |i|
+    #   user_section_details[i] = []
+    #   result.flatten.each do |re|
+    #     re["subject_details"].each do |rsub|
+    #       if  rsub["sub"] == i
+    #         user_section_details[i] << rsub
+    #       end
+    #     end
+    #   end
+    # end
 
-    user_section_details = {}
-    sections.each do |i|
-      user_section_details[i] = []
-      result.flatten.each do |re|
-        re["subject_details"].each do |rsub|
-          if  rsub["sub"] == i
-            user_section_details[i] << rsub
-          end
-        end
-      end
-    end
-
-    return user_section_details
+    return result
   end
 
 
