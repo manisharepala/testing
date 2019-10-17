@@ -127,6 +127,8 @@ Rails.application.routes.draw do
         post '/publish_assessment' => 'api/v1/api#publish_assessment'
 
         get '/teacher/assessments' => 'api/v1/api#assessments'
+
+        post '/merge_assessments' => 'api/v1/api#merge_assessments'
       end
     end
   end
