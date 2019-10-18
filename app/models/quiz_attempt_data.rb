@@ -159,7 +159,11 @@ class QuizAttemptData
 
       data['active_duration'] = question_attempts_attributes_with_sections_data.map{|d| d['time_taken']}.sum
       data['marks_scored'] = question_attempts_attributes_with_sections_data.map{|d| d['marks_scored']}.sum
-      attempt_no = QuizAttempt.where(user_id:qad.user_id.to_i,quiz_guid:quiz.guid).count + 1
+      if data['published_id'].present?
+        attempt_no = (QuizAttempt.where(user_id:qad.user_id.to_i,quiz_guid:quiz.guid).count + 1)
+      else
+        attempt_no = (QuizAttempt.where(user_id:qad.user_id.to_i,published_id:data['published_id']).count + 1)
+      end
 
       total_count = question_attempts_attributes_with_sections_data.count
       attempted_count = question_attempts_attributes_with_sections_data.select{|d| d['attempt_type'] == 'attempted'}.count

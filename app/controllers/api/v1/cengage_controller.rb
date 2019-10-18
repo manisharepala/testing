@@ -413,4 +413,25 @@ class Api::V1::CengageController < ApplicationController
     render json: data
   end
 
+  def published_assessment_overview
+    qtg = QuizTargetedGroup.find(params['published_id']) rescue nil
+    token = current_user.token
+    data = {}
+
+    if qtg.present?
+      quiz = Quiz.find(qtg.quiz_id)
+      user_details = (qtg.group_ids.map{|id| (UserManagementServer.get_students_in_group(id.to_i,'')).map{|b| {b['id']=>b['name']}}}.uniq + qtg.user_ids.map{|id| UserManagementServer.get_user_details(id.to_i,token)}.map{|d| {d['id'] => d['name']}}).reduce(:merge)
+      quiz_attempts = QuizAttempt.where(published_id:qtg.id.to_s,:user_id.in=>user_details.keys,attempt_no:1)
+
+      users_attempted_data = []
+      quiz_attempts.each do |qa|
+        users_attempted_data << {'id'=>qa.user_id,'name'=>user_details[qa.user_id],'marks_scored'=>qa.marks_scored}
+      end
+
+      data = {'name'=>quiz.name,'total_users'=>user_details.keys.count,'attempted_users'=>quiz_attempts.count,'no_of_questions'=>quiz.total_questions,'total_marks'=>quiz.get_total_marks,'users_attempted_data'=>users_attempted_data}
+    end
+
+    render json: data
+  end
+
 end

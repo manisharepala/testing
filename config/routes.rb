@@ -28,6 +28,8 @@ Rails.application.routes.draw do
 
   get "/assessment/zip_upload_question" => "quizzes#zip_upload_question"
   post "/assessment/post_zip_upload_question" => "quizzes#post_zip_upload_question"
+  get "/assessment/zip_upload_only_questions" => "quizzes#zip_upload_only_questions"
+  post "/assessment/post_zip_upload_only_questions" => "quizzes#post_zip_upload_only_questions"
 
   get "/assessment/migrate_quiz" => "quizzes#migrate_quiz"
 
@@ -146,6 +148,7 @@ Rails.application.routes.draw do
       get '/grade_subjects_chapters_concepts' => 'api/v1/cengage#grade_subjects_chapters_concepts'
       post '/generate_quiz' => 'api/v1/cengage#generate_quiz'
       get '/get_quiz_json' => 'api/v1/cengage#get_quiz_json'
+      get '/published_assessment_overview' => 'api/v1/cengage#published_assessment_overview'
 
       match '/get_question_json' => 'api/v1/cengage#get_question_json', via: [:get, :post]
       post '/publish_assessment' => 'api/v1/cengage#publish_assessment'

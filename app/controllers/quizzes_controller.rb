@@ -486,6 +486,63 @@ class QuizzesController < ApplicationController
     end
   end
 
+  def zip_upload_only_questions
+    @publisher_question_banks = PublisherQuestionBank.all
+  end
+
+  def post_zip_upload_only_questions
+    zip_name = "Maths-F2-C9-1-MCQ-EN.zip"
+    zip_path = "/home/inayath/edutor/assessment_app/public/zip_uploads/1/"
+    extract_dir = "/home/inayath/edutor/assessment_app/public/zip_uploads/1/Maths-F2-C9-1-MCQ-EN"
+
+    user_id = 100 #to know only uploaded questions
+    publisher_question_bank_id = params[:publisher_question_bank_id]
+
+    zip_name = params[:zip_file].original_filename
+
+    zip_path = File.join(Rails.root.to_s,"public/zip_uploads/#{user_id}/") #"/home/inayath/edutor/assessment/public/zip_uploads/1/"
+    FileUtils.mkdir_p zip_path unless Dir.exists?(zip_path)
+    file_path = zip_path+zip_name
+    File.open(file_path, "wb") { |f| f.write(params[:zip_file].read) }
+
+    extract_dir = zip_path + zip_name.gsub('.zip','')
+    FileUtils.mkdir_p (extract_dir)
+
+    Archive::Zip.extract(file_path, extract_dir)
+
+    tags_not_present = []
+    question_wise_tags_not_present = []
+
+    if (Dir[extract_dir+"/"+'*.etx'])!=[]
+      Dir[extract_dir+"/"+'*.etx'].each do |etx_file|
+        file = File.open(etx_file)
+        etx = Nokogiri::XML(file)
+        test_paper = etx.xpath("/ignitor_questions")
+        tags_not_present_data = verify_tags(test_paper)
+        tags_not_present += tags_not_present_data[0]
+        question_wise_tags_not_present += tags_not_present_data[1]
+      end
+      logger.info "2222222222222222222222222"
+      logger.info tags_not_present
+      logger.info question_wise_tags_not_present
+
+      if (tags_not_present.count == 0) && (question_wise_tags_not_present.count == 0)
+        Dir[extract_dir+"/"+'*.etx'].each do |etx_file|
+          process_etx(etx_file,user_id, publisher_question_bank_id,params[:name], false, params[:type],'cengage') #/home/inayath/edutor/assessment_app/public/zip_uploads/1/Maths-F2-C9-1-MCQ-EN/Maths-F2-C9-1-MCQ-EN.etx
+        end
+      else
+        logger.info "Tags not present -------------------------------- #{tags_not_present}"
+        raise Exception.new("Following tags are not present #{tags_not_present} and Following questions do not have the compulsory 5 tags -> #{question_wise_tags_not_present} ")
+      end
+    end
+
+    FileUtils.rm_rf(extract_dir)
+
+    respond_to do |format|
+      format.html { redirect_to assessment_zip_upload_question_path, notice: 'Quiz was successfully created.'}
+    end
+  end
+
   def zip_upload_question
     @publisher_question_banks = PublisherQuestionBank.all
     @quiz_types = [['All Types', 'all_types'],['Concept Practice Objective' ,'concept_practice_objective'],['Concept Test Objective' ,'concept_test_objective'],['Concept Practice Subjective' ,'concept_practice_subjective'],['Concept Test Subjective' ,'concept_test_subjective'],['Challenge Test Objective' ,'challenge_test_objective'],['Challenge Test Subjective' ,'challenge_test_subjective'],['Chapter Practice Objective' ,'chapter_practice_objective'],['Chapter Test Objective' ,'chapter_test_objective'],['Chapter Practice Subjective' ,'chapter_practice_subjective'],['Chapter Test Subjective' ,'chapter_test_subjective'],['Challenge Test' ,'challenge test'], ['Subjective', 'subjective'], ['Try Out', 'tryout'], ['Concept Practice', 'concept_practice'],['Subjective Practice','subjective_practice']]
@@ -603,7 +660,7 @@ class QuizzesController < ApplicationController
     end
   end
 
-  def process_etx(etx_file, user_id, publisher_question_bank_id,quiz_name, hidden=false, type)
+  def process_etx(etx_file, user_id, publisher_question_bank_id,quiz_name, hidden=false, type,institute_name='')
     s3_path = 'question_images/' #"learnflix-question-images/"
     master_dir = (File.dirname etx_file) + "/" # "/home/inayath/edutor/assessment/public/zip_uploads/1/Maths-F2-C9-1-MCQ-EN/"
     images_dir = etx_file.split('/').last.split('.').first + '_files' #"Maths-F2-C9-1-MCQ-EN_files"
@@ -625,12 +682,12 @@ class QuizzesController < ApplicationController
 
         quiz_section_question_ids = []
         section.xpath("group_questions").each do |group_ques|
-          question = create_group_question(user_id, group_ques,publisher_question_bank_id,s3_path,master_dir,images_dir)
+          question = create_group_question(user_id, group_ques,publisher_question_bank_id,s3_path,master_dir,images_dir,institute_name)
           quiz_section_question_ids << question._id
         end
 
         section.xpath("question_set").each do |ques|
-          question = create_simple_question(user_id, ques,publisher_question_bank_id, s3_path,master_dir,images_dir)
+          question = create_simple_question(user_id, ques,publisher_question_bank_id, s3_path,master_dir,images_dir,institute_name)
           quiz_section_question_ids << question._id
         end
 
@@ -640,12 +697,12 @@ class QuizzesController < ApplicationController
       end
     else
       test_paper.xpath("group_questions").each do |group_ques|
-        question = create_group_question(user_id, group_ques,publisher_question_bank_id,s3_path,master_dir,images_dir)
+        question = create_group_question(user_id, group_ques,publisher_question_bank_id,s3_path,master_dir,images_dir,institute_name)
         question_ids << question._id
       end
 
       test_paper.xpath("question_set").each do |ques|
-        question = create_simple_question(user_id, ques,publisher_question_bank_id, s3_path,master_dir,images_dir)
+        question = create_simple_question(user_id, ques,publisher_question_bank_id, s3_path,master_dir,images_dir,institute_name)
         question_ids << question._id
       end
     end
@@ -665,8 +722,8 @@ class QuizzesController < ApplicationController
     puts ("Successfully updated #{question_ids.count} -- #{question_ids}")
   end
 
-  def create_simple_question(user_id, ques,publisher_question_bank_id, s3_path,master_dir,images_dir)
-    question_data = get_simple_question_hash(user_id,ques, publisher_question_bank_id)
+  def create_simple_question(user_id, ques,publisher_question_bank_id, s3_path,master_dir,images_dir,institute_name)
+    question_data = get_simple_question_hash(user_id,ques, publisher_question_bank_id,institute_name)
     question = Question.create_question(question_data)
     update_image_path(question._id,s3_path)
     copy_question_images(question._id,master_dir,images_dir)
@@ -748,15 +805,15 @@ class QuizzesController < ApplicationController
     question.upload_images
   end
 
-  def create_group_question(user_id, group_ques,publisher_question_bank_id,s3_path,master_dir,images_dir)
-    question_data = get_group_question_hash(user_id,group_ques, publisher_question_bank_id,s3_path,master_dir,images_dir)
+  def create_group_question(user_id, group_ques,publisher_question_bank_id,s3_path,master_dir,images_dir,institute_name)
+    question_data = get_group_question_hash(user_id,group_ques, publisher_question_bank_id,s3_path,master_dir,images_dir,institute_name)
     question = Question.create_question(question_data)
     update_image_path(question._id,s3_path)
     copy_question_images(question._id,master_dir,images_dir)
     return question
   end
 
-  def get_group_question_hash(user_id, group_ques, publisher_question_bank_id,s3_path,master_dir,images_dir)
+  def get_group_question_hash(user_id, group_ques, publisher_question_bank_id,s3_path,master_dir,images_dir,institute_name)
     data = {}
     data['publisher_question_bank_ids'] = [publisher_question_bank_id]
     data['question_language_specific_datas_attributes'] = []
@@ -785,14 +842,14 @@ class QuizzesController < ApplicationController
 
     data['question_guids'] = []
     group_ques.xpath("question_set").each do |ques|
-      child_question = create_simple_question(user_id, ques,publisher_question_bank_id, s3_path,master_dir,images_dir)
+      child_question = create_simple_question(user_id, ques,publisher_question_bank_id, s3_path,master_dir,images_dir,institute_name)
       data['question_guids'] << child_question.guid
     end
     data['default_mark'] = data['question_guids'].map{|guid| Question.where(guid:guid)[0].default_mark}.sum
     return data
   end
 
-  def get_simple_question_hash(user_id, ques, publisher_question_bank_id)
+  def get_simple_question_hash(user_id, ques, publisher_question_bank_id,institute_name)
     data = {}
     data['publisher_question_bank_ids'] = [publisher_question_bank_id]
 
@@ -806,7 +863,7 @@ class QuizzesController < ApplicationController
 
     data['question_language_specific_datas_attributes'] << d
 
-    data['qtype'] = get_qtype(ques.xpath("qtype").attr("value").to_s.downcase)
+    data['qtype'] = get_qtype(ques.xpath("qtype").attr("value").to_s.downcase,institute_name)
     data['default_mark'] = ques.xpath("score").attr("value").to_s.to_i rescue 1
     data['penalty'] = ques.xpath("penalty").attr("value").to_s.to_i rescue 0
 
@@ -883,23 +940,37 @@ class QuizzesController < ApplicationController
     return data
   end
 
-  def get_qtype(qtype)
-    if qtype == "smcq"
-      "SmcqQuestion"
-    elsif qtype == "mmcq"
-      "MmcqQuestion"
-    elsif qtype == "fib"
-      "FibQuestion"
-    elsif qtype == "tof" || qtype == "truefalse"
-      "TrueFalseQuestion"
-    elsif qtype == "fibinteger"
-      "FibIntegerQuestion"
-    elsif qtype == "mcqmatrix"
-      "McqMatrixQuestion"
-    elsif qtype == "assertionreason"
-      "AssertionReasonQuestion"
-    elsif qtype == "saq" || qtype == "laq" || qtype == "vsaq"
-      "SubjectiveQuestion"
+  def get_qtype(qtype,institute_name)
+    if institute_name == 'cengage'
+      if qtype == "Single Answer Type Questions"
+        "SmcqQuestion"
+      elsif qtype == "Multiple Answers Type Questions"
+        "MmcqQuestion"
+      elsif qtype == "Linked Comprehension Questions"
+        "PassageQuestion"
+      elsif qtype == "Numerical Value Type Questions"
+        "FibIntegerQuestion"
+      elsif qtype == "Matching Column Questions"
+        "McqMatrixQuestion"
+      end
+    else
+      if qtype == "smcq"
+        "SmcqQuestion"
+      elsif qtype == "mmcq"
+        "MmcqQuestion"
+      elsif qtype == "fib"
+        "FibQuestion"
+      elsif qtype == "tof" || qtype == "truefalse"
+        "TrueFalseQuestion"
+      elsif qtype == "fibinteger"
+        "FibIntegerQuestion"
+      elsif qtype == "mcqmatrix"
+        "McqMatrixQuestion"
+      elsif qtype == "assertionreason"
+        "AssertionReasonQuestion"
+      elsif qtype == "saq" || qtype == "laq" || qtype == "vsaq"
+        "SubjectiveQuestion"
+      end
     end
   end
 
