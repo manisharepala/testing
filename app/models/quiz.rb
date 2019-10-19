@@ -24,6 +24,7 @@ class Quiz
   field :focus_area, type: BSON::Binary
   field :quiz_json, type: BSON::Binary
   field :topic_details, type: BSON::Binary
+  field :chapters, type: BSON::Binary
 
   has_many :quiz_targeted_groups
   # has_many :quiz_sections
@@ -310,6 +311,7 @@ class Quiz
     end
     data = data.merge(questions:questions_data)
     data = data.merge(quiz_sections:quiz_sections_data)
+    data = data.merge(chapters:chapters)
 
     data
   end

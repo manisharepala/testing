@@ -241,7 +241,7 @@ class Api::V1::ApiController < ApplicationController
     begin
       total_marks = Question.where(:id.in=>all_question_ids).map{|q| q.default_mark}.sum
 
-      quiz = Quiz.create!(quiz_language_specific_datas_attributes: [{name:params['name'],description:params['description'],instructions:params['instructions'],language: 'english'}],question_ids:all_question_ids,type:params['quiz_type'], player:params['quiz_type'], total_marks:total_marks, total_time:params['duration'],tag_ids:((params['grades'] + params['subjects']) rescue []),created_by:(current_user.id rescue nil))
+      quiz = Quiz.create!(quiz_language_specific_datas_attributes: [{name:params['name'],description:params['description'],instructions:params['instructions'],language: 'english'}],question_ids:all_question_ids,type:params['quiz_type'], player:params['quiz_type'], total_marks:total_marks, total_time:params['duration'],tag_ids:((params['grades'] + params['subjects']) rescue []),created_by:(current_user.id rescue nil),chapters:params['chapters'])
 
       if quiz.present?
         quiz.quiz_json = quiz.as_json(with_key:true,with_language_support:false)
