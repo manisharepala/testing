@@ -586,7 +586,7 @@ class QuizzesController < ApplicationController
 
       if (tags_not_present.count == 0) && (question_wise_tags_not_present.count == 0)
         Dir[extract_dir+"/"+'*.etx'].each do |etx_file|
-          process_etx(etx_file,user_id, publisher_question_bank_id,params[:name], false, params[:type]) #/home/inayath/edutor/assessment_app/public/zip_uploads/1/Maths-F2-C9-1-MCQ-EN/Maths-F2-C9-1-MCQ-EN.etx
+          process_etx(etx_file,user_id, publisher_question_bank_id,params[:name], false, params[:type],'learnflix') #/home/inayath/edutor/assessment_app/public/zip_uploads/1/Maths-F2-C9-1-MCQ-EN/Maths-F2-C9-1-MCQ-EN.etx
         end
       else
         logger.info "Tags not present -------------------------------- #{tags_not_present}"
@@ -660,7 +660,7 @@ class QuizzesController < ApplicationController
     end
   end
 
-  def process_etx(etx_file, user_id, publisher_question_bank_id,quiz_name, hidden=false, type,institute_name='')
+  def process_etx(etx_file, user_id, publisher_question_bank_id,quiz_name, hidden=false, type,institute_name)
     s3_path = 'question_images/' #"learnflix-question-images/"
     master_dir = (File.dirname etx_file) + "/" # "/home/inayath/edutor/assessment/public/zip_uploads/1/Maths-F2-C9-1-MCQ-EN/"
     images_dir = etx_file.split('/').last.split('.').first + '_files' #"Maths-F2-C9-1-MCQ-EN_files"
@@ -953,7 +953,7 @@ class QuizzesController < ApplicationController
       elsif qtype == "Matching Column Questions"
         "McqMatrixQuestion"
       end
-    else
+    elsif institute_name == 'learnflix'
       if qtype == "smcq"
         "SmcqQuestion"
       elsif qtype == "mmcq"
