@@ -14,14 +14,16 @@ class Api::V1::CengageController < ApplicationController
   end
 
   def custom_tests
+    user_id = current_user.id
+    user_token = current_user.token
     data = []
-    quiz_attempt_data_guids = QuizAttemptData.where(user_id:current_user.id).map{|qad| qad.data['asset_download_id']}.uniq
-    quiz_attempt_guids = QuizAttempt.where(:quiz_guid.in=>quiz_attempt_data_guids,user_id:current_user.id).map{|a| a.quiz_guid}
+    quiz_attempt_data_guids = QuizAttemptData.where(user_id:user_id).map{|qad| qad.data['asset_download_id']}.uniq
+    quiz_attempt_guids = QuizAttempt.where(:quiz_guid.in=>quiz_attempt_data_guids,user_id:user_id).map{|a| a.quiz_guid}
 
-    is_student = UserManagementServer.get_user_details(current_user.id,current_user.token)['roles'].include? 'student'
-    quizzes = Quiz.where(created_by:current_user.id)
+    is_student = UserManagementServer.get_user_details(user_id,user_token)['roles'].include? 'student'
+    quizzes = Quiz.where(created_by:user_id)
     published_quizzes_map = {}
-    QuizTargetedGroup.where(:quiz_id.in=>quizzes.map(&:id),published_by:current_user.id).each do |qtg|
+    QuizTargetedGroup.where(:quiz_id.in=>quizzes.map(&:id),published_by:user_id).each do |qtg|
       published_quizzes_map[qtg.quiz_id] ||= []
       published_quizzes_map[qtg.quiz_id] << qtg.id.to_s
     end
@@ -31,7 +33,11 @@ class Api::V1::CengageController < ApplicationController
       if is_student
         data << d
       else
-        data << d.merge('is_published'=>(published_quizzes_map[quiz.id].count > 0),'published_ids'=>published_quizzes_map[quiz.id])
+        if (published_quizzes_map[quiz.id].count > 0 rescue false)
+          data << d.merge('is_published'=>true,'published_ids'=>published_quizzes_map[quiz.id])
+        else
+          data << d.merge('is_published'=>false,'published_ids'=>[])
+        end
       end
     end
 
