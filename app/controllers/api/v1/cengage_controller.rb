@@ -20,14 +20,18 @@ class Api::V1::CengageController < ApplicationController
 
     is_student = UserManagementServer.get_user_details(current_user.id,current_user.token)['roles'].include? 'student'
     quizzes = Quiz.where(created_by:current_user.id)
-    published_quiz_ids = QuizTargetedGroup.where(:quiz_id.in=>quizzes.map(&:id),published_by:current_user.id).map(&:quiz_id).uniq
+    published_quizzes_map = {}
+    QuizTargetedGroup.where(:quiz_id.in=>quizzes.map(&:id),published_by:current_user.id).each do |qtg|
+      published_quizzes_map[qtg.quiz_id] ||= []
+      published_quizzes_map[qtg.quiz_id] << qtg.id.to_s
+    end
 
     quizzes.each do |quiz|
       d = {'name'=>quiz.name,'id'=>quiz.id,'guid'=>quiz.guid,'completed'=>(quiz_attempt_data_guids.include? quiz.guid),'is_analytics_ready'=>(quiz_attempt_guids.include? quiz.guid),'quiz_type'=>quiz.type,'player'=>quiz.player,'duration'=>quiz.total_time,'total_marks'=>quiz.get_total_marks,'total_questions'=>quiz.total_questions,'created_at'=>quiz.created_at.to_i}
       if is_student
         data << d
       else
-        data << d.merge('is_published'=>(published_quiz_ids.include? quiz.id))
+        data << d.merge('is_published'=>(published_quizzes_map[quiz.id].count > 0),'published_ids'=>published_quizzes_map[quiz.id])
       end
     end
 
