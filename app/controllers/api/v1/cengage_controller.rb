@@ -25,7 +25,7 @@ class Api::V1::CengageController < ApplicationController
     published_quizzes_map = {}
     QuizTargetedGroup.where(:quiz_id.in=>quizzes.map(&:id),published_by:user_id).each do |qtg|
       published_quizzes_map[qtg.quiz_id] ||= []
-      published_quizzes_map[qtg.quiz_id] << qtg.id.to_s
+      published_quizzes_map[qtg.quiz_id] << {'published_id'=>qtg.id.to_s,'published_on'=>qtg.published_on.to_i}
     end
 
     quizzes.each do |quiz|
