@@ -13,6 +13,10 @@ class Api::V1::CengageController < ApplicationController
     render json: data
   end
 
+  def current_time
+    render json: Time.now.to_i
+  end
+
   def custom_tests
     user_id = current_user.id
     user_token = current_user.token
