@@ -139,6 +139,7 @@ Rails.application.routes.draw do
 
   scope '/assessment' do
     scope '/apis' do
+      get '/current_time' => 'api/v1/cengage#current_time'
       get '/assessment_types' => 'api/v1/cengage#assessment_types'
       get '/question_types' => 'api/v1/cengage#question_types'
       get '/difficulty_tags' => 'api/v1/cengage#difficulty_tags'
