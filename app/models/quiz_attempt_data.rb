@@ -710,7 +710,18 @@ class QuizAttemptData
       end
     end
 
-    return user_section_details #result.flatten
+    user_section_data = []
+    user_section_details.keys.each do |k|
+      user_section_data <<  {"name" => k,"users"=>user_section_details[k]}
+    end
+
+    user_total_data = []
+
+    result.flatten.each do |re|
+      user_total_data << re["total"]
+    end
+
+    return {:section_data=>user_section_data,:user_data=>user_total_data} #result.flatten
   end
 
 
@@ -768,7 +779,7 @@ class QuizAttemptData
     range = 0..100
     r = range.each_slice(range.last/10).with_index.with_object({}) { |(a,i),h|h[a.first..a.last]=0 }
     sections  = QuizSection.where(:id.in=>Quiz.where(:guid=>assessment).last.quiz_section_ids).map{|i|i.quiz_section_language_specific_datas.last.name}.sort
-    section_hash = Hash[sections.collect { |item| [item, r] } ]
+    section_hash = Hash[sections.collect { |item| [item, (range.each_slice(range.last/10).with_index.with_object({}) { |(a,i),h|h[a.first..a.last]=0 })] } ]
 
     result.each do |re|
       r.keys.each do |k|
@@ -778,19 +789,21 @@ class QuizAttemptData
       end
     end
 
-    return r
 
-    # result.each do |re|
-    #   re["subject_details"].each do |sd|
-    #     section_hash[sd["subject"]].keys.each do |sk|
-    #       if sd["avg"].between?(sk.first,sk.last)
-    #         section_hash[sd["subject"]][sk] = section_hash[sd["subject"]][sk]+1
-    #         break
-    #       end
-    #     end
-    #   end
-    # end
 
+    result.each do |re|
+      re["subject_details"].each do |sd|
+        section_hash[sd["subject"]].keys.each do |sk|
+          if sd["avg"].between?(sk.first,sk.last)
+            section_hash[sd["subject"]][sk] = section_hash[sd["subject"]][sk]+1
+            break
+          end
+        end
+      end
+    end
+
+    data = {"total"=>r,"sections"=>section_hash}
+    return data
   end
 
   def self.get_assessment_group_topic_details(assessment,publish_id,group)
@@ -859,6 +872,52 @@ class QuizAttemptData
 
     return JSON.load(data.to_json)
   end
+
+
+
+  def self.get_question_error_analytics(asessment)
+    data = QuizAttempt.collection.aggregate(
+        [
+            {"$unwind"=>'$question_attempts'},
+            {"$match"=>{"$and"=>[{'attempt_no'=>1},{'quiz_guid'=>assessment}]}},
+
+            {"$group"=>{"_id"=>{"user_id"=> '$user_id',"question"=>'$question_attempts.question_json.id',
+
+                                "corrects"=>'$question_attempts.correct',"time"=>'$question_attempts.time_taken',"marks_scored"=>'$question_attempts.marks_scored',
+                                "difficulty"=>'$question_attempts.question_json.tags.difficulty_level',
+                                "attempt_type" => '$question_attempts.attempt_type', "type"=>'$question_attempts.question_json.tags.qsubtype',
+                                "section"=>'$question_attempts.quiz_section_name', "con"=>'$question_attempts.question_json.tags.concept'}}},
+
+            {"$project"=>{"user_id"=>'$_id.user_id',"section"=>'$_id.section',"concept"=>'$_id.con',"question_id"=>'$_id.question', "attempt_type"=>'$_id.attempt_type',
+                          "corrects"=>'$_id.corrects',"_id"=>0,"time"=>'$_id.time', "question_type"=>'$_id.type',"difficulty"=>'$_id.difficulty'}},
+
+            {"$group"=>{"_id"=>{"question_id"=>'$question_id',"sec"=>'$section',"con"=>'$concept',"qtype"=>'$question_type',
+                                "difficulty"=>'$difficulty'}, "count"=> { "$sum"=> 1 }, "corrects"=> {"$push"=>{"correct"=>'$corrects',"attempt_type"=>'$attempt_type'}},
+                        "avg_time"=>{"$avg"=>'$time'}}},
+
+            {"$project"=>{"question_id"=>'$_id.question_id',"section"=>'$_id.sec',"concept"=>'$_id.con',"question_type"=>'$_id.qtype',"difficulty"=>'$_id.difficulty',
+                          "avg_time"=>'$avg_time',"corrects"=>'$corrects.correct',"attempt_type"=>'$corrects.attempt_type',"count"=>'$count',"_id"=>0}},
+            {"$unwind"=>'$difficulty'},{"$unwind"=>'$question_type'},{"$unwind"=>'$concept'},
+    ],"allow_disk_use"=> true)
+
+    data = JSON.load(data.to_json)
+
+    sections  = QuizSection.where(:id.in=>Quiz.where(:guid=>assessment).last.quiz_section_ids).map{|i|i.quiz_section_language_specific_datas.last.name}.sort
+
+    section_hash = Hash[sections.collect { |item| [item, ''] } ]
+
+
+    data.each do |d|
+      c = d["corrects"].inject(Hash.new(0)) { |total, e| total[e] += 1 ;total}
+    end
+
+    section_hash.keys.each do |sec|
+
+    end
+
+  end
+
+
 
 end
 
