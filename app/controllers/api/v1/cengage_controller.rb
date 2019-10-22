@@ -430,7 +430,7 @@ class Api::V1::CengageController < ApplicationController
 
     if qtg.present?
       quiz = Quiz.find(qtg.quiz_id)
-      user_details = (qtg.group_ids.map{|id| (UserManagementServer.get_students_in_group(id.to_i,'')).map{|b| {b['id']=>b['name']}}}.uniq + qtg.user_ids.map{|id| UserManagementServer.get_user_details(id.to_i,token)}.map{|d| {d['id'] => d['name']}}).reduce(:merge)
+      user_details = (qtg.group_ids.map{|id| (UserManagementServer.get_students_in_group(id.to_i,'')).map{|b| {b['id']=>b['name']}}}.uniq + qtg.user_ids.map{|id| UserManagementServer.get_user_details(id.to_i,token)}.map{|d| {d['id'] => d['name']}}).flatten.reduce(:merge)
       quiz_attempts = QuizAttempt.where(published_id:qtg.id.to_s,:user_id.in=>user_details.keys,attempt_no:1)
 
       users_attempted_data = []
