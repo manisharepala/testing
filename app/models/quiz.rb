@@ -189,6 +189,10 @@ class Quiz
     end
 
     Archive::Zip.archive(zip_name, quiz_zip_path+'.')
+    if !quiz.file_path.present?
+      quiz.file_path = zip_name
+      quiz.save!
+    end
     FileUtils.rm_rf Dir.glob("#{zip_name.gsub('.zip','')}") if (zip_name.gsub('.zip','')).present?
   end
 
@@ -220,7 +224,18 @@ class Quiz
   end
 
   def upload_zip
-    if final && tags_verified
+    #run if file_paths are absent
+    # ['01ba525e-1168-4e26-88da-f4c3d4340e52','306c3f53-d117-4d81-b587-c11797a8036e','58ae144b-f6c8-4f9d-b628-9c1108c7b506','d2d4f649-6a48-4018-8c17-3d41721cf3a9'].each do |guid|
+    #   quiz = Quiz.where(guid:guid)[0]
+    # quiz.file_path = "/home/ubuntu/assessment_app/public/quiz_zips/#{guid}.zip"
+    # quiz.save!
+    # quiz.upload_zip
+    # end
+
+    ###########################
+
+    quiz = self
+    if quiz.final && quiz.tags_verified
       create_zip
       tags = {}
       #  tag_ids.each do |guid|
@@ -230,12 +245,12 @@ class Quiz
       #    tags << d
       #  end
       # tags = {"grade"=>"177acf20-32ce-421b-8f32-c3b920c58e54", "subject"=>"fef249d0-4deb-454b-ba3a-70f6317f95d2", "chapter"=>"d84b02e8-6993-4e3a-9746-19de19a4b628", "concept"=>"99756e2f-b32b-417d-9fb4-190003131ce", "course"=>"99756e2f-b32b-417d-9fb4-190003131ce"}
-      success = content_server.upload_file(quiz_language_specific_datas.where(language:Language::ENGLISH)[0].name,file_path, tags)
-      success = content_server.update_file(quiz_language_specific_datas.where(language:Language::ENGLISH)[0].name,file_path, tags)
+      success = content_server.upload_file(quiz.quiz_language_specific_datas.where(language:Language::ENGLISH)[0].name,quiz.file_path, tags)
+      success = content_server.update_file(quiz.quiz_language_specific_datas.where(language:Language::ENGLISH)[0].name,quiz.file_path, tags)
       if success
-        self.set(quiz_json:self.as_json(with_key:true))
-        self.set(uploaded:true)
-        File.delete(file_path) if File.exist?(file_path)
+        quiz.set(quiz_json:self.as_json(with_key:true))
+        quiz.set(uploaded:true)
+        File.delete(quiz.file_path) if File.exist?(quiz.file_path)
       end
     end
   end
