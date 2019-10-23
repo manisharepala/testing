@@ -442,6 +442,10 @@ class Api::V1::CengageController < ApplicationController
         users_attempted_data << {'id'=>qa.user_id,'name'=>user_details[qa.user_id],'marks_scored'=>qa.marks_scored}
       end
 
+      (user_details.keys - users_attempted_data.map{|a| a['id']}).uniq.each do |user_id|
+        users_attempted_data << {'id'=>user_id,'name'=>user_details[user_id],'marks_scored'=>'NA'}
+      end
+
       data = {'name'=>quiz.name,'total_users'=>user_details.keys.count,'attempted_users'=>quiz_attempts.count,'no_of_questions'=>quiz.total_questions,'total_marks'=>quiz.get_total_marks,'users_attempted_data'=>users_attempted_data}
     end
 
