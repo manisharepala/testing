@@ -905,6 +905,8 @@ class QuizAttemptData
 
     data = JSON.load(data.to_json)
 
+    all_question_ids = Quiz.find_by(:guid=>assessment).all_question_ids
+
     range = 0..100
     sections  = QuizSection.where(:id.in=>Quiz.where(:guid=>assessment).last.quiz_section_ids).map{|i|i.quiz_section_language_specific_datas.last.name}.sort
     section_hash = Hash[sections.collect { |item| [item, (range.each_slice(range.last/5).with_index.with_object({}) { |(a,i),h|h[a.first..a.last]=[] })] } ]
@@ -922,13 +924,13 @@ class QuizAttemptData
           wrong = 100 - correct
         end
       end
-      q_data << {:q_id => d["question_id"],:wrong=>wrong.round(2),:correct=>correct.round(2),:section=>d["section"]}
+      q_data << {:q_id => d["question_id"],:wrong=>wrong.round(2),:correct=>correct.round(2),:section=>d["section"],:q_index=>all_question_ids.find_index(d["question_id"])+1}
     end
 
     q_data.each do |qd|
       section_hash.keys.each do |sec|
         section_hash[sec].keys.each do |sd|
-          if qd[:wrong].between?(sd.first,sd.last) && sec == qd[:section]
+          if qd[:wrong].between?(sd.first,sd.last) && sec == qd[:section] && qd[:wrong] > 0
             section_hash[sec][sd] << qd
           end
         end
