@@ -26,6 +26,9 @@ class Quiz
   field :topic_details, type: BSON::Binary
   field :chapters, type: BSON::Binary
 
+  index({:guid=>1})
+
+
   has_many :quiz_targeted_groups
   # has_many :quiz_sections
   field :quiz_section_ids, type: Array, default: []

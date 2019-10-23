@@ -374,7 +374,7 @@ class QuizAttemptData
     quiz_attempt = QuizAttempt.where(:quiz_guid=>assessment,:user_id=>user_id).last
 
     data = QuizAttempt.collection.aggregate([{"$project"=>{"user_id"=>1,"quiz_guid"=>1,"quiz_section_attempts"=>1,"quiz_attempt_data_id"=>1,"question_attempts"=>1}},
-                                             {"$match"=>{"$and"=>[{"user_id"=>user_id},{"quiz_attempt_data_id"=>quiz_attempt.quiz_attempt_data_id},{"quiz_guid"=>assessment}]}},
+                                             {"$match"=>{"$and"=>[{"quiz_guid"=>assessment},{"user_id"=>user_id},{"quiz_attempt_data_id"=>quiz_attempt.quiz_attempt_data_id}]}},
                                              {"$group"=>{"_id"=>{"user_id"=>"$user_id","quiz_attempt_data_id"=>"$quiz_attempt_data_id","marks_scored"=>"$question_attempts.marks_scored",
                                                                  "assessment_id"=>"$quiz_guid","question"=>"$question_attempts.question_json.id","corrects"=>"$question_attempts.correct"}}},
                                              {"$project"=>{"user_id"=>"$_id.user_id","quiz_attempt_data_id"=>"$_id.quiz_attempt_data_id","marks_scored"=>"$_id.marks_scored",
@@ -517,8 +517,8 @@ class QuizAttemptData
     data = QuizAttempt.collection.aggregate([
                                                 {"$unwind"=>"$quiz_section_attempts"},
                                                 {"$project"=>{"quiz_section_attempts"=>1, "user_id"=>1,"quiz_guid"=>1,"marks_scored"=>1}},
-                                                {"$match"=>{"user_id"=>user_id}},
                                                 {"$match"=>{"quiz_guid"=>assessment}},
+                                                {"$match"=>{"user_id"=>user_id}},
 
                                                 {"$group"=>{"_id"=>{"assessment_id"=>"$quiz_guid","user_id"=>"$user_id","sub"=>"$quiz_section_attempts.quiz_section_name","total"=>"$quiz_section_attempts.total"},
                                                             "min_marks"=>{"$min"=>"$quiz_section_attempts.marks_scored"},"max_marks"=>{"$max"=>"$quiz_section_attempts.marks_scored"}, "avg_score"=>{"$avg"=>"$quiz_section_attempts.marks_scored"}}},
@@ -536,7 +536,7 @@ class QuizAttemptData
     @quiz.quiz_section_ids.each do |section_id|
 
       data = QuizAttempt.collection.aggregate([{"$unwind"=>"$quiz_section_attempts"},
-                                               {"$match"=>{"$and"=>[{"quiz_section_attempts.quiz_section_id"=>section_id},{"quiz_guid"=>assessment}]}},
+                                               {"$match"=>{"$and"=>[{"quiz_guid"=>assessment},{"quiz_section_attempts.quiz_section_id"=>section_id}]}},
                                                {"$project"=>{"user_id"=>1,"_id"=>0,"quiz_guid"=>1,"quiz_section_attempts"=>1,"quiz_attempt_data_id"=>1}}, {"$sort"=>{"quiz_section_attempts.marks_scored"=>-1}},
                                                {"$group"=>{"_id"=>false, "users"=>{"$push"=>{"_id"=>"$_id", "user_id"=>"$user_id","quiz"=>"$quiz_guid",
                                                                                              "sub"=>"$quiz_section_attempts.quiz_section_name","marks_scored"=>"$quiz_section_attempts.marks_scored",
@@ -642,7 +642,7 @@ class QuizAttemptData
     @quiz.quiz_section_ids.each do |section_id|
 
       data = QuizAttempt.collection.aggregate([{"$unwind"=>"$quiz_section_attempts"},
-                                               {"$match"=>{"$and"=>[{"quiz_section_attempts.quiz_section_id"=>section_id},{"quiz_guid"=>assessment},{"attempt_no"=>1}]}},
+                                               {"$match"=>{"$and"=>[{"quiz_guid"=>assessment},{"attempt_no"=>1},{"quiz_section_attempts.quiz_section_id"=>section_id}]}},
                                                {"$project"=>{"user_id"=>1,"_id"=>0,"quiz_guid"=>1,"quiz_section_attempts"=>1,"quiz_attempt_data_id"=>1}}, {"$sort"=>{"quiz_section_attempts.marks_scored"=>-1}},
                                                {"$group"=>{"_id"=>false, "users"=>{"$push"=>{"_id"=>"$_id", "user_id"=>"$user_id","quiz"=>"$quiz_guid",
                                                                                              "sub"=>"$quiz_section_attempts.quiz_section_name","marks_scored"=>"$quiz_section_attempts.marks_scored",
@@ -727,7 +727,7 @@ class QuizAttemptData
 
   def self.get_group_assessment_subject_details(assessment,publish_id,group)
     user_data = QuizAttempt.collection.aggregate([
-                                                     {"$match"=>{"$and"=>[{"attempt_no"=>1},{"quiz_guid"=>assessment}]}},
+                                                     {"$match"=>{"$and"=>[{"quiz_guid"=>assessment},{"attempt_no"=>1}]}},
                                                      {"$group"=>{"_id"=>{"user"=>"$user_id","marks_scored"=>"$marks_scored","total"=>"$total"}}},
                                                      {"$project"=>{"user_id"=>"$_id.user","total_marks_scored"=>"$_id.marks_scored","_id"=>0,"total"=>"$_id.total",
                                                                    "avg"=>{"$cond"=>[{"$eq"=>["$_id.total",0]},0, "$multiply"=>[{"$divide"=>["$_id.marks_scored","$_id.total"]},100]]}}}
@@ -735,7 +735,7 @@ class QuizAttemptData
 
     user_data = JSON.load(user_data.to_json)
     user_sec_data = QuizAttempt.collection.aggregate([{"$unwind"=>"$quiz_section_attempts"},
-                                                      {"$match"=>{"$and"=>[{"attempt_no"=>1},{"quiz_guid"=>assessment}]}},
+                                                      {"$match"=>{"$and"=>[{"quiz_guid"=>assessment},{"attempt_no"=>1}]}},
                                                       {"$group"=>{"_id"=>{"user"=>"$user_id","marks_scored"=>"$quiz_section_attempts.marks_scored","sub"=>"$quiz_section_attempts.quiz_section_name","total"=>"$quiz_section_attempts.total"}}},
                                                       {"$project"=>{"user_id"=>"$_id.user","subject"=>"$_id.sub","marks_scored"=>"$_id.marks_scored","_id"=>0,"total"=>"$_id.total","avg"=>{"$cond"=>[{"$eq"=>["$_id.total",0]},0, "$multiply"=>[{"$divide"=>["$_id.marks_scored","$_id.total"]},100]]}}},
                                                       {"$sort"=>{"user_id"=>1}} ],"allow_disk_use"=> true)
@@ -813,7 +813,7 @@ class QuizAttemptData
     topic_details = @quiz.topic_details
 
     data = QuizAttempt.collection.aggregate([{"$project"=>{"user_id"=>1,'attempt_no'=>1,"quiz_guid"=>1,"quiz_section_attempts"=>1,"quiz_attempt_data_id"=>1,"question_attempts"=>1}},
-                                             {"$match"=>{"$and"=>[{"attempt_no"=>1},{"quiz_guid"=>assessment}]}},
+                                             {"$match"=>{"$and"=>[{"quiz_guid"=>assessment},{"attempt_no"=>1}]}},
                                              {"$group"=>{"_id"=>{"user_id"=>"$user_id","quiz_attempt_data_id"=>"$quiz_attempt_data_id","marks_scored"=>"$question_attempts.marks_scored",
                                                                  "assessment_id"=>"$quiz_guid","question"=>"$question_attempts.question_json.id","corrects"=>"$question_attempts.correct"}}},
                                              {"$project"=>{"user_id"=>"$_id.user_id","quiz_attempt_data_id"=>"$_id.quiz_attempt_data_id","marks_scored"=>"$_id.marks_scored",
@@ -859,7 +859,7 @@ class QuizAttemptData
   def self.get_user_assesment_attempt_rank(assessment)
     @source = File.read(Rails.root.join("app/assets/javascripts/rank_array.js"))
     @context = ExecJS.compile(@source)
-    data = QuizAttempt.collection.aggregate([{"$match"=>{"$and"=>[{"attempt_no"=>1},{"quiz_guid"=>assessment}]}},
+    data = QuizAttempt.collection.aggregate([{"$match"=>{"$and"=>[{"quiz_guid"=>assessment},{"attempt_no"=>1}]}},
                                              {"$sort"=>{"marks_scored"=>-1}},
                                              {"$group"=>{"_id"=>false, "users"=>{"$push"=>{"_id"=>"$_id","user_id"=>"$user_id","quiz"=>"$quiz_guid","marks_scored"=>"$marks_scored","correct"=>"$correct","incorrect"=>"$in_correct", "attempted"=>"$attempted","un_attempted"=>"$un_attempted","total"=>"$total","duration"=>"$active_duration"}}}},
                                              {"$addFields"=>{"users"=>@context.call("rankArray","$users","marks_scored","dense=false")}},
@@ -880,7 +880,7 @@ class QuizAttemptData
     data = QuizAttempt.collection.aggregate(
         [
             {"$unwind"=>'$question_attempts'},
-            {"$match"=>{"$and"=>[{'attempt_no'=>1},{'quiz_guid'=>assessment}]}},
+            {"$match"=>{"$and"=>[{'quiz_guid'=>assessment},{'attempt_no'=>1}]}},
 
             {"$group"=>{"_id"=>{"user_id"=> '$user_id',"question"=>'$question_attempts.question_json.id',
 
