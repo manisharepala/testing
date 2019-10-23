@@ -876,7 +876,7 @@ class QuizAttemptData
 
 
 
-  def self.get_question_error_analytics(asessment,publish_id,group_id)
+  def self.get_question_error_analytics(assessment,publish_id,group_id)
     data = QuizAttempt.collection.aggregate(
         [
             {"$unwind"=>'$question_attempts'},
