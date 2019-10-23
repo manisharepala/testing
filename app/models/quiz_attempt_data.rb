@@ -964,12 +964,12 @@ class QuizAttemptData
           un_attempted = 100 - attempted
         end
       end
-      q_data << {:q_id => d["question_id"],:wrong=>wrong.round(2),:correct=>correct.round(2),:section=>d["section"],:attempted=>attempted,:un_attempted=>un_attempted,
+      attempt_data << {:q_id => d["question_id"],:wrong=>wrong.round(2),:correct=>correct.round(2),:section=>d["section"],:attempted=>attempted,:un_attempted=>un_attempted,
                  :concept=>d["concept"],:difficulty=>d["difficulty"],:q_type=>d["question_type"],:avg_time=>d["avg_time"]
       }
     end
 
-    return {:section_data=>section_data,:questions_data=>q_data}
+    return {:section_data=>section_data,:questions_data=>attempt_data}
   end
 
 
