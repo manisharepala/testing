@@ -448,7 +448,7 @@ class QuizAttemptData
     assessments.each do |assessment|
       quiz = Quiz.where(:guid=>assessment)
       attempt = QuizAttempt.where(:quiz_guid=>assessment,:user_id=>user_id).first
-      if attempt.presnt?
+      if attempt.present?
       data <<  {"name"=>quiz.name,"score"=>attempt.marks_scored,"date"=>Time.at(attempt.end_time),"rank"=>get_user_quiz_attempt_rank(assessment,user_id,attempt.quiz_attempt_data_id),
                 "subject_data" => get_quiz_section_data(assessment,user_id,attempt.quiz_attempt_data_id).map{|i| {"sub"=>i["sub"],"rank"=>i["rank"],"marks"=>i["marks"],"total_questions"=>i["total_questions"]}}}
       end
