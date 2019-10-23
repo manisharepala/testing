@@ -905,7 +905,7 @@ class QuizAttemptData
 
     range = 0..100
     sections  = QuizSection.where(:id.in=>Quiz.where(:guid=>assessment).last.quiz_section_ids).map{|i|i.quiz_section_language_specific_datas.last.name}.sort
-    section_hash = Hash[sections.collect { |item| [item, (range.each_slice(range.last/20).with_index.with_object({}) { |(a,i),h|h[a.first..a.last]=[] })] } ]
+    section_hash = Hash[sections.collect { |item| [item, (range.each_slice(range.last/5).with_index.with_object({}) { |(a,i),h|h[a.first..a.last]=[] })] } ]
     q_data = []
     data.each do |d|
       c = d["corrects"].inject(Hash.new(0)) { |total, e| total[e] += 1 ;total}
@@ -935,7 +935,7 @@ class QuizAttemptData
 
     section_data = []
     section_hash.keys.each do |k|
-      section_data << {"name"=>k,"q_data"=>section_hash[k]}
+      section_data << {"name"=>k,"q_data"=>section_hash[k].values,:range=>20}
     end
 
     attempt_data = []
