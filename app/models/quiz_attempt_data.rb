@@ -496,7 +496,7 @@ class QuizAttemptData
                                              {"$project"=>{"user"=>"$users.user_id","rank"=>"$users.rank","_id"=>0,"quiz_attempt_data_id"=>"$users.quiz_attempt_data_id"}},
                                              {"$match"=>{"$and"=>[{"user"=>user_id},{"quiz_attempt_data_id"=>attempt_id}]}}],"allow_disk_use"=> true)
 
-    return JSON.load(data.to_json)[0]["rank"]
+    return (JSON.load(data.to_json)[0]["rank"] rescue 0)
 
   end
 
