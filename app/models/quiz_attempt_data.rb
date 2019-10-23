@@ -432,12 +432,12 @@ class QuizAttemptData
     data["un_attempted"] = quiz_attempt.un_attempted
     data["questions"] = []
     #@quiz.all_question_ids.each do |q_id|
-      #quiz_attempt.question_attempts.where("question_id"=>q_id,"attempt_type"=>"attempted").each do |qa|
-        quiz_attempt.question_attempts.each do |qa|
-        selected_options = qa.question_answer_attempts.select{|a| a.is_selected == true}.map{|b| b.question_answer_json['id']} rescue []
-        correct_options = qa.question_json['answers'].flatten rescue []
-        data["questions"] << {"question_id"=>qa.question_id,'selected_options'=>selected_options,'correct_options'=>correct_options,"correct"=>qa.correct,"start_time"=>qa.start_time,"end_time"=>qa.end_time,"section_name"=>sections_data[qa.quiz_section_id]}
-      end
+    #quiz_attempt.question_attempts.where("question_id"=>q_id,"attempt_type"=>"attempted").each do |qa|
+    quiz_attempt.question_attempts.each do |qa|
+      selected_options = qa.question_answer_attempts.select{|a| a.is_selected == true}.map{|b| b.question_answer_json['id']} rescue []
+      correct_options = qa.question_json['answers'].flatten rescue []
+      data["questions"] << {"question_id"=>qa.question_id,'selected_options'=>selected_options,'correct_options'=>correct_options,"correct"=>qa.correct,"start_time"=>qa.start_time,"end_time"=>qa.end_time,"section_name"=>sections_data[qa.quiz_section_id]}
+    end
     #end
 
     return data
@@ -790,7 +790,6 @@ class QuizAttemptData
     end
 
 
-
     result.each do |re|
       re["subject_details"].each do |sd|
         section_hash[sd["subject"]].keys.each do |sk|
@@ -802,7 +801,9 @@ class QuizAttemptData
       end
     end
 
-    data = {"total"=>r,"sections"=>section_hash}
+    data = {"total"=>r.values,"sections"=>section_hash.keys.map{|i|
+      {"name"=>i, "values"=>section_hash[i].values }
+    },:range =>10}
     return data
   end
 
@@ -898,27 +899,79 @@ class QuizAttemptData
             {"$project"=>{"question_id"=>'$_id.question_id',"section"=>'$_id.sec',"concept"=>'$_id.con',"question_type"=>'$_id.qtype',"difficulty"=>'$_id.difficulty',
                           "avg_time"=>'$avg_time',"corrects"=>'$corrects.correct',"attempt_type"=>'$corrects.attempt_type',"count"=>'$count',"_id"=>0}},
             {"$unwind"=>'$difficulty'},{"$unwind"=>'$question_type'},{"$unwind"=>'$concept'},
-    ],"allow_disk_use"=> true)
+        ],"allow_disk_use"=> true)
 
     data = JSON.load(data.to_json)
 
+    range = 0..100
     sections  = QuizSection.where(:id.in=>Quiz.where(:guid=>assessment).last.quiz_section_ids).map{|i|i.quiz_section_language_specific_datas.last.name}.sort
-
-    section_hash = Hash[sections.collect { |item| [item, ''] } ]
-
-
+    section_hash = Hash[sections.collect { |item| [item, (range.each_slice(range.last/20).with_index.with_object({}) { |(a,i),h|h[a.first..a.last]=[] })] } ]
+    q_data = []
     data.each do |d|
       c = d["corrects"].inject(Hash.new(0)) { |total, e| total[e] += 1 ;total}
+      wrong = 0
+      correct = 0
+      c.keys.each do |ck|
+        if ck == false
+          wrong =  (c[ck]/d["count"].to_f)*100
+          correct = 100 - wrong
+        else
+          correct = (c[ck]/d["count"].to_f)*100
+          wrong = 100 - correct
+        end
+      end
+      q_data << {:q_id => d["question_id"],:wrong=>wrong.round(2),:correct=>correct.round(2),:section=>d["section"]}
     end
 
-    section_hash.keys.each do |sec|
-
+    q_data.each do |qd|
+      section_hash.keys.each do |sec|
+        section_hash[sec].keys.each do |sd|
+          if qd[:wrong].between?(sd.first,sd.last) && sec == qd[:section]
+            section_hash[sec][sd] << qd
+          end
+        end
+      end
     end
 
+    section_data = []
+    section_hash.keys.each do |k|
+      section_data << {"name"=>k,"q_data"=>section_hash[k]}
+    end
+
+    attempt_data = []
+    data.each do |d|
+      c = d["corrects"].inject(Hash.new(0)) { |total, e| total[e] += 1 ;total}
+      wrong = 0
+      correct = 0
+      c.keys.each do |ck|
+        if ck == false
+          wrong =  (c[ck]/d["count"].to_f)*100
+          correct = 100 - wrong
+        else
+          correct = (c[ck]/d["count"].to_f)*100
+          wrong = 100 - correct
+        end
+      end
+      un = d["attempt_type"].inject(Hash.new(0)) { |total, e| total[e] += 1 ;total}
+      un_attempted = 0
+      attempted = 0
+      un.keys.each do |uk|
+        if uk == "un_attempted" or uk == "skipped"
+          un_attempted = (un[uk]/d["count"].to_f)*100
+          attempted = 100 - un_attempted
+        else
+          attempted = (un[uk]/d["count"].to_f)*100
+          un_attempted = 100 - attempted
+        end
+      end
+      q_data << {:q_id => d["question_id"],:wrong=>wrong.round(2),:correct=>correct.round(2),:section=>d["section"]}
+    end
+
+
+    return section_data
   end
 
 
-
-end
+  end
 
 
