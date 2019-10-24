@@ -235,6 +235,11 @@ class Api::V1::ApiController < ApplicationController
   end
 
   def merge_assessments
+    # Quiz.where(:id.in=>(Quiz.all.map(&:id) - Quiz.where(chapters:nil).map(&:id))).each do |quiz|
+    #   quiz.update_attributes(type:'multi_chapter_test',player:'multi_chapter_test')
+    #   quiz.upload_zip
+    # end
+
     all_question_ids = Quiz.where(:guid.in=>params['assessment_guids']).map{|q| q.all_question_ids}.flatten.uniq
 
     data = {}

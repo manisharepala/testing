@@ -339,7 +339,7 @@ class Quiz
     # publisher_question_bank_id = '5d775e46fdbd262e669612cb'
 
     require 'zip'
-    guid = SecureRandom.uuid
+    # guid = SecureRandom.uuid
     zip_path = File.join(Rails.root.to_s,"public/quiz_zips/#{guid}") #"/home/inayath/edutor/assessment_app/public/quiz_zips/472508b1-6f7d-4f80-a1f0-b4ca4202be7b"
     tempfile = S3Server.download_quiz_zip(guid) #Rails.root.to_s + "/public/cengage_question_zips/2221"+number+".zip" #"/home/inayath/Downloads/222103.zip"
     FileUtils.mkdir_p (zip_path)
