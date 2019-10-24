@@ -334,7 +334,7 @@ class Quiz
     data
   end
 
-  def self.migrate_quizzes(guid,publisher_question_bank_id,only_questions=true)
+  def self.migrate_quizzes(guid,publisher_question_bank_id,only_questions=false)
     # Question.where(:publisher_question_bank_ids.in=>['5d775e46fdbd262e669612cb']).count
     # publisher_question_bank_id = '5d775e46fdbd262e669612cb'
 
