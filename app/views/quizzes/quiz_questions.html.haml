@@ -9,6 +9,9 @@
         %tr
           %td= 'Q Type'
           %td= q._type
+        %tr
+          %td= 'Display Q Type'
+          %td= q.display_q_type
         -if (q.qtype=='SmcqQuestion')||(q.qtype=='MmcqQuestion')||(q.qtype=='TrueFalseQuestion')||(q.qtype=='McqMatrixQuestion')||(q.qtype=='AssertionReasonQuestion')
           - q.question_answers.each_with_index do |qa,i|
             %tr
@@ -17,6 +20,20 @@
               %td
                 %span= Question.get_updated_text(qa.answer_english).html_safe rescue 'answer'
 
+        - elsif q.qtype == 'FibIntegerQuestion'
+          %tr
+            %td{style:"width:10%;"} Answer
+            %td
+              - q.question_fill_blanks.each_with_index do |question_fill_blank, i|
+                = question_fill_blank.answer
+          %tr
+            %td{style:"width:10%;"} No of Integer Digits
+            %td
+              = q.no_of_int_digits
+          %tr
+            %td{style:"width:10%;"} No of Decimal Digits
+            %td
+              = q.no_of_decimal_digits
         -elsif q.qtype=="FibQuestion"
           %tr
             %td A

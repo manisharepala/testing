@@ -7,6 +7,10 @@
       = select_tag "publisher_question_bank_id", options_for_select(@publisher_question_banks.map {|pqb| [pqb.name, pqb.id] }), class:'btn btn-default'
       %br
       %br
+      =label_tag :file,"Create Quiz / Only Questions"
+      = select_tag "quiz_or_questions", options_for_select([['Create Quiz','Create Quiz'],['Create Only Questions','Create Only Questions']]), class:'btn btn-default'
+      %br
+      %br
       =label_tag :file,"Assessment Type"
       = select_tag "type", options_for_select(@quiz_types), class:'btn btn-default'
       %br
