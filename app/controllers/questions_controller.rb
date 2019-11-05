@@ -212,6 +212,14 @@ class QuestionsController < ApplicationController
     end
   end
 
+  def edit_passage_question
+    @passage_question=Question.find(params[:id])
+    @questions=[]
+    @passage_question.question_guids.each do |que_id|
+      @questions << Question.where(guid:que_id)[0]
+    end
+  end
+
   def update
     qlsd_params = question_params['question_language_specific_datas_attributes'].to_h
     data = {default_mark: question_params['default_mark'],question_language_specific_datas: [question_text: Question.get_original_text(qlsd_params.values[0]['question_text']),general_feedback: Question.get_original_text(qlsd_params.values[0]['general_feedback']),hint: Question.get_original_text(qlsd_params.values[0]['hint']),actual_answer: Question.get_original_text(qlsd_params.values[0]['actual_answer'])]}

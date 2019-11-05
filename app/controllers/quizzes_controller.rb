@@ -418,7 +418,17 @@ class QuizzesController < ApplicationController
     if quiz.present?
       @questions = Question.where(:id.in=>quiz.question_ids)
     else
-      @questions = Question.all.desc('_id').limit(50)
+      @all_questions= Question.all.desc('_id').limit(50)
+      @passage_questions=Question.where(qtype:'PassageQuestion').limit(50);
+      @questions = []
+      @all_questions.each do |a|
+        @passage_questions.each do |pq|
+          arr = pq.question_guids.include?a.guid
+          if arr == false
+            @questions << a
+          end
+        end
+      end
     end
   end
 

@@ -45,6 +45,7 @@ Rails.application.routes.draw do
   get '/assessment/question/show', to: 'questions#show'
   get '/assessment/question/edit', to: 'questions#edit'
   post '/assessment/question/update', to: 'questions#update'
+  get '/assessment/question/edit_passage_question', to: 'questions#edit_passage_question'
 
   get '/assessment/quiz_sections', to: 'sections#get_quiz_sections'
   get '/assessment/section_questions', to: 'sections#section_questions'
