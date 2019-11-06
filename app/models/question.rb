@@ -12,6 +12,7 @@ class Question
   field :_type, as: :qtype, type: String
   field :display_q_type, type: String
   field :active, type: Boolean, default: true
+  field :sub_question, type: Boolean, default: false
   field :created_by, type: Integer
   field :guid, type: String
   field :tag_ids, type: Array
@@ -47,6 +48,20 @@ class Question
   ABSTRACT_CLASSES = %w(Question SubjectiveQuestion ObjectiveQuestion)
 
   # private_class_method :new, :create
+
+  def dummy
+    # adjusting to new field 'sub_question'
+    sub_question_guids = PassageQuestion.all.map{|p| p.question_guids}.flatten
+    Question.all.each do |q|
+      q.sub_question = false
+      q.save!
+    end
+
+    Question.where(:guid.in=>sub_question_guids).each do |q|
+      q.sub_question = true
+      q.save!
+    end
+  end
 
   def upload_images
     image_ids.each do |guid|
@@ -299,8 +314,8 @@ class Question
     end
   end
 
-  def self.create_simple_question(user_id, ques,publisher_question_bank_id, s3_path,master_dir,images_dir,institute_name,tags_db_id)
-    question_data = Question.get_simple_question_hash(user_id,ques, publisher_question_bank_id,institute_name,tags_db_id)
+  def self.create_simple_question(user_id, ques,publisher_question_bank_id, s3_path,master_dir,images_dir,institute_name,tags_db_id,sub_question=false)
+    question_data = Question.get_simple_question_hash(user_id,ques, publisher_question_bank_id,institute_name,tags_db_id).merge(sub_question:sub_question)
     question = Question.create_question(question_data)
     Question.update_image_path(question._id,s3_path)
     Question.copy_question_images(question._id,master_dir,images_dir)
@@ -420,7 +435,7 @@ class Question
 
     data['question_guids'] = []
     group_ques.xpath("question_set").each do |ques|
-      child_question = Question.create_simple_question(user_id, ques,publisher_question_bank_id, s3_path,master_dir,images_dir,institute_name,tags_db_id)
+      child_question = Question.create_simple_question(user_id, ques,publisher_question_bank_id, s3_path,master_dir,images_dir,institute_name,tags_db_id,true)
       data['question_guids'] << child_question.guid
     end
     data['default_mark'] = data['question_guids'].map{|guid| Question.where(guid:guid)[0].default_mark}.sum
