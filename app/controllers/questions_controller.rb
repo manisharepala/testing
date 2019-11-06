@@ -43,11 +43,12 @@ class QuestionsController < ApplicationController
       end
     end
     @question = Question.new
+    tags_db_id = PublisherQuestionBank.get_tags_db_id(@question.publisher_question_bank_ids[0])
     @quiz_types = [['All Types', 'all_types'],['Concept Practice Objective' ,'concept_practice_objective'],['Concept Test Objective' ,'concept_test_objective'],['Concept Practice Subjective' ,'concept_practice_subjective'],['Concept Test Subjective' ,'concept_test_subjective'],['Challenge Test Objective' ,'challenge_test_objective'],['Challenge Test Subjective' ,'challenge_test_subjective'],['Chapter Practice Objective' ,'chapter_practice_objective'],['Chapter Test Objective' ,'chapter_test_objective'],['Chapter Practice Subjective' ,'chapter_practice_subjective'],['Chapter Test Subjective' ,'chapter_test_subjective'],['Challenge Test' ,'challenge test'], ['Subjective', 'subjective'], ['Try Out', 'tryout'], ['Concept Practice', 'concept_practice']]
     @tags = {}
-    @tags['course'] = [TagsServer.get_tag_data(TagsServer.get_tag_guid('course','CBSE'))]
-    @tags['difficulty_level'] = TagsServer.get_tags_by_name('difficulty_level')
-    @tags['blooms_taxonomy'] = TagsServer.get_tags_by_name('blooms_taxonomy')
+    @tags['course'] = [TagsServer.get_tag_data(TagsServer.get_tag_guid('course','CBSE',tags_db_id))]
+    @tags['difficulty_level'] = TagsServer.get_tags_by_name('difficulty_level',tags_db_id)
+    @tags['blooms_taxonomy'] = TagsServer.get_tags_by_name('blooms_taxonomy',tags_db_id)
     @tags = @tags.merge(TagsServer.get_child_tags(@tags['course'][0]['guid']))
     @current_tags = {}
   end
@@ -196,10 +197,11 @@ class QuestionsController < ApplicationController
   end
 
   def edit
+    tags_db_id = PublisherQuestionBank.get_tags_db_id(@question.publisher_question_bank_ids[0])
     @tags = {}
-    @tags['course'] = [TagsServer.get_tag_data(TagsServer.get_tag_guid('course','CBSE'))]
-    @tags['difficulty_level'] = TagsServer.get_tags_by_name('difficulty_level')
-    @tags['blooms_taxonomy'] = TagsServer.get_tags_by_name('blooms_taxonomy')
+    @tags['course'] = [TagsServer.get_tag_data(TagsServer.get_tag_guid('course','CBSE',tags_db_id))]
+    @tags['difficulty_level'] = TagsServer.get_tags_by_name('difficulty_level',tags_db_id)
+    @tags['blooms_taxonomy'] = TagsServer.get_tags_by_name('blooms_taxonomy',tags_db_id)
     @tags = @tags.merge(TagsServer.get_child_tags(@tags['course'][0]['guid']))
 
     @current_tags = {}

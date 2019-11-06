@@ -2,7 +2,7 @@ class Api::V1::ApiController < ApplicationController
 
   def marks_tags
     data = []
-    TagsServer.get_tags_by_name('marks').each do |d|
+    TagsServer.get_tags_by_name('marks',PublisherQuestionBank.get_tags_db_id('')).each do |d|
       data << {'guid'=>d['guid'],'name'=>d['value'],'marks'=>d['value'].split(' ')[0],'recommend_duration'=>1}
     end
     render json: data
@@ -12,7 +12,7 @@ class Api::V1::ApiController < ApplicationController
     data = {}
     data['grades'] = []
 
-    TagsServer.get_child_tags(TagsServer.get_tag_guid('course','cbse'))['grade'].each do |d|
+    TagsServer.get_child_tags(TagsServer.get_tag_guid('course','cbse',PublisherQuestionBank.get_tags_db_id('')))['grade'].each do |d|
       data['grades'] << {'guid'=>d['guid'],'value'=>d['value'],'subjects'=>TagsServer.get_child_tags(d['guid'])['subject']}
     end
     render json: data
@@ -20,7 +20,7 @@ class Api::V1::ApiController < ApplicationController
 
   def difficulty_tags
     data = []
-    TagsServer.get_tags_by_name('difficulty_level').each do |d|
+    TagsServer.get_tags_by_name('difficulty_level',PublisherQuestionBank.get_tags_db_id('')).each do |d|
       data << {'guid'=>d['guid'],'name'=>d['value'],'recommend_duration'=>1}
     end
     render json: data
@@ -40,7 +40,7 @@ class Api::V1::ApiController < ApplicationController
       d['concepts'] = []
       chapter_data['concepts'].each do |concept_data|
         tag_key = "cbse_#{params[:grade]['name']}_#{params[:subject]['name']}_#{chapter_data['name']}_#{concept_data['name']}"
-        tag_guid = TagsServer.get_tag_guid_by_key(tag_key)
+        tag_guid = TagsServer.get_tag_guid_by_key(tag_key,PublisherQuestionBank.get_tags_db_id(''))
         if tag_guid.present?
           d1 = {}
           d1['guid'] = concept_data['guid']
@@ -116,7 +116,7 @@ class Api::V1::ApiController < ApplicationController
     params[:chapters].each do |chapter_data|
       chapter_data['concepts'].each do |concept_data|
         tag_key = "cbse_#{params[:grade]['name']}_#{params[:subject]['name']}_#{chapter_data['name']}_#{concept_data['name']}"
-        tag_guid = TagsServer.get_tag_guid_by_key(tag_key)
+        tag_guid = TagsServer.get_tag_guid_by_key(tag_key,PublisherQuestionBank.get_tags_db_id(''))
         if tag_guid.present?
           concept_data['tags'].each do |difficulty_tag_data|
             question_ids = Question.all_in(:tag_ids.in=>[tag_guid,difficulty_tag_data['guid']]).map(&:id)

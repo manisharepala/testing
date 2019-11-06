@@ -521,17 +521,9 @@ class QuizzesController < ApplicationController
       only_questions = false
       user_id = 1
     end
-    if params['publisher_question_bank_id'] == "5c2c591368ce591e55ed0293"
-      institute_name = 'learnflix'
-      tags_db_id = '5c209b1e68ce596b0168bf33'
-    elsif params['publisher_question_bank_id'] == "5d775e46fdbd262e669612cb"
-      institute_name = 'cengage'
-      tags_db_id = '5d7623c6fdbd263418f59abc'
-    else
-      institute_name = 'cengage'
-      tags_db_id = '5d7623c6fdbd263418f59abc'
-      # raise Exception.new('Institution and tags Db do not match')
-    end
+
+    institute_name = PublisherQuestionBank.get_institute_name(params['publisher_question_bank_id'])
+    tags_db_id = PublisherQuestionBank.get_tags_db_id(params['publisher_question_bank_id'])
 
     zip_path = File.join(Rails.root.to_s,"public/zip_uploads/#{user_id}/") #"/home/inayath/edutor/assessment/public/zip_uploads/1/"
     FileUtils.mkdir_p zip_path unless Dir.exists?(zip_path)
@@ -551,7 +543,7 @@ class QuizzesController < ApplicationController
         file = File.open(etx_file)
         etx = Nokogiri::XML(file)
         test_paper = etx.xpath("/assessment")
-        tags_not_present_data = Question.verify_tags(test_paper)
+        tags_not_present_data = Question.verify_tags(test_paper,tags_db_id)
         tags_not_present += tags_not_present_data[0]
         question_wise_tags_not_present += tags_not_present_data[1]
       end

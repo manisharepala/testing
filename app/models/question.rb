@@ -134,12 +134,12 @@ class Question
   end
 
   def add_tag(name,value)
-    self.tag_ids << TagsServer.get_tag_guid(name,value)
+    self.tag_ids << TagsServer.get_tag_guid(name,value,PublisherQuestionBank.get_tags_db_id(publisher_question_bank_ids[0]))
     self.save!
   end
 
   def remove_tag(name, value)
-    guid = TagsServer.get_tag_guid(name,value)
+    guid = TagsServer.get_tag_guid(name,value,PublisherQuestionBank.get_tags_db_id(publisher_question_bank_ids[0]))
     if guid.present?
       self.update_attributes(tag_ids: (self.tag_ids - [guid]))
       return true
@@ -240,7 +240,7 @@ class Question
 
   #############################
 
-  def self.verify_tags(test_paper,tags_db_id='5d7623c6fdbd263418f59abc')
+  def self.verify_tags(test_paper,tags_db_id)
     tag_not_present = []
     question_wise_tags_not_present = []
 
