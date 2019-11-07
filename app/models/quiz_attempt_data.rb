@@ -387,12 +387,39 @@ class QuizAttemptData
     marks = data["marks_scored"]
     vals = corrects.zip(marks)
     question_hash = Hash[keys.zip(vals)]
+
+    question_data = []
+    quiz_attempt.question_attempts.each do |qa|
+      selected_options = qa.question_answer_attempts.select{|a| a.is_selected == true}.map{|b| b.question_answer_json['id']} rescue []
+      correct_options = qa.question_json['answers'].flatten rescue []
+      question_data << {"question_id"=>qa.question_id,'selected_options'=>selected_options,'correct_options'=>correct_options,"correct"=>qa.correct,"start_time"=>qa.start_time,"end_time"=>qa.end_time,"section_name"=>qa.quiz_section_name,"difficulty"=>qa.question_json["tags"].select{|i| i["difficulty_level"]}.last.values.last,"concept"=>qa.question_json["tags"].select{|i| i["concept"]}.last.values.last}
+    end
+
+    topic_level_data = {}
+    diff_levels = quiz_attempt.question_attempts.map{|i| i.question_json["tags"].select{|i| i["difficulty_level"]}.last.values.last}.uniq
+
+    topic_details["sections"].each do |sec|
+      topic_level_data[sec["name"]] ||= {}
+      sec["topics"].each do |topic|
+        topic_level_data[sec["name"]][topic["name"]] ||= {}
+        question_data.each do |d|
+          diff_levels.each do |diff|
+            topic_level_data[sec["name"]][topic["name"]][diff] ||= []
+            if diff == d["difficulty"] && topic["name"] == d["concept"] && sec["name"] == d["section_name"]
+            topic_level_data[sec["name"]][topic["name"]][diff] << d
+            end
+          end
+        end
+      end
+    end
+
     topic_details["sections"].each do |sec|
       topic_data[sec["name"]] = []
       sec["topics"].each do |topic|
         topic[topic["name"]] = {}
         topic[topic["name"]]["total_marks"] = topic["total_marks"]
         topic[topic["name"]]["total_questions"] = topic["total_questions"]
+        topic[topic["name"]]["difficulty"] = topic_level_data[sec["name"]][topic["name"]]
         marks = 0
         topic["question_ids"].each do |qid|
           marks = marks+question_hash[qid][1]
@@ -436,7 +463,7 @@ class QuizAttemptData
     quiz_attempt.question_attempts.each do |qa|
       selected_options = qa.question_answer_attempts.select{|a| a.is_selected == true}.map{|b| b.question_answer_json['id']} rescue []
       correct_options = qa.question_json['answers'].flatten rescue []
-      data["questions"] << {"question_id"=>qa.question_id,'selected_options'=>selected_options,'correct_options'=>correct_options,"correct"=>qa.correct,"start_time"=>qa.start_time,"end_time"=>qa.end_time,"section_name"=>sections_data[qa.quiz_section_id]}
+      data["questions"] << {"question_id"=>qa.question_id,'selected_options'=>selected_options,'correct_options'=>correct_options,"correct"=>qa.correct,"start_time"=>qa.start_time,"end_time"=>qa.end_time,"section_name"=>sections_data[qa.quiz_section_id],"difficulty"=>qa.question_json["tags"].select{|i| i["difficulty_level"]}.last.values.last,:concept=>qa.question_json["tags"].select{|i| i["concept"]}.last.values.last}
     end
     #end
 
@@ -449,8 +476,8 @@ class QuizAttemptData
       quiz = Quiz.where(:guid=>assessment)
       attempt = QuizAttempt.where(:quiz_guid=>assessment,:user_id=>user_id).first
       if attempt.present?
-      data <<  {"name"=>quiz.name,"score"=>attempt.marks_scored,"date"=>Time.at(attempt.end_time),"rank"=>get_user_quiz_attempt_rank(assessment,user_id,attempt.quiz_attempt_data_id),
-                "subject_data" => get_quiz_section_data(assessment,user_id,attempt.quiz_attempt_data_id).map{|i| {"sub"=>i["sub"],"rank"=>i["rank"],"marks"=>i["marks"],"total_questions"=>i["total_questions"]}}}
+        data <<  {"name"=>quiz.name,"score"=>attempt.marks_scored,"date"=>Time.at(attempt.end_time),"rank"=>get_user_quiz_attempt_rank(assessment,user_id,attempt.quiz_attempt_data_id),
+                  "subject_data" => get_quiz_section_data(assessment,user_id,attempt.quiz_attempt_data_id).map{|i| {"sub"=>i["sub"],"rank"=>i["rank"],"marks"=>i["marks"],"total_questions"=>i["total_questions"]}}}
       end
     end
     return data
@@ -969,7 +996,7 @@ class QuizAttemptData
         end
       end
       attempt_data << {:q_id => d["question_id"],:wrong=>wrong.round(2),:correct=>correct.round(2),:section=>d["section"],:attempted=>attempted,:un_attempted=>un_attempted,
-                 :concept=>d["concept"],:difficulty=>d["difficulty"],:q_type=>d["question_type"],:avg_time=>d["avg_time"]
+                       :concept=>d["concept"],:difficulty=>d["difficulty"],:q_type=>d["question_type"],:avg_time=>d["avg_time"]
       }
     end
 
