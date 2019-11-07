@@ -33,11 +33,13 @@
                             %td.text-center{style:"width:10%;"}
                             %td
                               = qd.cktext_area :hint, :class => "form-control", required:true, :class => "form-control", required:true, :ckeditor => {:toolbar =>    'Full'}, :ckeditor => { :height => 200 },value:(Question.get_updated_text(question_language_specific_data.hint)).html_safe
-            %tr
-              %th.text-center{style: "height: 3.5em"} Options
-            %tr
-              %td
-                - if @question.qtype == 'SmcqQuestion' || @question.qtype == 'MmcqQuestion' || @question.qtype == 'TrueFalseQuestion' || @question.qtype == 'McqMatrixQuestion' || @question.qtype == 'AssertionReasonQuestion'
+
+
+            - if @question.qtype == 'SmcqQuestion' || @question.qtype == 'MmcqQuestion' || @question.qtype == 'TrueFalseQuestion' || @question.qtype == 'McqMatrixQuestion' || @question.qtype == 'AssertionReasonQuestion'
+              %tr
+                %th.text-center{style: "height: 3.5em"} Options
+              %tr
+                %td
                   - @question.question_answers.each_with_index do |question_answer, i|
                     = f.simple_fields_for :question_answers, question_answer do |qa|
                       %tr
@@ -47,6 +49,20 @@
                           - else
                             =qa.check_box :fraction, :checked => (question_answer.fraction == true) ? true : false
                         %td= qa.cktext_area :answer_english, :class => "form-control", required:true, :ckeditor => { :height => 100 },value:(Question.get_updated_text(question_answer.answer_english)).html_safe
+            - elsif @question.qtype == 'FibIntegerQuestion'
+              %tr
+                %th.text-center{style: "height: 3.5em"} Answer
+                %td
+                  - @question.question_fill_blanks.each_with_index do |question_fill_blank, i|
+                    = question_fill_blank.answer
+              %tr
+                %th.text-center{style: "height: 3.5em"} No of Integer Digits
+                %td
+                  = @question.no_of_int_digits
+              %tr
+                %th.text-center{style: "height: 3.5em"} No of Decimal Digits
+                %td
+                  = @question.no_of_decimal_digits
             %tr
               %th.text-center Marks
               %td= f.text_area :default_mark

@@ -334,12 +334,12 @@ class Quiz
     data
   end
 
-  def self.migrate_quizzes(guid,publisher_question_bank_id,only_questions=true)
+  def self.migrate_quizzes(guid,publisher_question_bank_id,only_questions=false)
     # Question.where(:publisher_question_bank_ids.in=>['5d775e46fdbd262e669612cb']).count
     # publisher_question_bank_id = '5d775e46fdbd262e669612cb'
 
     require 'zip'
-    guid = SecureRandom.uuid
+    # guid = SecureRandom.uuid
     zip_path = File.join(Rails.root.to_s,"public/quiz_zips/#{guid}") #"/home/inayath/edutor/assessment_app/public/quiz_zips/472508b1-6f7d-4f80-a1f0-b4ca4202be7b"
     tempfile = S3Server.download_quiz_zip(guid) #Rails.root.to_s + "/public/cengage_question_zips/2221"+number+".zip" #"/home/inayath/Downloads/222103.zip"
     FileUtils.mkdir_p (zip_path)
@@ -353,12 +353,13 @@ class Quiz
     question_ids = []
     quiz_section_ids = []
     failed_q_ids = []
+    tags_db_id = PublisherQuestionBank.get_tags_db_id(publisher_question_bank_id)
 
     data.keys #[:name, :description, :instructions, :total_marks, :total_time, :player, :time_open, :time_close, :questions]
 
     tags_not_present = []
     question_wise_tags_not_present = []
-    tags_not_present_data = Quiz.verify_tags(data)
+    tags_not_present_data = Quiz.verify_tags(data,tags_db_id)
     tags_not_present += tags_not_present_data[0]
     tags_not_present = tags_not_present.uniq
     question_wise_tags_not_present += tags_not_present_data[1]
@@ -372,7 +373,7 @@ class Quiz
     if only_questions
       data['questions'].each_with_index do |ques_data,i|
         begin
-          question = Question.create_question(Quiz.get_simple_question_hash(ques_data,user_id,publisher_question_bank_id,skip_tags))
+          question = Question.create_question(Quiz.get_simple_question_hash(ques_data,user_id,publisher_question_bank_id,skip_tags,tags_db_id))
           Quiz.update_image_path(question._id,s3_path)
           Quiz.copy_question_images(question._id,images_dir)
           question_ids << question._id.to_s
@@ -382,7 +383,7 @@ class Quiz
       end
     else
       data['questions'].each_with_index do |ques_data,i|
-        question = Question.create_question(Quiz.get_simple_question_hash(ques_data,user_id,publisher_question_bank_id,skip_tags))
+        question = Question.create_question(Quiz.get_simple_question_hash(ques_data,user_id,publisher_question_bank_id,skip_tags,tags_db_id))
         Quiz.update_image_path(question._id,s3_path)
         Quiz.copy_question_images(question._id,images_dir)
         question_ids << question._id.to_s
@@ -494,7 +495,7 @@ class Quiz
     question.upload_images
   end
 
-  def Quiz.verify_tags(data)
+  def Quiz.verify_tags(data,tags_db_id)
     tag_not_present = []
     question_wise_tags_not_present = []
 
@@ -503,7 +504,7 @@ class Quiz
 
       if tag_keys.count == 5
         tag_keys.each do |key|
-          if !TagsServer.get_tag_guid_by_key(key).present?
+          if !TagsServer.get_tag_guid_by_key(key,tags_db_id).present?
             tag_not_present << key
           end
         end
@@ -561,7 +562,7 @@ class Quiz
     end
   end
 
-  def Quiz.get_simple_question_hash(ques_data,user_id,publisher_question_bank_id,skip_tags)
+  def Quiz.get_simple_question_hash(ques_data,user_id,publisher_question_bank_id,skip_tags,tags_db_id)
     #[:id, :question_text, :marks, :penalty, :question_type, :tags, :explanation, :hint, :options, :answers, :blanks]
     data = {}
     data['publisher_question_bank_ids'] = [publisher_question_bank_id]
@@ -603,11 +604,11 @@ class Quiz
     if !skip_tags
       tag_keys = Quiz.get_question_tag_keys(ques_data)
       tag_keys.each do |key|
-        data['tag_ids'] << TagsServer.get_tag_guid_by_key(key)
+        data['tag_ids'] << TagsServer.get_tag_guid_by_key(key,tags_db_id)
       end
       ques_data['tags'].each do |hash|
         if (hash.keys[0] == "difficulty_level") || (hash.keys[0] == "blooms_taxonomy")
-          guid = TagsServer.get_tag_guid(hash.keys[0], hash.values[0])
+          guid = TagsServer.get_tag_guid(hash.keys[0], hash.values[0],tags_db_id)
           data['tag_ids'] << guid if guid.present?
         end
       end

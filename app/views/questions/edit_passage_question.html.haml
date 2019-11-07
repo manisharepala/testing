@@ -1,4 +1,11 @@
-.container{style:'margin-top:4%;'}
+.container{style:'margin-top:5%;'}
+  %h3 Passage
+  %table.table-striped.table-bordered{style:"width: 100%;"}
+    %tbody
+      %tr
+        %td= (Question.get_updated_text(@passage_question.question_language_specific_datas.where(language: Language::ENGLISH)[0].question_text) rescue 'question text').html_safe
+      %tr
+        %td= link_to "Edit", assessment_question_edit_path(id:@passage_question.id), class:'btn btn-default', target:'_blank'
   %h3 Questions
   - @questions.each_with_index do |q,i|
     %table.table-striped.table-bordered{style:"width: 100%;"}

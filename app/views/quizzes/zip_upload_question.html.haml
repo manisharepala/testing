@@ -7,32 +7,34 @@
       = select_tag "publisher_question_bank_id", options_for_select(@publisher_question_banks.map {|pqb| [pqb.name, pqb.id] }), class:'btn btn-default'
       %br
       %br
-      =label_tag :file,"Assessment Type"
-      = select_tag "type", options_for_select(@quiz_types), class:'btn btn-default'
+      =label_tag :file,"Create Quiz / Only Questions"
+      = select_tag "quiz_or_questions", options_for_select([['Create Quiz','Create Quiz'],['Create Only Questions','Create Only Questions']]),id:"quiz_or_questions", class:'btn btn-default'
       %br
       %br
-      %input{:name => "name", :type => "text", :placeholder => "Quiz Name", style:'width:25%;'}
-      %br
+      %div{id:"quiz_div"}
+        =label_tag :file,"Assessment Type"
+        = select_tag "type", options_for_select(@quiz_types), class:'btn btn-default'
+        %br
+        %br
+        %input{:name => "name", :type => "text", :placeholder => "Quiz Name", style:'width:25%;'}
       %br
       =file_field_tag :zip_file, accept: 'zip', class:'btn btn-default'
       %br
       %br
       =submit_tag "Upload", class:'btn btn-default'
 
+:javascript
+  myFunction();
+  $("#quiz_or_questions").change(function(){
+    myFunction();
+  });
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-  
+  function myFunction(){
+    var q = $("#quiz_or_questions").val();
+    if(q == 'Create Only Questions'){
+      $("#quiz_div").hide();
+    }
+    else{
+      $("#quiz_div").show();
+    }
+  }

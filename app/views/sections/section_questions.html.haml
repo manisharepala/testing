@@ -31,6 +31,10 @@
           %td Explanation:
           %td=(Question.get_updated_text(q.question_language_specific_datas.where(language: Language::ENGLISH)[0].general_feedback)).html_safe
         %tr
+        -if q.qtype == 'PassageQuestion'
+          %td= link_to "Show", assessment_question_edit_passage_question_path(id:q.id), class:'btn btn-default', target:'_blank'
+          %td
+        -else
           %td= link_to "Edit", assessment_question_edit_path(id:q.id), class:'btn btn-default', target:'_blank'
           %td
         %br

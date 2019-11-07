@@ -188,7 +188,7 @@ class ApiController < ApplicationController
     data['grades'] = []
     data['subjects'] = []
 
-    d = TagsServer.get_uniq_tag_values_with_guids
+    d = TagsServer.get_uniq_tag_values_with_guids(PublisherQuestionBank.get_tags_db_id(''))
 
     data['grades'] << d['grade']
     data['subjects'] << d['subject']
