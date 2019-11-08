@@ -105,7 +105,12 @@ class Api::V1::ApiController < ApplicationController
       end
     end
 
-    render json: data
+    summary = {}
+    by_tags = tags.map{|a| a.merge('serving_questions'=>data.map{|b| b['concepts']}.flatten.map{|c| c['tags']}.flatten.select{|d| d['guid'] == a['guid']}.flatten.map{|e| e['recommended_questions']}.sum)}
+    summary['total_questions']= {'requested'=>tags.map{|a| a['required_questions']}.sum,'serving'=>by_tags.map{|e| e['serving_questions']}.sum}
+    summary['by_tags'] = by_tags
+
+    render json: {'summary'=>summary,'data'=>data}
   end
 
   def get_questions_by_tags
