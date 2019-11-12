@@ -16,6 +16,7 @@ class PublisherQuestionBank
   end
 
   def self.get_tags_db_id(publisher_question_bank_id)
+    publisher_question_bank_id = publisher_question_bank_id.to_s
     if publisher_question_bank_id == "5c2c591368ce591e55ed0293"
       return '5c209b1e68ce596b0168bf33'
     elsif publisher_question_bank_id == "5d775e46fdbd262e669612cb"
@@ -29,6 +30,7 @@ class PublisherQuestionBank
   end
 
   def self.get_institute_name(publisher_question_bank_id)
+    publisher_question_bank_id = publisher_question_bank_id.to_s
     if publisher_question_bank_id == "5c2c591368ce591e55ed0293"
       return 'learnflix'
     elsif publisher_question_bank_id == "5d775e46fdbd262e669612cb"

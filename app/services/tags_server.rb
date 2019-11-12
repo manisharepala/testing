@@ -70,6 +70,15 @@ class TagsServer
     end
   end
 
+  def self.get_tags_data_by_name(name,tags_db_id)
+    res = get('/tags/find_tags', {query: {name: name,tags_db_id:tags_db_id}})
+    if res.code == 200
+      JSON.parse(res.body)
+    else
+      []
+    end
+  end
+
   def self.get_uniq_tag_values_with_guids(tags_db_id)
     res = get('/tags/get_uniq_tag_values_with_guids', {query: {tags_db_id:tags_db_id}})
     if res.code == 200

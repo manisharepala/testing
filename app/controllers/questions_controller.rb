@@ -199,7 +199,7 @@ class QuestionsController < ApplicationController
   def edit
     tags_db_id = PublisherQuestionBank.get_tags_db_id(@question.publisher_question_bank_ids[0])
     @tags = {}
-    @tags['course'] = [TagsServer.get_tag_data(TagsServer.get_tag_guid('course','CBSE',tags_db_id))]
+    @tags['course'] = TagsServer.get_tags_data_by_name('course',tags_db_id)
     @tags['difficulty_level'] = TagsServer.get_tags_by_name('difficulty_level',tags_db_id)
     @tags['blooms_taxonomy'] = TagsServer.get_tags_by_name('blooms_taxonomy',tags_db_id)
     @tags = @tags.merge(TagsServer.get_child_tags(@tags['course'][0]['guid']))
@@ -209,7 +209,7 @@ class QuestionsController < ApplicationController
       d = TagsServer.get_tag_data(guid)
       if d.present?
         @current_tags[d['name']] = [d['value'],d['guid']]
-        @tags[d['name']] = (TagsServer.get_sibling_tags(d['guid']) - [nil]) if !(d['name'] == 'course' || d['name'] == 'difficulty_level' || d['name'] == 'blooms_taxonomy')
+        @tags[d['name']] = (TagsServer.get_sibling_tags(d['guid']) - [nil]) if !(d['name'] == 'difficulty_level' || d['name'] == 'blooms_taxonomy')
       end
     end
   end
