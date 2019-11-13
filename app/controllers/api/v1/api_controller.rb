@@ -8,20 +8,20 @@ class Api::V1::ApiController < ApplicationController
     render json: data
   end
 
+  def difficulty_tags
+    data = []
+    TagsServer.get_tags_by_name('difficulty_level',PublisherQuestionBank.get_tags_db_id('')).each do |d|
+      data << {'guid'=>d['guid'],'name'=>d['value'],'recommend_duration'=>1}
+    end
+    render json: data
+  end
+
   def get_gradewise_subject_tags
     data = {}
     data['grades'] = []
 
     TagsServer.get_child_tags(TagsServer.get_tag_guid('course','cbse',PublisherQuestionBank.get_tags_db_id('')))['grade'].each do |d|
       data['grades'] << {'guid'=>d['guid'],'value'=>d['value'],'subjects'=>TagsServer.get_child_tags(d['guid'])['subject']}
-    end
-    render json: data
-  end
-
-  def difficulty_tags
-    data = []
-    TagsServer.get_tags_by_name('difficulty_level',PublisherQuestionBank.get_tags_db_id('')).each do |d|
-      data << {'guid'=>d['guid'],'name'=>d['value'],'recommend_duration'=>1}
     end
     render json: data
   end
@@ -115,8 +115,6 @@ class Api::V1::ApiController < ApplicationController
   end
 
   def get_questions_by_tags
-    data = {}
-    question_replacement_map = {}
     final_question_ids = []
 
     params[:chapters].each do |chapter_data|
@@ -128,29 +126,16 @@ class Api::V1::ApiController < ApplicationController
             question_ids = Question.all_in(:tag_ids.in=>[tag_guid,difficulty_tag_data['guid']]).map(&:id)
             q_ids = question_ids.sample(difficulty_tag_data['final_questions'])
             final_question_ids << q_ids
-
-            q_ids.each do |q_id|
-              question_replacement_map[q_id] = question_ids - q_ids
-            end
           end
         end
       end
     end
 
-    questions_data = []
-    final_question_ids.flatten.each do |id|
-      q = Question.find(id)
-      questions_data << q.as_json(with_key:true,with_language_support:false)
-    end
-
-    data['questions_data'] = questions_data
-    data['question_replacement_map'] = question_replacement_map
-
-    render json: data
+    render json: Question.where(id:final_question_ids.flatten).map{|q| q.as_json(with_key:true,with_language_support:false)}
   end
 
-  def get_question_json
-    render json: Question.find(params[:id]).as_json(with_key:true,with_language_support:false)
+  def get_replacement_question
+    render json: Question.all_in(:tag_ids.in =>Question.find(params[:id]).tag_ids)[0].as_json(with_key:true,with_language_support:false)
   end
 
   def generate_quiz

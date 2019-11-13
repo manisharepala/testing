@@ -126,7 +126,7 @@ Rails.application.routes.draw do
         get '/difficulty_tags' => 'api/v1/api#difficulty_tags'
         post '/get_recommended_questions_count_by_tags' => 'api/v1/api#get_recommended_questions_count_by_tags'
         post '/get_questions_by_tags' => 'api/v1/api#get_questions_by_tags'
-        get '/get_question_json' => 'api/v1/api#get_question_json'
+        get '/get_replacement_question' => 'api/v1/api#get_replacement_question'
         post '/generate_quiz' => 'api/v1/api#generate_quiz'
         post '/publish_assessment' => 'api/v1/api#publish_assessment'
 
