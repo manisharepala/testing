@@ -122,6 +122,7 @@ Rails.application.routes.draw do
         post '/search_assessments' => 'api/v1/students#search_assessments'
 
         get '/get_gradewise_subject_tags' => 'api/v1/api#get_gradewise_subject_tags'
+        get '/get_tags' => 'api/v1/api#get_tags'
         get '/marks_tags' => 'api/v1/api#marks_tags'
         get '/difficulty_tags' => 'api/v1/api#difficulty_tags'
         post '/get_recommended_questions_count_by_tags' => 'api/v1/api#get_recommended_questions_count_by_tags'

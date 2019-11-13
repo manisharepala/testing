@@ -1,19 +1,19 @@
 class Api::V1::ApiController < ApplicationController
 
-  def marks_tags
-    data = []
-    TagsServer.get_tags_by_name('marks',PublisherQuestionBank.get_tags_db_id('')).each do |d|
-      data << {'guid'=>d['guid'],'name'=>d['value'],'marks'=>d['value'].split(' ')[0],'recommend_duration'=>1}
+  def get_tags
+    if params['quiz_type'] == 'objective'
+      render json: TagsServer.get_tags_by_name('marks',PublisherQuestionBank.get_tags_db_id('')).map{|d| {'guid'=>d['guid'],'name'=>d['value'],'marks'=>d['value'].split(' ')[0],'recommend_duration'=>1}}
+    else
+      render json: TagsServer.get_tags_by_name('difficulty_level',PublisherQuestionBank.get_tags_db_id('')).map{|d| {'guid'=>d['guid'],'name'=>d['value'],'recommend_duration'=>1}}
     end
-    render json: data
+  end
+
+  def marks_tags
+    render json: TagsServer.get_tags_by_name('marks',PublisherQuestionBank.get_tags_db_id('')).map{|d| {'guid'=>d['guid'],'name'=>d['value'],'marks'=>d['value'].split(' ')[0],'recommend_duration'=>1}}
   end
 
   def difficulty_tags
-    data = []
-    TagsServer.get_tags_by_name('difficulty_level',PublisherQuestionBank.get_tags_db_id('')).each do |d|
-      data << {'guid'=>d['guid'],'name'=>d['value'],'recommend_duration'=>1}
-    end
-    render json: data
+    render json: TagsServer.get_tags_by_name('difficulty_level',PublisherQuestionBank.get_tags_db_id('')).map{|d| {'guid'=>d['guid'],'name'=>d['value'],'recommend_duration'=>1}}
   end
 
   def get_gradewise_subject_tags
