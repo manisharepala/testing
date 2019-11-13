@@ -61,6 +61,15 @@ class TagsServer
     end
   end
 
+  def self.get_tag_parent_data(guid)
+    res = get('/tags/get_tag_parent_data', {query: {guid: guid}})
+    if res.code == 200
+      JSON.parse(res.body)
+    else
+      {}
+    end
+  end
+
   def self.get_tags_data(guids)
     res = get('/tags/find_tags', {query: {guids: guids}})
     if res.code == 200

@@ -116,10 +116,10 @@ class Api::V1::ApiController < ApplicationController
 
   def get_questions_by_tags
     final_question_ids = []
-
+    course_name = TagsServer.get_tag_parent_data(params['grade']['guid'])['value']
     params[:chapters].each do |chapter_data|
       chapter_data['concepts'].each do |concept_data|
-        tag_key = "cbse_#{params[:grade]['name']}_#{params[:subject]['name']}_#{chapter_data['name']}_#{concept_data['name']}"
+        tag_key = "#{course_name}_#{params[:grade]['name']}_#{params[:subject]['name']}_#{chapter_data['name']}_#{concept_data['name']}"
         tag_guid = TagsServer.get_tag_guid_by_key(tag_key,PublisherQuestionBank.get_tags_db_id(''))
         if tag_guid.present?
           concept_data['tags'].each do |difficulty_tag_data|
@@ -131,7 +131,7 @@ class Api::V1::ApiController < ApplicationController
       end
     end
 
-    render json: Question.where(id:final_question_ids.flatten).map{|q| q.as_json(with_key:true,with_language_support:false)}
+    render json: Question.where(:id.in=>final_question_ids.flatten).map{|q| q.as_json(with_key:true,with_language_support:false)}
   end
 
   def get_replacement_question
