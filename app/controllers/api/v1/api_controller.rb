@@ -116,18 +116,11 @@ class Api::V1::ApiController < ApplicationController
 
   def get_questions_by_tags
     final_question_ids = []
-    course_name = TagsServer.get_tag_parent_data(params['grade']['guid'])['value']
-    params[:chapters].each do |chapter_data|
-      chapter_data['concepts'].each do |concept_data|
-        tag_key = "#{course_name}_#{params[:grade]['name']}_#{params[:subject]['name']}_#{chapter_data['name']}_#{concept_data['name']}"
-        tag_guid = TagsServer.get_tag_guid_by_key(tag_key,PublisherQuestionBank.get_tags_db_id(''))
-        if tag_guid.present?
-          concept_data['tags'].each do |difficulty_tag_data|
-            question_ids = Question.all_in(:tag_ids.in=>[tag_guid,difficulty_tag_data['guid']]).map(&:id)
-            q_ids = question_ids.sample(difficulty_tag_data['final_questions'])
-            final_question_ids << q_ids
-          end
-        end
+    params['concepts'].each do |concept_data|
+      concept_data['tags'].each do |tag_data|
+        question_ids = Question.all_in(:tag_ids.in=>[concept_data['guid'],tag_data['guid']]).map(&:id)
+        q_ids = question_ids.sample(tag_data['final_questions'])
+        final_question_ids << q_ids
       end
     end
 
