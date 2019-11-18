@@ -112,7 +112,7 @@ class Api::V1::ApiController < ApplicationController
     summary['total_questions_serving'] = by_tags.map{|e| e['serving_questions']}.sum
     summary['by_tags'] = by_tags
 
-    render json: {'summary'=>summary,'data'=>data}
+    render json: {'summary'=>summary,'chapters'=>data}
   end
 
   def get_questions_by_tags
