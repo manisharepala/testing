@@ -258,4 +258,63 @@ class Api::V1::ApiController < ApplicationController
     render json: data
   end
 
+  def test_analytics
+    params = {'published_id'=>'5daeafecfdbd26239540315b','group_id'=>314}
+    token = "eyJhbGciOiJIUzI1NiJ9.eyJ1c2VybmFtZSI6bnVsbCwiZW1haWwiOiJjbGFzc182X3RlYWNoZXJfMV8xNTUyOTkwOTU4X0B2YXJzaXR5LmNvbSIsInJvbGxfbm8iOm51bGwsInVzZXJfaWQiOjM2Mywic3ViIjoiMzYzIiwic2NwIjoidXNlciIsImF1ZCI6bnVsbCwiaWF0IjoxNTU2NTE1MDgyLCJleHAiOjE1NTY2MDE0ODIsImp0aSI6Ijk5YWJiYTFiLTAwNjMtNDg2My1hZWFhLWExM2M0ZWM5ZWEwNSJ9.PT0uU986H3XBAELUzWyp9CD1uLzvrUlSpPCsFaVqE3I"
+    qtg = QuizTargetedGroup.find(params['published_id'])
+    quiz = Quiz.find(qtg.quiz_id)
+
+    data = {}
+
+    if quiz.present?
+      data['name'] = quiz.name
+      tags_data = TagsServer.get_tags_data(quiz.tag_ids)
+      data['subjects'] = tags_data.select{|a| a['name'] == 'subject'}.map{|b| b['value']}
+      data['grades'] = tags_data.select{|a| a['name'] == 'grade'}.map{|b| b['value']}
+      data['type'] = quiz.type
+
+      students_data = UserManagementServer.get_students_in_group(params['group_id'],token)
+      students_id_name_map = students_data{|a| {a['id']=>a['name']}}.reduce(:merge)
+      quiz_attempts = QuizAttempt.where(published_id:params['published_id'],:user_id.in=>students_data.map{|s| s['id']},attempt_no:1)
+      attempted_student_ids = quiz_attempts.map(&:user_id)
+      data['attempted_students_count'] = attempted_student_ids.count
+      data['total_students_count'] = students_data.count
+      data['un_attempted_students'] = students_data.select{|s| (!attempted_student_ids.include? s['id'])}.map{|a| {'id'=>a['id'],'name'=>a['name']}}
+
+      marks_scored = quiz_attempts.map(&:marks_scored)
+      time_taken = quiz_attempts.map(&:active_duration)
+      data['top_score'] = marks_scored.max
+      min_score_in_top_3 = marks_scored.max(3).min
+      data['top_3_scores'] = quiz_attempts.select{|a| a['marks_scored'] >= min_score_in_top_3}.map{|qa| {'id'=>qa['user_id'],'name'=>students_id_name_map[qa['user_id']],'marks_scored'=>qa.marks_scored}}
+
+      data['total_marks'] = quiz.get_total_marks
+
+      data['average_score'] = (marks_scored.sum/marks_scored.count).round(1)
+      data['marks_scored_by_each_student'] = quiz_attempts.map{|qa| {'id'=>qa['user_id'],'name'=>students_id_name_map[qa['user_id']],'marks_scored'=>qa['marks_scored']}}
+
+      data['average_time_taken_for_quiz'] = (time_taken.sum/time_taken.count*60).round(1)
+      data['time_taken_by_each_student'] = quiz_attempts.map{|qa| {'id'=>qa['user_id'],'name'=>students_id_name_map[qa['user_id']],'time_taken'=>(qa['active_duration']/60.0).round}}
+
+      question_wise_data = {}
+      quiz_attempts.each do |quiz_attempt|
+        quiz_attempt.question_attempts.each do |qa|
+          question_wise_data[qa.question_id] ||= {'correct'=>[],'time_taken'=>[]}
+          question_wise_data[qa.question_id]['correct'] << qa.correct
+          question_wise_data[qa.question_id]['time_taken'] << qa.time_taken
+        end
+      end
+
+      question_ids = quiz.all_question_ids
+      data['individual_question_correct_percentage'] = question_wise_data.map{|k,v| {'id'=>k,'question_number'=>"Q#{question_ids.find_index(k)+1}",'correct_percentage'=>(v['correct'].count(true)/v['correct'].count.to_f).rond(1)}}.sort_by{|a| a['correct_percentage']}.reverse
+
+      data['most_difficult_question'] = data['question_wise_correct_percentage'][0]
+
+      data['average_time_per_question'] = (data['average_time_for_quiz']/quiz.total_questions).round(1)
+      data['individual_question_average_time'] =  question_wise_data.map{|k,v| {'id'=>k,'question_number'=>"Q#{question_ids.find_index(k)+1}",'time_taken'=>(v['time_taken'].sum/v['time_taken'].count.to_f).rond(1)}}
+
+    end
+
+    render json: data
+  end
+
 end
