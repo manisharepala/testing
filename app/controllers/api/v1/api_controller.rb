@@ -31,7 +31,8 @@ class Api::V1::ApiController < ApplicationController
     concept_questions_map = {}
     tag_questions_map = {}
 
-    tags = params[:difficulty_tags].present?? params[:difficulty_tags] : params[:mark_tags]
+    tags = params[:tags]
+    course_name = TagsServer.get_tag_parent_data(params['grade']['guid'])['value']
 
     params[:chapters].each do |chapter_data|
       d = {}
@@ -39,7 +40,7 @@ class Api::V1::ApiController < ApplicationController
       d['name'] = chapter_data['name']
       d['concepts'] = []
       chapter_data['concepts'].each do |concept_data|
-        tag_key = "cbse_#{params[:grade]['name']}_#{params[:subject]['name']}_#{chapter_data['name']}_#{concept_data['name']}"
+        tag_key = "#{course_name}_#{params[:grade]['name']}_#{params[:subject]['name']}_#{chapter_data['name']}_#{concept_data['name']}"
         tag_guid = TagsServer.get_tag_guid_by_key(tag_key,PublisherQuestionBank.get_tags_db_id(''))
         if tag_guid.present?
           d1 = {}
