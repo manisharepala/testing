@@ -351,7 +351,8 @@ class Api::V1::CengageController < ApplicationController
     end
 
     question_ids = Question.all_in(:tag_ids.in=>tags).map(&:id)
-    difficulty_levels = params['difficulty_levels'].present?? params['difficulty_levels']:["00be0a27-126d-4aca-905a-323b5f54553a","a945bd15-5066-43d8-b8d1-604409cefaad","90620785-a35b-492e-a67e-f441afc329ae"]
+    difficulty_levels = params['difficulty_levels'].present?? params['difficulty_levels'] : ["c001e8da-ec6b-4d55-9d91-5ecdea26caa1", "20270e3a-cd9b-48b0-8742-6667d854c52f", "a2db0be0-71f8-413a-9461-3f65c93d5f05"]
+    #TagsServer.get_tags_data_by_name('difficulty_level','5d7623c6fdbd263418f59abc').map{|a| a['guid']}
 
     if (params['pagination'] == false) && params['chapters'].present?
       data = Question.where(:id.in=>question_ids,:tag_ids.in=>difficulty_levels,:_type.in=>params['question_types'])
