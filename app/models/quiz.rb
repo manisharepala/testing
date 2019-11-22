@@ -421,7 +421,7 @@ class Quiz
 
   def Quiz.update_img_src(text,s3_path,ques_id)
     if text.present?
-      text = JSON.parse(text)
+      text = JSON.load(text)
       replacement_paths = []
       image_names = []
       Nokogiri::HTML(text).css('img').map{ |i| i['src'] }.each do |img|
