@@ -23,9 +23,22 @@ class PublisherQuestionBank
       return '5d7623c6fdbd263418f59abc'
     elsif publisher_question_bank_id == "5dc2885cfdbd26388aa2e2a2"
       return '5dc2877cfdbd266534cd7873'
+      #####ignitor start
+    elsif publisher_question_bank_id == "5ddd0a7414ba781e36352f80"
+      return '5dd7af106a69c51de3a794c0'
+    elsif publisher_question_bank_id == "5ddd0a7414ba781e36352f81"
+      return '5dd7ae996a69c51de3a794be'
+    elsif publisher_question_bank_id == "5ddd0a7414ba781e36352f82"
+      return '5dd7aeb56a69c51de3a794bf'
+    elsif publisher_question_bank_id == "5ddd0a7414ba781e36352f83"
+      return '5dd26b7f6a69c512584b1ea5'
     else
       return '5c209b1e68ce596b0168bf33'
       # raise Exception.new('Institution and tags Db do not match')
+
+      # Ignitor store data
+      # [{"5ddd0a7414ba781e36352f80"=>"St-George"}, {"5ddd0a7414ba781e36352f81"=>"TCE"}, {"5ddd0a7414ba781e36352f82"=>"Gateforum"}, {"5ddd0a7414ba781e36352f83"=>"Edutor"}]
+      # [["5dd26b7f6a69c512584b1ea5", "Sample-Db", "718c48e4-1919-4ae8-bdfe-9dc38e86553d"], ["5dd7ae996a69c51de3a794be", "TCE", "84f9b837-7313-4944-a376-49dd5ef2a7f3"], ["5dd7aeb56a69c51de3a794bf", "Gateforum", "7d613bcf-129d-4100-a042-d5948e2c0427"], ["5dd7af106a69c51de3a794c0", "St_George", "6f03a582-9895-49e7-a7d6-89cede413f29"]]
     end
   end
 
