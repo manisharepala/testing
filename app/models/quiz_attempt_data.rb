@@ -11,7 +11,8 @@ class QuizAttemptData
   index({'data.book_id' =>1, :user_id=>1})
   index({'data.book_id' => 1,:user_id=>1,'data.player_subtype'=>1})
 
-  after_create :process_quiz_attempt_data
+  #after_create :process_quiz_attempt_data
+  after_create :process_quiz_attempt_data_delayed_job
 
   def process_quiz_attempt_data
     QuizAttemptDataJob.set(wait: 2.minutes).perform_later(self.id.to_s)
