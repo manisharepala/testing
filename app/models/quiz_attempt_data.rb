@@ -393,11 +393,11 @@ class QuizAttemptData
     quiz_attempt.question_attempts.each do |qa|
       selected_options = qa.question_answer_attempts.select{|a| a.is_selected == true}.map{|b| b.question_answer_json['id']} rescue []
       correct_options = qa.question_json['answers'].flatten rescue []
-      question_data << {"question_id"=>qa.question_id,'selected_options'=>selected_options,'correct_options'=>correct_options,"correct"=>qa.correct,"start_time"=>qa.start_time,"end_time"=>qa.end_time,"section_name"=>qa.quiz_section_name,"difficulty"=>qa.question_json["tags"].select{|i| i["difficulty_level"]}.last.values.last,"concept"=>qa.question_json["tags"].select{|i| i["concept"]}.last.values.last}
+      question_data << {"question_id"=>qa.question_id,'selected_options'=>selected_options,'correct_options'=>correct_options,"correct"=>qa.correct,"start_time"=>qa.start_time,"end_time"=>qa.end_time,"section_name"=>qa.quiz_section_name,"difficulty"=>(qa.question_json["tags"].select{|i| i["difficulty_level"]}.last.values.last rescue ""),"concept"=>(qa.question_json["tags"].select{|i| i["concept"]}.last.values.last rescue "")}
     end
 
     topic_level_data = {}
-    diff_levels = quiz_attempt.question_attempts.map{|i| i.question_json["tags"].select{|i| i["difficulty_level"]}.last.values.last}.uniq
+    diff_levels = quiz_attempt.question_attempts.map{|i| (i.question_json["tags"].select{|i| i["difficulty_level"]}.last.values.last rescue "")}.uniq
 
     topic_details["sections"].each do |sec|
       topic_level_data[sec["name"]] ||= {}
@@ -464,7 +464,7 @@ class QuizAttemptData
     quiz_attempt.question_attempts.each do |qa|
       selected_options = qa.question_answer_attempts.select{|a| a.is_selected == true}.map{|b| b.question_answer_json['id']} rescue []
       correct_options = qa.question_json['answers'].flatten rescue []
-      data["questions"] << {"question_id"=>qa.question_id,'selected_options'=>selected_options,'correct_options'=>correct_options,"correct"=>qa.correct,"start_time"=>qa.start_time,"end_time"=>qa.end_time,"section_name"=>sections_data[qa.quiz_section_id],"difficulty"=>qa.question_json["tags"].select{|i| i["difficulty_level"]}.last.values.last,:concept=>qa.question_json["tags"].select{|i| i["concept"]}.last.values.last}
+      data["questions"] << {"question_id"=>qa.question_id,'selected_options'=>selected_options,'correct_options'=>correct_options,"correct"=>qa.correct,"start_time"=>qa.start_time,"end_time"=>qa.end_time,"section_name"=>sections_data[qa.quiz_section_id],"difficulty"=>(qa.question_json["tags"].select{|i| i["difficulty_level"]}.last.values.last rescue ""),:concept=>(qa.question_json["tags"].select{|i| i["concept"]}.last.values.last rescue "")}
     end
     #end
 
